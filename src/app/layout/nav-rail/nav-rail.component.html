@@ -1,0 +1,65 @@
+<nav class="rail">
+  <!-- Logo -->
+  <a class="logo" routerLink="/social-inbox" aria-label="Home">
+    <span class="logo-mark">L7</span>
+  </a>
+
+  <!-- Primary navigation -->
+  <div class="nav-scroll">
+    <ul class="nav">
+      <li *ngFor="let item of items">
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [matTooltip]="item.label"
+          matTooltipPosition="right">
+          <span class="icon-wrap">
+            <span class="msr">{{ item.icon }}</span>
+            <span class="badge" *ngIf="item.badge">{{ item.badge }}</span>
+          </span>
+          <span class="label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- More -->
+    <div class="more-wrap">
+      <button class="nav-item more-btn" [class.active]="moreOpen" (click)="toggleMore()">
+        <span class="icon-wrap"><span class="msr">apps</span></span>
+        <span class="label">more</span>
+      </button>
+
+      <div class="more-flyout" *ngIf="moreOpen">
+        <div class="more-head">More</div>
+        <a
+          class="more-item"
+          *ngFor="let item of moreItems"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          (click)="closeMore()">
+          <span class="msr">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer utilities -->
+  <div class="rail-footer">
+    <button class="util theme" aria-label="Theme">
+      <span class="msr">palette</span>
+    </button>
+    <button class="util alert" aria-label="Alerts">
+      <span class="msr">warning</span>
+      <span class="badge">610</span>
+    </button>
+    <a class="avatar" routerLink="/account-settings" routerLinkActive="active"
+       matTooltip="Account Settings" matTooltipPosition="right" aria-label="Profile">
+      <span class="msr">person</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Click-away backdrop for the more flyout -->
+<div class="more-backdrop" *ngIf="moreOpen" (click)="closeMore()"></div>

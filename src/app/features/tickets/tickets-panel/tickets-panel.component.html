@@ -1,0 +1,31 @@
+<aside class="panel">
+  <div class="panel-head">
+    <span class="title">
+      <span class="msr">confirmation_number</span>
+      TICKETS
+    </span>
+    <button class="collapse" aria-label="Collapse"><span class="msr">left_panel_close</span></button>
+  </div>
+
+  <div class="panel-body">
+    <ng-container *ngFor="let folder of folders">
+      <div class="folder" [class.active]="folder.active">
+        <span class="f-icon msr">
+          {{ folder.children ? 'folder' : 'inbox' }}
+        </span>
+        <span class="f-label">{{ folder.label }}</span>
+        <span class="f-count">{{ folder.count }}</span>
+      </div>
+
+      <div class="children" *ngIf="folder.children">
+        <div class="child" *ngFor="let child of folder.children">
+          <span class="c-label">{{ child.label }}</span>
+          <span class="c-meta">
+            <span class="alert" *ngIf="child.alert">({{ child.alert }})</span>
+            <span class="c-count">{{ child.count }}</span>
+          </span>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</aside>

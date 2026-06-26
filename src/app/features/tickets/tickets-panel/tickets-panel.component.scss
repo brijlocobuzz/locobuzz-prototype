@@ -1,0 +1,98 @@
+:host { display: block; height: 100%; }
+
+.panel {
+  width: 280px;
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+}
+.panel-head .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  letter-spacing: .6px;
+  color: var(--text-2);
+}
+.panel-head .title .msr { font-size: var(--font-size-18); color: var(--text-3); }
+.collapse {
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+}
+.collapse:hover { background: #f2f4f8; }
+
+.panel-body { flex: 1; overflow-y: auto; padding: 4px 10px 16px; }
+
+.folder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--text-1);
+}
+.folder:hover { background: #f5f7fb; }
+.folder.active { background: var(--brand); color: #fff; }
+.folder.active .f-icon { color: #fff; }
+.folder.active .f-count { background: rgba(255,255,255,.25); color: #fff; }
+
+.f-icon { font-size: var(--font-size-20); color: var(--text-3); }
+.f-label { flex: 1; font-size: var(--font-size-14); font-weight: 500; }
+.f-count {
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  background: #eef1f6;
+  color: var(--text-2);
+  padding: 2px 9px;
+  border-radius: 20px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.children {
+  margin: 2px 0 6px;
+  padding-left: 22px;
+  border-left: 1px solid var(--border-soft);
+  margin-left: 22px;
+}
+.child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.child:hover { background: #f5f7fb; }
+.c-label { font-size: var(--font-size-14); }
+.c-meta { display: flex; align-items: center; gap: 8px; }
+.alert { color: #e0414b; font-size: var(--font-size-12); font-weight: 600; }
+.c-count {
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  background: #eef1f6;
+  color: var(--text-2);
+  padding: 2px 8px;
+  border-radius: 20px;
+  min-width: 24px;
+  text-align: center;
+}

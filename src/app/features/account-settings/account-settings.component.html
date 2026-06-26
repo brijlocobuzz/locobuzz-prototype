@@ -1,0 +1,74 @@
+<div class="acct" [class.collapsed]="collapsed">
+  <!-- Title bar (over sidebar) -->
+  <div class="acct-titlebar">
+    <button class="back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+    <span class="acct-title">Account Settings</span>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="acct-sidebar">
+    <button class="ai-btn" [matTooltip]="collapsed ? 'Explore AI Features' : ''" matTooltipPosition="right">
+      <span class="msr">auto_awesome</span>
+      <span class="ai-text">Explore AI Features</span>
+    </button>
+
+    <div class="acct-search">
+      <span class="msr">search</span>
+      <input type="text" placeholder="Search" />
+    </div>
+
+    <nav class="acct-nav">
+      <ng-container *ngFor="let item of nav">
+        <button
+          class="nav-row level-0"
+          [class.active]="active === item.label"
+          [matTooltip]="collapsed ? item.label : ''"
+          matTooltipPosition="right"
+          (click)="toggle(item)">
+          <span class="n-icon msr">{{ item.icon }}</span>
+          <span class="n-label">{{ item.label }}</span>
+          <span class="n-chev msr" *ngIf="item.expandable">
+            {{ open[item.label] ? 'expand_less' : 'expand_more' }}
+          </span>
+        </button>
+
+        <div class="subnav" *ngIf="item.children && open[item.label]">
+          <button
+            class="nav-row level-1"
+            *ngFor="let child of item.children"
+            [class.active]="active === child.label"
+            [matTooltip]="collapsed ? child.label : ''"
+            matTooltipPosition="right"
+            (click)="toggle(child)">
+            <span class="n-icon msr">{{ child.icon }}</span>
+            <span class="n-label">{{ child.label }}</span>
+            <span class="n-chev msr" *ngIf="child.expandable">
+              {{ open[child.label] ? 'expand_less' : 'expand_more' }}
+            </span>
+          </button>
+        </div>
+      </ng-container>
+    </nav>
+
+    <div class="acct-foot">
+      <button class="collapse-row" (click)="toggleCollapse()"
+              [matTooltip]="collapsed ? 'Expand' : ''" matTooltipPosition="right">
+        <span class="msr">{{ collapsed ? 'left_panel_open' : 'left_panel_close' }}</span>
+        <span class="collapse-text">Collapse</span>
+      </button>
+      <div class="user-row">
+        <span class="u-avatar">BP</span>
+        <span class="u-meta">
+          <span class="u-name">Brij Patil</span>
+          <span class="u-role">Supervisor Admin ...</span>
+        </span>
+        <span class="msr u-chev">expand_less</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <section class="acct-content">
+    <router-outlet />
+  </section>
+</div>

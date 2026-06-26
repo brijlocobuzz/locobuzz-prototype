@@ -1,0 +1,13 @@
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-topbar',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './topbar.component.html',
+  styleUrl: './topbar.component.scss',
+})
+export class TopbarComponent {
+  @Input() searchPlaceholder = 'Search for a Ticket ID...';
+}

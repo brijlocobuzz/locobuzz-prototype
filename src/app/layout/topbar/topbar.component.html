@@ -1,0 +1,33 @@
+<header class="topbar">
+  <div class="search">
+    <span class="msr">search</span>
+    <input type="text" [placeholder]="searchPlaceholder" />
+  </div>
+
+  <button class="filter-pill">
+    <span class="lbl">Brands:</span>
+    <span class="val">All</span>
+    <span class="msr chev">expand_more</span>
+  </button>
+
+  <button class="filter-pill">
+    <span class="msr cal">calendar_today</span>
+    <span class="val">Last 2 Days</span>
+    <span class="msr chev">expand_more</span>
+  </button>
+
+  <div class="spacer"></div>
+
+  <div class="actions">
+    <button class="icon-btn" aria-label="Saved views"><span class="msr">bookmark</span></button>
+    <button class="icon-btn" aria-label="Filter"><span class="msr">filter_alt</span></button>
+    <button class="icon-btn" aria-label="Sort"><span class="msr">sort</span></button>
+    <button class="icon-btn" aria-label="More"><span class="msr">more_vert</span></button>
+    <span class="sep"></span>
+    <button class="icon-btn" aria-label="Preview"><span class="msr">visibility</span></button>
+    <div class="view-toggle">
+      <button class="active" aria-label="List view"><span class="msr">view_list</span></button>
+      <button aria-label="Board view"><span class="msr">view_column</span></button>
+    </div>
+  </div>
+</header>

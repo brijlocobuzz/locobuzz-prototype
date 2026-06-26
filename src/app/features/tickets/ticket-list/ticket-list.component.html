@@ -1,0 +1,72 @@
+<div class="list">
+  <article class="ticket" *ngFor="let t of tickets">
+    <!-- Header -->
+    <div class="t-head">
+      <input type="checkbox" class="t-check" />
+
+      <div class="t-avatar" [style.background]="t.avatarColor">
+        {{ t.initials }}
+        <span class="net net-{{ t.network }}">
+          <span class="msr">{{ networkIcon(t.network) }}</span>
+        </span>
+      </div>
+
+      <div class="t-who">
+        <div class="t-name-row">
+          <span class="t-name">{{ t.name }}</span>
+          <span class="t-handle" *ngIf="t.handle">{{ t.handle }}</span>
+          <span class="t-group" *ngIf="t.group"><span class="msr">group</span>{{ t.group }}</span>
+        </div>
+        <div class="t-sub">
+          <span class="dm">DM</span>
+          <span class="chan">{{ t.channel }}</span>
+          <span class="dot">•</span>
+          <span class="brand"><span class="msr">storefront</span>{{ t.brand }}</span>
+        </div>
+      </div>
+
+      <div class="t-meta">
+        <span class="assignee" *ngIf="t.assignee">
+          <span class="a-dot"></span>{{ t.assignee }}
+        </span>
+        <span class="comments"><span class="msr">chat_bubble</span>{{ t.comments }}</span>
+        <span class="chip urgent" *ngIf="t.priority === 'Urgent'">
+          <span class="msr">local_fire_department</span>Urgent
+        </span>
+        <span class="chip sla" [class.breached]="t.sla === 'Breached'">
+          <span class="msr">{{ t.sla === 'Breached' ? 'gpp_bad' : 'verified_user' }}</span>{{ t.sla }}
+        </span>
+        <span class="chip age"><span class="msr">timer</span>{{ t.age }}</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <p class="t-body">{{ t.message }}</p>
+
+    <div class="t-remaining" *ngIf="t.remaining">
+      <span class="msr">undo</span>{{ t.remaining }}
+    </div>
+
+    <!-- Footer -->
+    <div class="t-foot">
+      <div class="foot-left">
+        <span class="ticket-id" *ngIf="!t.tags"><span class="msr">confirmation_number</span>{{ t.id }}</span>
+        <ng-container *ngIf="t.tags">
+          <span class="tag" *ngFor="let tag of t.tags" [class.moderation]="tag.tone === 'moderation'">
+            <span class="msr">{{ tag.tone === 'moderation' ? 'shield' : 'sell' }}</span>{{ tag.label }}
+          </span>
+        </ng-container>
+      </div>
+
+      <div class="foot-actions">
+        <span class="ticket-id alt" *ngIf="t.tags"><span class="msr">confirmation_number</span>{{ t.id }}</span>
+        <button class="act"><span class="msr">desktop_windows</span>Open</button>
+        <button class="act assign"><span class="msr">person_add</span></button>
+        <button class="act close"><span class="msr">cancel</span>Close<span class="msr chev">expand_more</span></button>
+        <button class="act reply"><span class="msr">reply</span>Reply</button>
+        <button class="act more"><span class="msr">more_horiz</span></button>
+        <button class="act eye"><span class="msr">visibility</span></button>
+      </div>
+    </div>
+  </article>
+</div>

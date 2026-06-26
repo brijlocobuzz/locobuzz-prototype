@@ -1,0 +1,95 @@
+:host { display: block; }
+
+.topbar {
+  height: 64px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 320px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #fafbfc;
+  color: var(--text-3);
+}
+.search:focus-within { border-color: var(--brand); background: #fff; }
+.search .msr { font-size: var(--font-size-20); }
+.search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font: inherit;
+  font-size: var(--font-size-14);
+  color: var(--text-1);
+}
+
+.filter-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-14);
+  color: var(--text-1);
+}
+.filter-pill:hover { border-color: #cdd4e0; }
+.filter-pill .lbl { color: var(--text-3); }
+.filter-pill .val { font-weight: 600; }
+.filter-pill .chev { font-size: var(--font-size-20); color: var(--text-3); }
+.filter-pill .cal { font-size: var(--font-size-18); color: var(--text-3); }
+
+.spacer { flex: 1; }
+
+.actions { display: flex; align-items: center; gap: 4px; }
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.icon-btn:hover { background: #f2f4f8; border-color: var(--border); }
+.icon-btn .msr { font-size: var(--font-size-21); }
+
+.sep { width: 1px; height: 24px; background: var(--border); margin: 0 6px; }
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-left: 4px;
+}
+.view-toggle button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: #fff;
+  color: var(--text-3);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.view-toggle button.active { background: var(--brand-soft); color: var(--brand); }
+.view-toggle button .msr { font-size: var(--font-size-21); }

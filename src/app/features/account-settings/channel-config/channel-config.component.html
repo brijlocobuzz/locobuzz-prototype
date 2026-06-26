@@ -1,0 +1,125 @@
+<!-- Toolbar -->
+<header class="cc-toolbar">
+  <button class="brand-pill">
+    <span class="lbl">Brands:</span>
+    <span class="val">singlestore1</span>
+    <span class="msr chev">expand_more</span>
+  </button>
+  <button class="icon-btn"><span class="msr">filter_alt</span></button>
+
+  <div class="spacer"></div>
+
+  <div class="stat">
+    <span class="stat-title">Social Profiles</span>
+    <span class="stat-box">
+      <span class="dot green"></span><b>2,033</b> Active
+      <span class="divider"></span><b>3,000</b> Total
+    </span>
+  </div>
+  <div class="stat">
+    <span class="stat-title">Other Profiles</span>
+    <span class="stat-box">
+      <span class="dot green"></span><b>1,480</b> Active
+      <span class="divider"></span><b>2,100</b> Total
+    </span>
+  </div>
+
+  <button class="add-btn"><span class="msr">add_circle</span>Add Channel</button>
+</header>
+
+<!-- Body -->
+<div class="cc-body">
+  <!-- Channels panel -->
+  <aside class="cc-channels">
+    <div class="ch-head">
+      <h3>Channels</h3>
+      <span class="ch-sub">6 of 29 configured</span>
+    </div>
+
+    <div class="ch-list">
+      <ng-container *ngFor="let g of groups">
+        <button class="grp" (click)="toggle(g)">
+          <span class="msr g-chev">{{ expanded[g.label] ? 'expand_more' : 'chevron_right' }}</span>
+          <span class="g-label">{{ g.label }}</span>
+          <span class="g-count" *ngIf="g.count">{{ g.count }}</span>
+        </button>
+
+        <div class="ch-items" *ngIf="g.channels && expanded[g.label]">
+          <button class="ch-item" *ngFor="let c of g.channels" [class.active]="c.active">
+            <span class="c-icon" [style.background]="c.color"><span class="msr">{{ c.icon }}</span></span>
+            <span class="c-label">{{ c.label }}</span>
+            <span class="c-expired" *ngIf="c.expiredBadge">Expired: {{ c.expiredBadge }}</span>
+            <span class="c-count" *ngIf="!c.empty">{{ c.count }}</span>
+            <span class="c-empty" *ngIf="c.empty"></span>
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </aside>
+
+  <!-- Profiles -->
+  <section class="cc-profiles">
+    <div class="pf-head">
+      <span class="pf-title">
+        <span class="pf-fb"><span class="msr">thumb_up</span></span>
+        Facebook profiles ({{ profiles.length }})
+      </span>
+      <div class="pf-tools">
+        <div class="view-toggle">
+          <button><span class="msr">view_list</span></button>
+          <button class="active"><span class="msr">grid_view</span></button>
+        </div>
+        <div class="pf-search">
+          <span class="msr">search</span>
+          <input type="text" placeholder="Search Page name" />
+        </div>
+      </div>
+    </div>
+
+    <div class="pf-grid">
+      <article class="pf-card" *ngFor="let p of profiles">
+        <div class="pf-card-head">
+          <div class="pf-avatar" [style.background]="p.avatarColor">
+            {{ p.initials }}
+            <span class="pf-net"><span class="msr">thumb_up</span></span>
+          </div>
+          <div class="pf-who">
+            <span class="pf-name">{{ p.name }}</span>
+            <span class="pf-owner"><span class="msr">person</span>{{ p.owner }}</span>
+          </div>
+          <span class="pf-status"><span class="msr">check_circle</span>{{ p.status }}</span>
+        </div>
+
+        <div class="pf-dates">
+          <div class="date-box">
+            <span class="d-label"><span class="msr">event</span>ADDED ON :</span>
+            <span class="d-val">{{ p.addedOn }}</span>
+          </div>
+          <div class="date-box">
+            <span class="d-label"><span class="msr">schedule</span>LAST UPDATED ON :</span>
+            <span class="d-val">{{ p.updatedOn }}</span>
+          </div>
+        </div>
+
+        <div class="pf-mentions">
+          <div class="m-head">
+            <span class="m-title">MENTIONS TYPES BEING COLLECTED</span>
+            <button class="m-edit"><span class="msr">edit</span>EDIT</button>
+          </div>
+          <div class="m-chips">
+            <span class="m-chip" *ngFor="let t of p.mentionTypes">
+              <span class="msr">{{ t === 'Messages' ? 'chat' : 'mode_comment' }}</span>{{ t }}
+            </span>
+            <span class="m-chip more">+{{ p.moreTypes }} more</span>
+          </div>
+        </div>
+
+        <div class="pf-actions">
+          <button class="pa reauth"><span class="msr">autorenew</span>Reauthorize</button>
+          <button class="pa delete"><span class="msr">delete</span>Delete</button>
+          <button class="pa pause"><span class="msr">pause</span>Pause</button>
+        </div>
+      </article>
+    </div>
+  </section>
+</div>
