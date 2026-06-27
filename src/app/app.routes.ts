@@ -4,6 +4,7 @@ import { TicketsPageComponent } from './features/tickets/tickets-page.component'
 import { PlaceholderPageComponent } from './features/placeholder/placeholder-page.component';
 import { AccountSettingsComponent } from './features/account-settings/account-settings.component';
 import { ChannelConfigComponent } from './features/account-settings/channel-config/channel-config.component';
+import { YourProfileComponent } from './features/account-settings/your-profile/your-profile.component';
 import { AccountPlaceholderComponent } from './features/account-settings/account-placeholder.component';
 
 export const routes: Routes = [
@@ -30,6 +31,7 @@ export const routes: Routes = [
     component: AccountSettingsComponent,
     children: [
       { path: '', redirectTo: 'channel-configuration', pathMatch: 'full' },
+      { path: 'your-profile', component: YourProfileComponent },
       { path: 'channel-configuration', component: ChannelConfigComponent },
       // Every other Account Settings section falls through to a placeholder.
       { path: ':section', component: AccountPlaceholderComponent },
