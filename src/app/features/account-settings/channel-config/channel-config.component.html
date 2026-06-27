@@ -24,8 +24,11 @@
     </span>
   </div>
 
-  <button class="add-btn"><span class="msr">add_circle</span>Add Channel</button>
+  <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Channel</button>
 </header>
+
+<!-- Add-channel wizard -->
+<app-add-channel-wizard *ngIf="wizardOpen" (closed)="wizardOpen = false"></app-add-channel-wizard>
 
 <!-- Body -->
 <div class="cc-body">
@@ -65,6 +68,10 @@
         Facebook profiles ({{ profiles.length }})
       </span>
       <div class="pf-tools">
+        <div class="style-toggle">
+          <button [class.active]="cardStyle === 'classic'" (click)="cardStyle = 'classic'">Classic</button>
+          <button [class.active]="cardStyle === 'vibrant'" (click)="cardStyle = 'vibrant'">Vibrant</button>
+        </div>
         <div class="view-toggle">
           <button><span class="msr">view_list</span></button>
           <button class="active"><span class="msr">grid_view</span></button>
@@ -77,47 +84,57 @@
     </div>
 
     <div class="pf-grid">
-      <article class="pf-card" *ngFor="let p of profiles">
-        <div class="pf-card-head">
-          <div class="pf-avatar" [style.background]="p.avatarColor">
+      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" *ngFor="let p of profiles">
+        <span class="card-accent"></span>
+
+        <!-- header -->
+        <div class="card-head">
+          <div class="card-avatar" [style.background]="p.avatarColor">
             {{ p.initials }}
-            <span class="pf-net"><span class="msr">thumb_up</span></span>
+            <span class="card-net"><span class="msr">thumb_up</span></span>
           </div>
-          <div class="pf-who">
-            <span class="pf-name">{{ p.name }}</span>
-            <span class="pf-owner"><span class="msr">person</span>{{ p.owner }}</span>
+          <div class="card-who">
+            <span class="card-name">{{ p.name }}</span>
+            <span class="card-owner"><span class="msr">person</span>{{ p.owner }}</span>
           </div>
-          <span class="pf-status"><span class="msr">check_circle</span>{{ p.status }}</span>
+          <span class="card-status"><span class="msr">verified</span>{{ p.status }}</span>
         </div>
 
-        <div class="pf-dates">
-          <div class="date-box">
-            <span class="d-label"><span class="msr">event</span>ADDED ON :</span>
-            <span class="d-val">{{ p.addedOn }}</span>
-          </div>
-          <div class="date-box">
-            <span class="d-label"><span class="msr">schedule</span>LAST UPDATED ON :</span>
-            <span class="d-val">{{ p.updatedOn }}</span>
-          </div>
-        </div>
-
-        <div class="pf-mentions">
-          <div class="m-head">
-            <span class="m-title">MENTIONS TYPES BEING COLLECTED</span>
-            <button class="m-edit"><span class="msr">edit</span>EDIT</button>
-          </div>
-          <div class="m-chips">
-            <span class="m-chip" *ngFor="let t of p.mentionTypes">
-              <span class="msr">{{ t === 'Messages' ? 'chat' : 'mode_comment' }}</span>{{ t }}
+        <!-- mentions -->
+        <div class="card-mentions">
+          <div class="cm-head">
+            <span class="cm-title">
+              <span class="dot"></span>MENTIONS COLLECTED
+              <span class="cm-count">{{ p.mentionTypes.length }}</span>
             </span>
-            <span class="m-chip more">+{{ p.moreTypes }} more</span>
+            <button class="cm-edit"><span class="msr">edit</span>Edit</button>
+          </div>
+          <div class="cm-chips">
+            <span class="cm-chip" *ngFor="let t of p.mentionTypes; let ci = index"
+                  [ngClass]="'tone-' + (ci % 4)">
+              <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
+            </span>
           </div>
         </div>
 
-        <div class="pf-actions">
-          <button class="pa reauth"><span class="msr">autorenew</span>Reauthorize</button>
-          <button class="pa delete"><span class="msr">delete</span>Delete</button>
-          <button class="pa pause"><span class="msr">pause</span>Pause</button>
+        <!-- alert -->
+        <div class="card-alert" *ngIf="p.alert">
+          <span class="ca-msg"><span class="msr">warning</span>{{ p.alert.text }}</span>
+          <span class="ca-badge">{{ p.alert.badge }}</span>
+        </div>
+
+        <!-- compact dates -->
+        <div class="card-dates">
+          <span class="cd-item"><span class="msr">calendar_today</span>Added <b>{{ shortDate(p.addedOn) }}</b></span>
+          <span class="cd-sep">·</span>
+          <span class="cd-item"><span class="msr">schedule</span>Updated <b>{{ shortDate(p.updatedOn) }}</b></span>
+        </div>
+
+        <!-- actions -->
+        <div class="card-actions">
+          <button class="ca-btn"><span class="msr">autorenew</span>Reauthorize</button>
+          <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+          <button class="ca-btn"><span class="msr">pause</span>Pause</button>
         </div>
       </article>
     </div>

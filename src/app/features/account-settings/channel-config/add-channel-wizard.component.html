@@ -1,0 +1,261 @@
+<div class="wz-backdrop" (click)="close()"></div>
+
+<div class="wz-modal" role="dialog" aria-modal="true">
+
+  <!-- celebration screen (after Finish) -->
+  <div class="wz-celebrate" *ngIf="celebrating">
+    <span class="wz-confetti">
+      <i *ngFor="let p of confetti" [class.round]="p.round"
+         [style.left.%]="p.left" [style.background]="p.color"
+         [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.duration"
+         [style.--drift.px]="p.drift" [style.--rot.deg]="p.rotate"></i>
+    </span>
+
+    <div class="wz-burst">
+      <span class="wz-ring"></span>
+      <span class="wz-ring r2"></span>
+      <span class="wz-badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="wz-badge-circle" cx="26" cy="26" r="24"></circle>
+          <path class="wz-badge-check" d="M16 27 l7 7 l14 -15"></path>
+        </svg>
+      </span>
+    </div>
+
+    <h2 class="wz-celebrate-title">Channel connected!</h2>
+    <p class="wz-celebrate-sub">{{ selected?.label }} is now configured and listening for mentions.</p>
+
+    <div class="wz-celebrate-pill">
+      <span class="wz-mini-ic" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+        <svg *ngIf="brandSvg(selected?.id) as d; else celebGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path [attr.d]="d"></path>
+        </svg>
+        <ng-template #celebGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+      </span>
+      {{ selected?.label }} · {{ connectionLabel }}
+    </div>
+
+    <button class="wz-next finish wz-celebrate-done" (click)="complete()">
+      <span class="msr">arrow_forward</span>Go to channel
+    </button>
+  </div>
+
+  <ng-container *ngIf="!celebrating">
+  <!-- header -->
+  <header class="wz-head">
+    <span class="wz-spark"><span class="msr">auto_awesome</span></span>
+    <div class="wz-titles" *ngIf="current === 'choose'; else configHead">
+      <h2>Add channel</h2>
+      <p>Connect a channel to start listening &amp; engaging across platforms.</p>
+    </div>
+    <ng-template #configHead>
+      <div class="wz-titles">
+        <h2>Configure {{ selected?.label }}</h2>
+        <p>Follow the steps to finish setting up this channel.</p>
+      </div>
+    </ng-template>
+    <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
+  </header>
+
+  <!-- stepper -->
+  <nav class="wz-stepper">
+    <ng-container *ngFor="let s of steps; let i = index; let last = last">
+      <div class="wz-step" [class.done]="i < stepIndex" [class.active]="i === stepIndex">
+        <span class="wz-dot">
+          <span class="msr" *ngIf="i < stepIndex">check</span>
+          <ng-container *ngIf="i >= stepIndex">{{ i + 1 }}</ng-container>
+        </span>
+        <span class="wz-step-label">{{ s.label }}</span>
+      </div>
+      <span class="wz-conn" *ngIf="!last" [class.done]="i < stepIndex"></span>
+    </ng-container>
+  </nav>
+
+  <!-- body -->
+  <div class="wz-body" [ngSwitch]="current">
+
+    <!-- 1 · choose channel -->
+    <section *ngSwitchCase="'choose'" class="wz-choose">
+      <div class="wz-search">
+        <span class="msr">search</span>
+        <input type="text" placeholder="Search channels…" [(ngModel)]="search" />
+      </div>
+
+      <div class="wz-empty" *ngIf="!filteredGroups().length">
+        <span class="msr">search_off</span> No channels match “{{ search }}”.
+      </div>
+
+      <div class="wz-group" *ngFor="let g of filteredGroups()">
+        <h4 class="wz-group-title">{{ g.label }}</h4>
+        <div class="wz-tiles">
+          <button class="wz-tile" *ngFor="let c of g.channels"
+                  [class.sel]="selected?.id === c.id"
+                  (click)="pickChannel(c)" (dblclick)="next()">
+            <span class="wz-tag" *ngIf="c.tag">{{ c.tag }}</span>
+            <span class="wz-tile-icon" [style.background]="tint(c.color)" [style.color]="c.color">
+              <svg *ngIf="brandSvg(c.id) as d; else tileGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path [attr.d]="d"></path>
+              </svg>
+              <ng-template #tileGlyph><span class="msr">{{ c.icon }}</span></ng-template>
+            </span>
+            <span class="wz-tile-label">{{ c.label }}</span>
+            <span class="wz-tile-check"><span class="msr">check_circle</span></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · connection type (X / FB Groups) -->
+    <section *ngSwitchCase="'connection'" class="wz-center">
+      <h3 class="wz-q">How do you want to connect {{ selected?.label }}?</h3>
+      <p class="wz-sub">Choose owned to engage from your account, or public to listen only.</p>
+
+      <div class="wz-choice-grid">
+        <button class="wz-choice" [class.sel]="connectionType === 'owned'" (click)="connectionType = 'owned'">
+          <span class="wz-choice-ic"><span class="msr">lock</span></span>
+          <span class="wz-choice-name">Owned account</span>
+          <span class="wz-choice-desc">Authenticate with your own account to listen and reply.</span>
+          <ul class="wz-bullets">
+            <li><span class="msr">check</span>Full engagement</li>
+            <li><span class="msr">check</span>Post &amp; reply</li>
+            <li><span class="msr">check</span>Private metrics</li>
+          </ul>
+        </button>
+
+        <button class="wz-choice" [class.sel]="connectionType === 'public'" (click)="connectionType = 'public'">
+          <span class="wz-choice-ic"><span class="msr">public</span></span>
+          <span class="wz-choice-name">Public source</span>
+          <span class="wz-choice-desc">Track a public profile or URL. Listening only, no replies.</span>
+          <ul class="wz-bullets">
+            <li><span class="msr">check</span>No login required</li>
+            <li><span class="msr">check</span>Listening only</li>
+            <li><span class="msr">check</span>Anonymous mentions</li>
+          </ul>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3a · authenticate (OAuth) -->
+    <section *ngSwitchCase="'authenticate'" class="wz-center wz-auth">
+      <span class="wz-brand" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+        <svg *ngIf="brandSvg(selected?.id) as d; else authGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path [attr.d]="d"></path>
+        </svg>
+        <ng-template #authGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+      </span>
+      <h3 class="wz-q">Authenticate with {{ selected?.label }}</h3>
+      <p class="wz-sub">You’ll be redirected to {{ selected?.label }} to authorize Locobuzz. We never store your password.</p>
+
+      <div class="wz-auth-box" [class.ok]="authDone">
+        <button *ngIf="!authDone && !authLoading" class="wz-login" (click)="startAuth()">
+          Login with {{ selected?.label }}
+        </button>
+        <span *ngIf="authLoading" class="wz-auth-loading">
+          <span class="wz-spinner"></span>Authenticating…
+        </span>
+        <span *ngIf="authDone" class="wz-auth-ok">
+          <span class="msr">check_circle</span>Authenticated successfully
+        </span>
+      </div>
+      <span class="wz-secure"><span class="msr">verified_user</span>Secure OAuth · revoke access anytime</span>
+    </section>
+
+    <!-- 3b · public handle -->
+    <section *ngSwitchCase="'public'" class="wz-center">
+      <span class="wz-brand" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+        <svg *ngIf="brandSvg(selected?.id) as d; else pubGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path [attr.d]="d"></path>
+        </svg>
+        <ng-template #pubGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+      </span>
+      <h3 class="wz-q">Add a public {{ selected?.label }} source</h3>
+      <p class="wz-sub">You’ll be able to listen but not engage with users. All mentions will come in as anonymous.</p>
+
+      <div class="wz-field">
+        <label>Add public {{ selected?.label }} handle</label>
+        <input type="text" placeholder="&#64;john_doe" [(ngModel)]="publicHandle" />
+        <span class="wz-hint">Ex. &#64;john_doe</span>
+      </div>
+    </section>
+
+    <!-- 3c · select pages -->
+    <section *ngSwitchCase="'pages'" class="wz-pages">
+      <div class="wz-pages-head">
+        <div>
+          <h3 class="wz-q left">Select pages to connect</h3>
+          <p class="wz-sub left">Choose one or more pages from your {{ selected?.label }} account.</p>
+        </div>
+        <button class="wz-selectall" (click)="toggleAllPages()">
+          {{ allPagesSelected ? 'Clear all' : 'Select all' }}
+        </button>
+      </div>
+
+      <div class="wz-page-list">
+        <button class="wz-page" *ngFor="let p of pages"
+                [class.sel]="selectedPages.has(p.id)" (click)="togglePage(p.id)">
+          <span class="wz-check" [class.on]="selectedPages.has(p.id)">
+            <span class="msr" *ngIf="selectedPages.has(p.id)">check</span>
+          </span>
+          <span class="wz-page-av" [style.background]="p.color">{{ p.initials }}</span>
+          <span class="wz-page-who">
+            <span class="wz-page-name">{{ p.name }}</span>
+            <span class="wz-page-sub">{{ p.followers }}</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 4 · review & finish -->
+    <section *ngSwitchCase="'review'" class="wz-center wz-review">
+      <span class="wz-done"><span class="msr">task_alt</span></span>
+      <h3 class="wz-q">Ready to finish</h3>
+      <p class="wz-sub">Review your configuration and click Finish to add this channel.</p>
+
+      <div class="wz-summary">
+        <div class="wz-row">
+          <span class="wz-row-k">Channel</span>
+          <span class="wz-row-v">
+            <span class="wz-mini-ic" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+              <svg *ngIf="brandSvg(selected?.id) as d; else miniGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path [attr.d]="d"></path>
+              </svg>
+              <ng-template #miniGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+            </span>
+            {{ selected?.label }}
+          </span>
+        </div>
+        <div class="wz-row">
+          <span class="wz-row-k">Connection type</span>
+          <span class="wz-row-v"><span class="wz-pill">{{ connectionLabel }}</span></span>
+        </div>
+        <div class="wz-row" *ngIf="current === 'review' && publicHandle && (selected?.flow === 'choice' || selected?.flow === 'handle')">
+          <span class="wz-row-k">Public source</span>
+          <span class="wz-row-v mono">{{ publicHandle }}</span>
+        </div>
+        <div class="wz-row" *ngIf="selectedPageList.length">
+          <span class="wz-row-k">Pages</span>
+          <span class="wz-row-v chips">
+            <span class="wz-pill" *ngFor="let p of selectedPageList">{{ p.name }}</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- footer -->
+  <footer class="wz-foot">
+    <span class="wz-meta">Step {{ stepIndex + 1 }} of {{ totalSteps }} · {{ steps[stepIndex].label }}</span>
+    <div class="wz-foot-btns">
+      <button class="wz-back" *ngIf="stepIndex > 0" (click)="back()">
+        <span class="msr">arrow_back</span>Back
+      </button>
+      <button class="wz-next" [class.finish]="onReview" [disabled]="!canContinue" (click)="next()">
+        <span class="msr" *ngIf="onReview">check</span>
+        {{ onReview ? 'Finish setup' : 'Continue' }}
+        <span class="msr" *ngIf="!onReview">arrow_forward</span>
+      </button>
+    </div>
+  </footer>
+  </ng-container>
+</div>
