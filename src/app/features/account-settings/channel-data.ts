@@ -42,7 +42,7 @@ export interface ChannelProfile {
   owner: string;
   initials: string;
   avatarColor: string;
-  status: 'Owned' | 'Connected';
+  status: 'Owned' | 'Public';
   addedOn: string;
   updatedOn: string;
   mentionTypes: string[];   // all types shown, no overflow
@@ -61,6 +61,64 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     mentionTypes: ['User Comments', 'Messages', 'Visitor Posts', 'Mentions', 'Reviews', 'Recommendations'],
     alert: { text: 'Access token expired', badge: 'ACTION NEEDED' },
   },
+  {
+    name: 'Acme Official', owner: 'Priya Menon', initials: 'A', avatarColor: '#2563eb',
+    status: 'Owned', addedOn: 'May 03, 2026 9:21 AM', updatedOn: 'Jun 25, 2026 4:42 PM',
+    mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions'],
+  },
+  {
+    name: 'Acme Support', owner: 'Daniel Kim', initials: 'A', avatarColor: '#16b364',
+    status: 'Public', addedOn: 'Apr 18, 2026 2:05 PM', updatedOn: 'Jun 24, 2026 11:30 AM',
+    mentionTypes: ['Messages', 'User Comments', 'Reviews', 'Ratings', 'Recommendations'],
+  },
+  {
+    name: 'Acme India', owner: 'Ravi Shah', initials: 'A', avatarColor: '#e1306c',
+    status: 'Owned', addedOn: 'Mar 27, 2026 6:48 PM', updatedOn: 'Jun 20, 2026 8:15 AM',
+    mentionTypes: ['User Comments', 'User Posts', 'Mentions', 'Reviews'],
+    alert: { text: 'Access token expired', badge: 'ACTION NEEDED' },
+  },
+  {
+    name: 'Acme Labs', owner: 'Eva Cruz', initials: 'A', avatarColor: '#e37400',
+    status: 'Public', addedOn: 'Feb 09, 2026 10:12 AM', updatedOn: 'Jun 18, 2026 3:27 PM',
+    mentionTypes: ['Messages', 'Visitor Posts', 'Mentions', 'Reviews', 'Ratings', 'Recommendations'],
+  },
+  {
+    name: 'Acme Store', owner: 'Tom Iverson', initials: 'A', avatarColor: '#00bcd4',
+    status: 'Owned', addedOn: 'Jan 15, 2026 8:40 AM', updatedOn: 'Jun 17, 2026 1:05 PM',
+    mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Reviews', 'Ratings'],
+  },
+  {
+    name: 'Acme Careers', owner: 'Lena Frost', initials: 'A', avatarColor: '#0caa41',
+    status: 'Public', addedOn: 'Dec 21, 2025 4:18 PM', updatedOn: 'Jun 15, 2026 10:22 AM',
+    mentionTypes: ['User Posts', 'Mentions', 'Reviews'],
+    alert: { text: 'Access token expired', badge: 'ACTION NEEDED' },
+  },
+  {
+    name: 'Acme Global', owner: 'Marcus Webb', initials: 'A', avatarColor: '#5c6bc0',
+    status: 'Owned', addedOn: 'Nov 30, 2025 11:11 AM', updatedOn: 'Jun 12, 2026 6:48 PM',
+    mentionTypes: ['User Comments', 'Messages', 'Visitor Posts', 'Mentions', 'Reviews', 'Recommendations'],
+  },
+  {
+    name: 'Acme Events', owner: 'Aria Tan', initials: 'A', avatarColor: '#ff7043',
+    status: 'Public', addedOn: 'Nov 08, 2025 2:55 PM', updatedOn: 'Jun 10, 2026 9:30 AM',
+    mentionTypes: ['Messages', 'User Comments', 'Mentions', 'Ratings'],
+  },
+  {
+    name: 'Acme Cloud', owner: 'Noah Bennett', initials: 'A', avatarColor: '#7c4dff',
+    status: 'Owned', addedOn: 'Oct 19, 2025 7:02 PM', updatedOn: 'Jun 08, 2026 3:14 PM',
+    mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions', 'Reviews'],
+  },
+  {
+    name: 'Acme Retail', owner: 'Sara Oyelaran', initials: 'A', avatarColor: '#ec407a',
+    status: 'Public', addedOn: 'Sep 27, 2025 10:45 AM', updatedOn: 'Jun 05, 2026 12:00 PM',
+    mentionTypes: ['User Comments', 'Visitor Posts', 'Reviews', 'Ratings', 'Recommendations'],
+    alert: { text: 'Access token expired', badge: 'ACTION NEEDED' },
+  },
+  {
+    name: 'Acme Studio', owner: 'Jon Hale', initials: 'A', avatarColor: '#26a69a',
+    status: 'Owned', addedOn: 'Sep 02, 2025 5:36 PM', updatedOn: 'Jun 02, 2026 8:50 AM',
+    mentionTypes: ['Messages', 'User Comments', 'User Posts', 'Mentions', 'Reviews', 'Ratings'],
+  },
 ];
 
 /* ===================================================================
@@ -73,8 +131,9 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
  *  - 'pages'   : OAuth then pick pages/accounts      (Facebook)       → review
  *  - 'oauth'   : OAuth only                          (Instagram, …)   → review
  *  - 'handle'  : public handle/URL only, listen-only (Reddit, …)      → review
+ *  - 'url'     : no auth — paste a page URL w/ guidance (E-Commerce)  → review
  */
-export type ChannelFlow = 'choice' | 'pages' | 'oauth' | 'handle';
+export type ChannelFlow = 'choice' | 'pages' | 'oauth' | 'handle' | 'url';
 
 export interface CatalogChannel {
   id: string;
@@ -157,7 +216,7 @@ export const CHANNEL_CATALOG: CatalogGroup[] = [
       { id: 'booking',    label: 'Booking',          icon: 'hotel',         color: '#003580', flow: 'handle' },
       { id: 'expedia',    label: 'Expedia',          icon: 'flight',        color: '#fbc02d', flow: 'handle' },
       { id: 'ganalytics', label: 'Google Analytics', icon: 'analytics',     color: '#e37400', flow: 'oauth'  },
-      { id: 'ecommerce',  label: 'E-Commerce',       icon: 'shopping_cart', color: '#7c4dff', flow: 'oauth'  },
+      { id: 'ecommerce',  label: 'E-Commerce',       icon: 'shopping_cart', color: '#7c4dff', flow: 'url'    },
       { id: 'voice',      label: 'Voice',            icon: 'call',          color: '#34a853', flow: 'oauth'  },
     ],
   },

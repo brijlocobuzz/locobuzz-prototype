@@ -178,6 +178,43 @@
       </div>
     </section>
 
+    <!-- 3d · store URL (no auth — e.g. E-Commerce) -->
+    <section *ngSwitchCase="'url'" class="wz-center">
+      <span class="wz-brand" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+        <svg *ngIf="brandSvg(selected?.id) as d; else urlGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path [attr.d]="d"></path>
+        </svg>
+        <ng-template #urlGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+      </span>
+      <h3 class="wz-q">Add your {{ selected?.label }} page URL</h3>
+      <p class="wz-sub">No login needed. Paste the public web address of the product or store page you
+        want to track — we’ll monitor its reviews, ratings &amp; Q&amp;A automatically.</p>
+
+      <div class="wz-field">
+        <label>Store / product page URL</label>
+        <div class="wz-url">
+          <span class="msr">link</span>
+          <input type="url" inputmode="url" placeholder="https://www.example.com/product/12345"
+                 [(ngModel)]="storeUrl" />
+        </div>
+        <span class="wz-hint">Example: <code>https://www.amazon.in/dp/B0CXXXX</code> &nbsp;·&nbsp;
+          <code>https://yourstore.myshopify.com/products/abc</code></span>
+      </div>
+
+      <!-- guidance -->
+      <div class="wz-guide">
+        <span class="wz-guide-ic"><span class="msr">info</span></span>
+        <div class="wz-guide-body">
+          <b>Which URL should I add?</b>
+          <ul>
+            <li>Use the <b>full public page link</b> — it must start with <code>https://</code>.</li>
+            <li>Point to the <b>product, store or seller page</b>, not your seller dashboard or account settings.</li>
+            <li>Make sure the page is <b>publicly visible</b> (opens without a login).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- 3c · select pages -->
     <section *ngSwitchCase="'pages'" class="wz-pages">
       <div class="wz-pages-head">
@@ -231,6 +268,10 @@
         <div class="wz-row" *ngIf="current === 'review' && publicHandle && (selected?.flow === 'choice' || selected?.flow === 'handle')">
           <span class="wz-row-k">Public source</span>
           <span class="wz-row-v mono">{{ publicHandle }}</span>
+        </div>
+        <div class="wz-row" *ngIf="selected?.flow === 'url' && storeUrl">
+          <span class="wz-row-k">Page URL</span>
+          <span class="wz-row-v mono">{{ storeUrl }}</span>
         </div>
         <div class="wz-row" *ngIf="selectedPageList.length">
           <span class="wz-row-k">Pages</span>

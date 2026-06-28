@@ -6,7 +6,7 @@ import {
   CatalogChannel, CatalogGroup, FacebookPage,
 } from '../channel-data';
 
-type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'review';
+type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'url' | 'review';
 interface Step { key: StepKey; label: string; }
 
 @Component({
@@ -39,6 +39,7 @@ export class AddChannelWizardComponent {
   // path state
   connectionType: 'owned' | 'public' | null = null;
   publicHandle = '';
+  storeUrl = '';
   authDone = false;
   authLoading = false;
   selectedPages = new Set<string>();
@@ -79,6 +80,8 @@ export class AddChannelWizardComponent {
         return [choose, { key: 'authenticate', label: 'Authenticate' }, review];
       case 'handle':
         return [choose, { key: 'public', label: 'Add public source' }, review];
+      case 'url':
+        return [choose, { key: 'url', label: 'Add store URL' }, review];
     }
   }
 
@@ -99,6 +102,7 @@ export class AddChannelWizardComponent {
     // reset any path state from a previous selection
     this.connectionType = null;
     this.publicHandle = '';
+    this.storeUrl = '';
     this.authDone = false;
     this.authLoading = false;
     this.selectedPages.clear();
@@ -136,8 +140,16 @@ export class AddChannelWizardComponent {
       case 'authenticate': return this.authDone;
       case 'public':       return this.publicHandle.trim().length > 0;
       case 'pages':        return this.selectedPages.size > 0;
+      case 'url':          return this.isValidUrl(this.storeUrl);
       case 'review':       return true;
+      default:             return false;
     }
+  }
+
+  /** Light URL check — must look like a real http(s) web address. */
+  isValidUrl(value: string): boolean {
+    const v = value.trim();
+    return /^https?:\/\/.+\..+/i.test(v);
   }
 
   get onReview(): boolean { return this.current === 'review'; }
@@ -186,6 +198,7 @@ export class AddChannelWizardComponent {
   get connectionLabel(): string {
     if (this.selected?.flow === 'choice') return this.connectionType === 'public' ? 'Public' : 'Owned';
     if (this.selected?.flow === 'handle') return 'Public';
+    if (this.selected?.flow === 'url') return 'URL source';
     return 'Owned';
   }
 }
