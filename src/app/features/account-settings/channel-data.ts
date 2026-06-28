@@ -7,8 +7,9 @@ export interface ChannelGroup {
 
 export interface Channel {
   label: string;
-  icon: string;          // Material Symbols ligature
+  icon: string;          // Material Symbols ligature (fallback)
   color: string;
+  id?: string;           // BRAND_ICONS key → real brand logo
   count?: number;        // configured count
   expiredBadge?: number; // red "Expired: n"
   active?: boolean;
@@ -19,13 +20,13 @@ export const CHANNEL_GROUPS: ChannelGroup[] = [
   {
     label: 'SOCIAL MEDIA', count: 7, expanded: true,
     channels: [
-      { label: 'Facebook', icon: 'thumb_up', color: '#1877f2', count: 2, active: true },
-      { label: 'Instagram', icon: 'photo_camera', color: '#e1306c', count: 3 },
-      { label: 'X (Twitter)', icon: 'close', color: '#000000', count: 9, expiredBadge: 4 },
-      { label: 'LinkedIn', icon: 'work', color: '#0a66c2', empty: true },
-      { label: 'YouTube', icon: 'smart_display', color: '#ff0000', count: 1 },
-      { label: 'TikTok', icon: 'music_note', color: '#010101', empty: true },
-      { label: 'Facebook Groups', icon: 'groups', color: '#1877f2', empty: true },
+      { label: 'Facebook', id: 'facebook', icon: 'thumb_up', color: '#1877f2', count: 2, active: true },
+      { label: 'Instagram', id: 'instagram', icon: 'photo_camera', color: '#e1306c', count: 3 },
+      { label: 'X (Twitter)', id: 'twitter', icon: 'close', color: '#000000', count: 9, expiredBadge: 4 },
+      { label: 'LinkedIn', id: 'linkedin', icon: 'work', color: '#0a66c2', empty: true },
+      { label: 'YouTube', id: 'youtube', icon: 'smart_display', color: '#ff0000', count: 1 },
+      { label: 'TikTok', id: 'tiktok', icon: 'music_note', color: '#010101', empty: true },
+      { label: 'Facebook Groups', id: 'fbgroups', icon: 'groups', color: '#1877f2', empty: true },
     ],
   },
   { label: 'MESSAGING', count: 4 },

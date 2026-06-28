@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, ChannelGroup, ChannelProfile, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, mentionTypeIcon } from '../channel-data';
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
 
 /** A single custom-view filter condition. */
@@ -32,11 +32,31 @@ export class ChannelConfigComponent {
 
   mentionIcon = mentionTypeIcon;
 
+  /** The channel whose profiles are shown — drives the panel title + brand theming. */
+  activeChannel: Channel = CHANNEL_GROUPS[0].channels![0]; // Facebook
+
+  /** Switch the profiles panel to another channel (resets transient view state). */
+  selectChannel(c: Channel) {
+    if (c === this.activeChannel) return;
+    this.activeChannel = c;
+    this.clearSelection();
+    this.closeDetail();
+    this.activeViewId = 'all';
+  }
+
+  /** Light tint of a brand colour for soft backgrounds. */
+  tintColor(color: string = this.activeChannel.color): string { return color + '1a'; }
+
+  /** Real brand-logo SVG path for a channel id (null → fall back to a Material icon). */
+  brandSvg(id: string | undefined): string | null {
+    return id ? (BRAND_ICONS[id] ?? null) : null;
+  }
+
   /** Card colour theme — both share the same layout. */
   cardStyle: 'classic' | 'vibrant' = 'classic';
 
   /** Profiles view — 'card' grid or 'list' data-grid (table). */
-  viewMode: 'card' | 'list' = 'list';
+  viewMode: 'card' | 'list' = 'card';
 
   /** Selected rows (by profile name) in list view. */
   selected = new Set<string>();

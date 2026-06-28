@@ -8,17 +8,49 @@
 
   <div class="spacer"></div>
 
-  <div class="stat">
-    <span class="stat-title">Social Profiles</span>
-    <span class="stat-box">
-      <span class="dot green"></span><b>2,033</b><span class="stat-total">/ 3,000</span>
-    </span>
+  <!-- compact pill -> full detail on hover -->
+  <div class="stat green" style="--pct:68">
+    <span class="ring"><i></i></span>
+    <span class="stat-cap">Social <b>68%</b></span>
+
+    <div class="stat-pop">
+      <div class="sp-head">
+        <span class="dot green"></span>
+        <span class="sp-title">Social Profiles</span>
+        <span class="sp-badge healthy">HEALTHY</span>
+      </div>
+      <div class="sp-row">
+        <span class="sp-lbl">Used</span>
+        <span class="sp-val"><b>2,033</b> <span class="sp-mut">/ 3,000</span></span>
+      </div>
+      <div class="sp-bar"><span style="width:68%"></span></div>
+      <div class="sp-stats">
+        <div class="sp-box"><span class="sp-box-lbl">REMAINING</span><span class="sp-box-val">967</span></div>
+        <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">68%</span></div>
+      </div>
+    </div>
   </div>
-  <div class="stat">
-    <span class="stat-title">Other Profiles</span>
-    <span class="stat-box">
-      <span class="dot purple"></span><b>1,480</b><span class="stat-total">/ 2,100</span>
-    </span>
+
+  <div class="stat purple" style="--pct:70">
+    <span class="ring"><i></i></span>
+    <span class="stat-cap">Other <b>70%</b></span>
+
+    <div class="stat-pop">
+      <div class="sp-head">
+        <span class="dot purple"></span>
+        <span class="sp-title">Other Profiles</span>
+        <span class="sp-badge healthy">HEALTHY</span>
+      </div>
+      <div class="sp-row">
+        <span class="sp-lbl">Used</span>
+        <span class="sp-val"><b>1,480</b> <span class="sp-mut">/ 2,100</span></span>
+      </div>
+      <div class="sp-bar"><span style="width:70%"></span></div>
+      <div class="sp-stats">
+        <div class="sp-box"><span class="sp-box-lbl">REMAINING</span><span class="sp-box-val">620</span></div>
+        <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">70%</span></div>
+      </div>
+    </div>
   </div>
 
   <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Channel</button>
@@ -45,8 +77,12 @@
         </button>
 
         <div class="ch-items" *ngIf="g.channels && expanded[g.label]">
-          <button class="ch-item" *ngFor="let c of g.channels" [class.active]="c.active">
-            <span class="c-icon" [style.background]="c.color"><span class="msr">{{ c.icon }}</span></span>
+          <button class="ch-item" *ngFor="let c of g.channels"
+                  [class.active]="c === activeChannel" (click)="selectChannel(c)">
+            <span class="c-icon" [style.background]="c.color">
+              <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c.id)"><path [attr.d]="brandSvg(c.id)"></path></svg>
+              <span class="msr" *ngIf="!brandSvg(c.id)">{{ c.icon }}</span>
+            </span>
             <span class="c-label">{{ c.label }}</span>
             <span class="c-expired" *ngIf="c.expiredBadge">Expired: {{ c.expiredBadge }}</span>
             <span class="c-count" *ngIf="!c.empty">{{ c.count }}</span>
@@ -61,8 +97,11 @@
   <section class="cc-profiles">
     <div class="pf-head">
       <span class="pf-title">
-        <span class="pf-fb"><span class="msr">thumb_up</span></span>
-        Facebook profiles ({{ profiles.length }})
+        <span class="pf-fb" [style.background]="activeChannel.color">
+          <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg>
+          <span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span>
+        </span>
+        {{ activeChannel.label }} profiles ({{ profiles.length }})
       </span>
       <div class="pf-tools">
         <div class="style-toggle" *ngIf="viewMode === 'card'">
@@ -188,7 +227,7 @@
               <div class="t-profile">
                 <span class="t-avatar" [style.background]="p.avatarColor">
                   {{ p.initials }}
-                  <span class="t-net"><span class="msr">thumb_up</span></span>
+                  <span class="t-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
                 </span>
                 <span class="t-who">
                   <span class="t-name">{{ p.name }}  <span class="t-own" [class.public]="p.status === 'Public'">
@@ -254,7 +293,7 @@
           <div class="dw-title">
             <span class="t-avatar lg" [style.background]="d.avatarColor">
               {{ d.initials }}
-              <span class="t-net"><span class="msr">thumb_up</span></span>
+              <span class="t-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
             </span>
             <div class="dw-who">
               <h2>{{ d.name }}</h2>
@@ -286,12 +325,14 @@
 
           <div class="dw-section">Mentions types being collected</div>
           <p class="dw-desc">
-            The interaction types Locobuzz collects from this Facebook page — comments, messages,
+            The interaction types Locobuzz collects from this {{ activeChannel.label }} profile — comments, messages,
             posts, mentions and reviews — so every conversation reaches your inbox.
           </p>
           <div class="dw-chips">
-            <span class="t-chip fb" *ngFor="let t of d.mentionTypes">
-              <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
+            <span class="t-chip fb" *ngFor="let t of d.mentionTypes"
+                  [style.color]="activeChannel.color" [style.background]="tintColor()"
+                  [style.borderColor]="activeChannel.color + '55'">
+              <span class="msr" [style.color]="activeChannel.color">{{ mentionIcon(t) }}</span>{{ t }}
             </span>
           </div>
         </div>
@@ -312,13 +353,15 @@
     <!-- ================= CARD GRID VIEW ================= -->
     <div class="pf-grid" *ngIf="viewMode === 'card'">
       <article class="card" [class.vibrant]="cardStyle === 'vibrant'" *ngFor="let p of displayProfiles">
-        <span class="card-accent"></span>
+        <!-- <span class="card-accent"
+              [style.background]="'linear-gradient(90deg,' + activeChannel.color + ',' + activeChannel.color + '99)'"></span> -->
 
         <!-- header -->
-        <div class="card-head">
+        <div class="card-head"
+             [style.background]="cardStyle === 'vibrant' ? ('linear-gradient(180deg,' + tintColor() + ',#ffffff)') : ''">
           <div class="card-avatar" [style.background]="p.avatarColor">
             {{ p.initials }}
-            <span class="card-net"><span class="msr">thumb_up</span></span>
+            <span class="card-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
           </div>
           <div class="card-who">
             <span class="card-name">{{ p.name }}</span>

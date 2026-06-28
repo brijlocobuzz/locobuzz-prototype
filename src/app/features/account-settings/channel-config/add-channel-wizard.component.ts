@@ -56,7 +56,8 @@ export class AddChannelWizardComponent {
   get steps(): Step[] {
     const choose: Step = { key: 'choose', label: 'Choose channel' };
     const review: Step = { key: 'review', label: 'Review & finish' };
-    if (!this.selected) return [choose, review];
+    // Default preview (no channel chosen yet): a typical 3-step path.
+    if (!this.selected) return [choose, { key: 'authenticate', label: 'Authenticate' }, review];
 
     switch (this.selected.flow) {
       case 'choice': {

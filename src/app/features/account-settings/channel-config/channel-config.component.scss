@@ -2,7 +2,7 @@
 
 /* ---- toolbar ---- */
 .cc-toolbar {
-  height: 64px;
+  height: 55px;
   display: flex; align-items: center; gap: 10px;
   padding: 0 10px;
   background: var(--surface);
@@ -26,28 +26,72 @@
 .icon-btn:hover { background: #f2f4f8; }
 .spacer { flex: 1; }
 
+/* ---- usage stat: compact pill, full detail on hover ---- */
 .stat {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-  border: 1px solid var(--border); border-radius: 12px;
-  padding: 8px 16px; background: #fff;
-}
-.stat-title {
-  font-size: var(--font-size-11); font-weight: 600; color: var(--text-3);
-  text-transform: uppercase; letter-spacing: .04em;
-}
-.stat-box {
+  --c: #1f9d5a;                 /* accent colour, overridden per modifier */
+  position: relative;
   display: inline-flex; align-items: center; gap: 8px;
-  font-size: var(--font-size-18);
+  height: 40px; padding: 0 14px;
+  border: 1px solid var(--border); border-radius: 22px;
+  background: #fff; cursor: default;
+  transition: box-shadow .15s ease, border-color .15s ease;
 }
-.stat-box b { color: var(--text-1); font-weight: 700; }
-.stat-box .stat-total { color: var(--text-3); font-weight: 500; }
-.stat-box .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.stat-box .dot.green { background: #1f9d5a; }
-.stat-box .dot.purple { background: #7c5cff; }
+.stat.purple { --c: #7c5cff; }
+.stat:hover { border-color: var(--c); box-shadow: 0 2px 10px rgba(16, 24, 40, .08); }
+
+/* donut ring driven by --pct (0-100) */
+.stat .ring {
+  width: 24px; height: 24px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: conic-gradient(var(--c) calc(var(--pct) * 1%), #e6e9f0 0);
+}
+.stat .ring i { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+
+.stat-cap { font-size: var(--font-size-14); color: var(--text-2); white-space: nowrap; }
+.stat-cap b { color: var(--text-1); font-weight: 700; margin-left: 2px; }
+
+/* hover popover */
+.stat-pop {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+  width: 320px; padding: 14px;
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(16, 24, 40, .16);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease, visibility .15s;
+}
+.stat:hover .stat-pop { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.sp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.sp-head .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.sp-head .dot.green { background: #1f9d5a; }
+.sp-head .dot.purple { background: #7c5cff; }
+.sp-title { font-size: var(--font-size-15); font-weight: 600; color: var(--text-1); flex: 1; }
+.sp-badge {
+  font-size: var(--font-size-11); font-weight: 700; letter-spacing: .04em;
+  padding: 3px 8px; border-radius: 6px;
+}
+.sp-badge.healthy { background: #e8f6ee; color: #1f9d5a; }
+
+.sp-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.sp-lbl { font-size: var(--font-size-13); color: var(--text-3); }
+.sp-val { font-size: var(--font-size-16); }
+.sp-val b { font-weight: 700; color: var(--text-1); }
+.sp-mut { color: var(--text-3); }
+
+.sp-bar { height: 8px; border-radius: 6px; background: #eef1f6; overflow: hidden; margin-bottom: 14px; }
+.sp-bar > span { display: block; height: 100%; border-radius: 6px; background: var(--c); }
+
+.sp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sp-box {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 10px 12px; border-radius: 10px; background: #f7f9fc; border: 1px solid var(--border-soft);
+}
+.sp-box-lbl { font-size: var(--font-size-11); font-weight: 600; letter-spacing: .04em; color: var(--text-3); }
+.sp-box-val { font-size: var(--font-size-18); font-weight: 700; color: var(--text-1); }
 
 .add-btn {
   display: flex; align-items: center; gap: 7px;
-  height: 42px; padding: 0 10px; margin-left: 4px;
+  height: 30px; padding: 0 10px; margin-left: 4px;
   border: none; border-radius: 10px; cursor: pointer;
   background: var(--brand); color: #fff;
   font: inherit; font-size: var(--font-size-14); font-weight: 600;
@@ -103,6 +147,13 @@
   display: grid; place-items: center; flex: 0 0 auto;
 }
 .c-icon .msr { font-size: var(--font-size-16); color: #fff; }
+
+/* real brand logos rendered white on the channel-colour tiles/badges */
+.brand-svg { display: block; fill: #fff; }
+.c-icon .brand-svg { width: 15px; height: 15px; }
+.pf-fb .brand-svg { width: 16px; height: 16px; }
+.t-net .brand-svg { width: 9px; height: 9px; }
+.card-net .brand-svg { width: 11px; height: 11px; }
 .c-label { flex: 1; }
 .c-expired {
   font-size: var(--font-size-12); font-weight: 600;
@@ -316,7 +367,7 @@
   background: linear-gradient(180deg, #eef3ff, #ffffff);
 }
 .card-avatar {
-  position: relative; width: 50px; height: 50px; border-radius: 50%;
+  position: relative; width: 40px; height: 40px; border-radius: 14px;
   color: #fff; font-weight: 700; font-size: var(--font-size-18);
   display: grid; place-items: center; flex: 0 0 auto;
 }
@@ -334,9 +385,9 @@
 .card-owner .msr { font-size: var(--font-size-15); }
 .card-status {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: var(--font-size-14); font-weight: 600; color: var(--sla-fg);
+  font-size: var(--font-size-12); font-weight: 600; color: var(--sla-fg);
   background: var(--sla-bg); border: 1px solid #c5ead4;
-  padding: 5px 10px; border-radius: 20px;
+  padding: 4px 8px; border-radius: 20px;
 }
 .card-status .msr { font-size: var(--font-size-15); }
 
@@ -375,8 +426,8 @@
 .cm-chip .msr { font-size: var(--font-size-15); color: var(--text-3); }
 
 /* colourful chips (vibrant) */
-.card.vibrant .cm-chip { border-color: #d3e2fb; background: #eef5ff; color: #2563eb; }
-.card.vibrant .cm-chip .msr { color: #3b82f6; }
+.card.vibrant .cm-chip { border-color: #cfe0ff; background: #eef5ff; color: #1877f2; }  /* Facebook channel colour */
+.card.vibrant .cm-chip .msr { color: #1877f2; }
 
 /* alert (semantic red in both themes) */
 .card-alert {
@@ -502,7 +553,7 @@
 .t-open:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
 .t-open .msr { font-size: var(--font-size-18); }
 .t-avatar {
-  position: relative; width: 34px; height: 34px; border-radius: 50%;
+  position: relative; width: 34px; height: 34px; border-radius: 9px;
   color: #fff; font-weight: 700; font-size: var(--font-size-13);
   display: grid; place-items: center; flex: 0 0 auto;
 }
@@ -572,10 +623,12 @@
   display: inline-flex; align-items: center; gap: 5px;
   height: 22px; padding: 0 8px; border-radius: 6px;
   font-size: var(--font-size-12); font-weight: 500;
-  border: 1px solid var(--border); background: #f5f6f9; color: var(--text-2);
+  border: 1px solid #cfe0ff; background: #eef5ff; color: #1877f2;   /* Facebook channel colour */
 }
-.t-chip .msr { font-size: var(--font-size-13); color: var(--text-3); }
-.t-chip.more { background: #eef1f6; color: var(--text-3); border: none; }
+.t-chip .msr { font-size: var(--font-size-13); color: #1877f2; }
+/* "+N more" — reads as an action, not a type: dashed neutral outline */
+.t-chip.more { background: transparent; color: var(--text-3); border: 1px dashed #b8c0cc; font-weight: 600; }
+.t-chip.more:hover { color: var(--brand); border-color: var(--brand); }
 
 /* dates */
 .t-date { font-size: var(--font-size-13); color: var(--text-2); }
@@ -643,7 +696,7 @@
 /* floating close — white circle outside the panel, top-left */
 .dw-close-out {
   position: absolute; top: 14px; left: -46px;
-  width: 36px; height: 25px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   border: none; background: #fff; cursor: pointer;
   color: var(--text-1); display: grid; place-items: center;
   box-shadow: 0 4px 14px rgba(16, 24, 40, .22);
@@ -655,7 +708,7 @@
 /* header — preview style (muted) */
 .dw-head { padding: 10px; border-bottom: 1px solid var(--border-soft); }
 .dw-title { display: flex; align-items: center; gap: 10px; }
-.t-avatar.lg { width: 46px; height: 46px; font-size: var(--font-size-17); }
+.t-avatar.lg { width: 46px; height: 46px; border-radius: 12px; font-size: var(--font-size-17); }
 .dw-who h2 { margin: 0; font-size: var(--font-size-18); font-weight: 700; color: var(--text-1); }
 .dw-owner { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-13); color: var(--text-3); }
 .dw-owner .msr { font-size: var(--font-size-15); }
