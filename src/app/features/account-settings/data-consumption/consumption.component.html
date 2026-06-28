@@ -1,0 +1,102 @@
+<div class="dc-page">
+  <!-- Header (toolbar style) -->
+  <header class="dc-toolbar">
+    <div class="dc-head-text">
+      <h1>Data Consumption</h1>
+      <p>See how much of each Locobuzz service you've used and what's still available this billing cycle.</p>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="dc-date-wrap">
+      <button class="dc-date" (click)="toggleDate()">
+        <span class="msr">calendar_today</span>
+        <span class="val">{{ selectedRange }}</span>
+        <span class="msr chev">expand_more</span>
+      </button>
+
+      <div class="dc-date-menu" *ngIf="dateOpen">
+        <button class="dc-date-opt" *ngFor="let opt of dateOptions"
+                [class.active]="opt === selectedRange"
+                (click)="selectRange(opt)">
+          {{ opt }}
+        </button>
+      </div>
+    </div>
+
+    <span class="dc-billing">Billing cycle <strong>01 Jun 2026 - 30 Jun 2026</strong></span>
+  </header>
+
+  <!-- Summary / filter strip -->
+  <div class="dc-summary">
+    <span class="dc-summary-label">{{ filteredCards.length }} of {{ cards.length }} services</span>
+
+    <div class="dc-chips" role="group" aria-label="Filter services by status">
+      <button class="chip" [attr.data-status]="'all'"
+              [class.active]="filter === 'all'"
+              [attr.aria-pressed]="filter === 'all'"
+              (click)="setFilter('all')">
+        All {{ cards.length }}
+      </button>
+      <button class="chip" [attr.data-status]="'critical'"
+              [class.active]="filter === 'critical'"
+              [attr.aria-pressed]="filter === 'critical'"
+              (click)="setFilter('critical')">
+        <span class="dot"></span>{{ count('critical') }} Critical
+      </button>
+      <button class="chip" [attr.data-status]="'low'"
+              [class.active]="filter === 'low'"
+              [attr.aria-pressed]="filter === 'low'"
+              (click)="setFilter('low')">
+        <span class="dot"></span>{{ count('low') }} Low
+      </button>
+      <button class="chip" [attr.data-status]="'good'"
+              [class.active]="filter === 'good'"
+              [attr.aria-pressed]="filter === 'good'"
+              (click)="setFilter('good')">
+        <span class="dot"></span>{{ count('good') }} Good
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="dc-grid">
+    <article class="dc-card" *ngFor="let c of filteredCards"
+             [attr.data-status]="c.status" [class.is-empty]="c.isEmpty">
+      <div class="card-head">
+        <span class="card-title">{{ c.title }}</span>
+        <span class="badge" *ngIf="c.status === 'critical'" [attr.data-status]="c.status"
+              [attr.aria-label]="c.statusLabel + ' status'">{{ c.statusLabel }}</span>
+      </div>
+
+      <div class="card-value" [title]="exact(c.used) + ' used of ' + exact(c.total)">
+        <span class="big">{{ compact(c.used) }}</span>
+        <span class="total">/ {{ compact(c.total) }}</span>
+      </div>
+
+      <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
+        <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
+      </div>
+
+      <div class="card-meta">
+        <span class="rem" [attr.data-status]="c.status"
+              [title]="exact(c.remaining) + ' remaining'">
+          <ng-container *ngIf="!c.isEmpty; else notStarted">{{ compact(c.remaining) }} Remaining</ng-container>
+          <ng-template #notStarted>Not started · {{ compact(c.total) }} available</ng-template>
+        </span>
+      </div>
+
+      <div class="card-actions" [class.single]="!c.hasDetails">
+        <button type="button" class="show" *ngIf="c.hasDetails" (click)="showDetails(c)">Show Details <span class="msr">chevron_right</span></button>
+        <button type="button" class="quota" [attr.data-status]="c.status" (click)="openQuota(c)">
+          Increase Quota <span class="msr">open_in_new</span>
+        </button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ===== Increase-limit dialog (shared) ===== -->
+<app-increase-limit-dialog *ngIf="quotaCard as q"
+  [serviceName]="q.title" [currentLimit]="q.total" [usedAmount]="q.used" [status]="q.status"
+  (closed)="closeQuota()"></app-increase-limit-dialog>

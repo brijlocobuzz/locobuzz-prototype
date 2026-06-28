@@ -83,6 +83,8 @@
   border-left: 1px solid var(--border-soft);
 }
 .nav-row.level-1 { font-size: var(--font-size-14); padding: 9px 12px; }
+.nav-row.level-2 { font-size: var(--font-size-14); padding: 8px 12px; color: var(--text-2); }
+.nav-row.level-2 .n-icon { font-size: 9px; width: 18px; text-align: center; }
 
 .acct-foot { border-top: 1px solid var(--border-soft); padding: 8px 10px 10px; }
 .collapse-row {

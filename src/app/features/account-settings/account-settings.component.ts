@@ -32,7 +32,7 @@ export class AccountSettingsComponent {
     if (item.expandable) this.open[item.label] = !this.open[item.label];
     if (item.route) {
       this.active = item.label;
-      this.router.navigate(['/account-settings', item.route]);
+      this.router.navigate(['/account-settings', ...item.route.split('/')]);
     } else {
       this.active = item.label;
     }
