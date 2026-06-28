@@ -1,0 +1,189 @@
+<div class="yp">
+  <!-- ===== Page header ===== -->
+  <header class="yp-top">
+    <div class="yp-top-text">
+      <h1>My Profile</h1>
+      <p>Manage your personal details, assigned brands and role permissions.</p>
+    </div>
+    <div class="role-switch" role="tablist" aria-label="View as role">
+      <button type="button" [class.active]="role === 'admin'" (click)="setRole('admin')">Admin</button>
+      <button type="button" [class.active]="role === 'agent'" (click)="setRole('agent')">Agent</button>
+    </div>
+  </header>
+
+  <!-- ===== Profile card ===== -->
+  <section class="yp-card profile-card">
+    <div class="profile-head">
+      <div class="avatar-wrap">
+        <img alt="Profile" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=180&q=80" />
+        <button type="button" class="avatar-cam" aria-label="Change photo"><span class="msr">photo_camera</span></button>
+      </div>
+      <div class="profile-who">
+        <h2>Alam Shaikh</h2>
+        <p>{{ role === 'admin' ? 'Admin' : 'Agent' }} · alam.shaikh&#64;locobuzz.com</p>
+      </div>
+      <button type="button" class="edit-btn" (click)="editProfile = !editProfile">
+        <span class="msr">edit</span>{{ editProfile ? 'Done' : 'Edit' }}
+      </button>
+    </div>
+
+    <div class="profile-form">
+      <label class="field">
+        <span>First Name</span>
+        <input type="text" value="Alam" [readonly]="!editProfile" />
+      </label>
+      <label class="field">
+        <span>Last Name</span>
+        <input type="text" value="Shaikh" [readonly]="!editProfile" />
+      </label>
+      <label class="field">
+        <span>Email</span>
+        <input type="email" value="alam.shaikh@locobuzz.com" readonly />
+      </label>
+
+      <fieldset class="field gender">
+        <span>Gender</span>
+        <div class="radios">
+          <label><input type="radio" name="gender" checked [disabled]="!editProfile" /> Male</label>
+          <label><input type="radio" name="gender" [disabled]="!editProfile" /> Female</label>
+          <label><input type="radio" name="gender" [disabled]="!editProfile" /> Other</label>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span>Date of Birth</span>
+        <input type="text" placeholder="DD/MM/YYYY" [readonly]="!editProfile" />
+      </label>
+
+      <label class="field">
+        <span>Phone Number</span>
+        <div class="phone">
+          <select [disabled]="!editProfile" aria-label="Country code">
+            <option>IND +91</option>
+            <option>UAE +971</option>
+          </select>
+          <input type="tel" placeholder="Enter phone number" [readonly]="!editProfile" />
+        </div>
+      </label>
+    </div>
+
+    <div class="mfa-row">
+      <span class="mfa-ic"><span class="msr">shield</span></span>
+      <div class="mfa-text">
+        <strong>Multi-factor authentication</strong>
+        <small>Add an extra layer of security.</small>
+      </div>
+      <button type="button" class="toggle" [class.on]="mfaOn" (click)="mfaOn = !mfaOn"
+              [attr.aria-pressed]="mfaOn" aria-label="Toggle multi-factor authentication">
+        <span></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== Assigned Brands ===== -->
+  <section class="yp-card brands-card">
+    <div class="card-head">
+      <div>
+        <h2>Assigned Brands</h2>
+        <p>{{ assignedBrands.length }} brands assigned to your account.</p>
+      </div>
+      <button type="button" class="edit-btn" (click)="openBrandsModal()">
+        <span class="msr">edit</span>Edit
+      </button>
+    </div>
+    <div class="brand-row">
+      <button type="button" class="brand-pill" *ngFor="let b of assignedBrands" (click)="openBrandsModal()">
+        <img [src]="brandLogo(b.domain)" alt="" />
+        <span>{{ b.name }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== Permissions ===== -->
+  <section class="yp-card perm-card">
+    <div class="card-head perm-head">
+      <div>
+        <h2>Permissions</h2>
+        <p>{{ permissionGranted }} of {{ permissionTotal }} enabled across {{ groups.length }} sections</p>
+      </div>
+      <label class="search-box">
+        <span class="msr">search</span>
+        <input type="text" [(ngModel)]="search" placeholder="Search permissions" />
+      </label>
+    </div>
+
+    <div class="perm-list">
+      <article class="perm-group" [ngClass]="'tone-' + group.tone" *ngFor="let group of visibleGroups">
+        <button type="button" class="pg-summary" [attr.aria-expanded]="expanded[group.id]" (click)="toggleGroup(group.id)">
+          <span class="msr chev">{{ expanded[group.id] ? 'expand_more' : 'chevron_right' }}</span>
+          <span class="pg-icon"><span class="msr">{{ group.icon }}</span></span>
+          <span class="pg-text">
+            <strong>{{ group.name }}</strong>
+            <small>{{ group.description }}</small>
+          </span>
+          <span class="pg-count">{{ groupEnabled(group) }}/{{ groupTotal(group) }}</span>
+        </button>
+
+        <div class="pg-caps" *ngIf="expanded[group.id]">
+          <div class="cap" *ngFor="let cap of group.capabilities">
+            <div class="cap-head">
+              <strong>{{ cap.name }}</strong>
+              <span class="risk" *ngIf="cap.risk" [class.high]="cap.risk === 'High risk'">
+                <span class="msr">warning</span>{{ cap.risk | uppercase }}
+              </span>
+              <span class="cap-count">{{ capEnabledCount(cap) }}/{{ cap.children.length }}</span>
+            </div>
+            <p class="cap-note">{{ cap.note }}</p>
+            <div class="cap-chips">
+              <span class="chip" *ngFor="let child of cap.children" [class.on]="capEnabled(cap)">
+                <span class="chip-mark"><span class="msr">{{ capEnabled(cap) ? 'check' : 'close' }}</span></span>
+                {{ child }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="perm-empty" *ngIf="visibleGroups.length === 0">
+        <span class="msr">search_off</span>
+        No permissions match “{{ search }}”.
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== Assign brands modal ===== -->
+<div class="yp-backdrop" *ngIf="brandsModalOpen" (click)="brandsModalOpen = false">
+  <section class="yp-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Assign brands">
+    <header class="modal-head">
+      <div>
+        <h2>Assign brands</h2>
+        <p>{{ draftBrandIds.length }} brands selected</p>
+      </div>
+      <button type="button" class="modal-close" (click)="brandsModalOpen = false" aria-label="Close">
+        <span class="msr">close</span>
+      </button>
+    </header>
+
+    <label class="modal-search">
+      <span class="msr">search</span>
+      <input type="text" placeholder="Search brands" />
+    </label>
+
+    <div class="modal-brand-grid">
+      <button type="button" class="brand-select" *ngFor="let b of allBrands"
+              [class.selected]="draftBrandIds.includes(b.id)" (click)="toggleDraftBrand(b)">
+        <img [src]="brandLogo(b.domain)" alt="" />
+        <span>{{ b.name }}</span>
+        <span class="select-mark" [class.on]="draftBrandIds.includes(b.id)">
+          <span class="msr" *ngIf="draftBrandIds.includes(b.id)">check</span>
+        </span>
+      </button>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="btn-ghost" (click)="brandsModalOpen = false">Cancel</button>
+      <button type="button" class="btn-primary" (click)="saveBrands()">Save brands</button>
+    </footer>
+  </section>
+</div>
