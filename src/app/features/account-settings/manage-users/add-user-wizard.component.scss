@@ -757,6 +757,137 @@
   .au-profile-row { flex-direction: column; }
 }
 
+/* ===================================================================
+   Celebration screen (after Save) — pure-CSS, GPU-friendly
+   =================================================================== */
+.au-celebrate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 460px;
+  overflow: hidden;
+  animation: au-fade .2s ease;
+}
+
+.au-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.au-confetti i {
+  position: absolute;
+  top: -16px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation-name: au-confetti-fall;
+  animation-timing-function: cubic-bezier(.3, .5, .5, 1);
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+.au-confetti i.round { width: 10px; height: 10px; border-radius: 50%; }
+@keyframes au-confetti-fall {
+  0%   { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+  10%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift, 0), 480px) rotate(var(--rot, 240deg)); }
+}
+
+.au-burst { position: relative; width: 96px; height: 96px; display: grid; place-items: center; margin-bottom: 6px; }
+.au-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, .18);
+  transform: scale(0);
+  opacity: 0;
+  animation: au-ring-pulse 1.4s ease-out .15s infinite;
+}
+.au-ring.r2 { animation-delay: .75s; background: rgba(79, 70, 229, .14); }
+@keyframes au-ring-pulse {
+  0%   { transform: scale(.5); opacity: .8; }
+  80%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.au-badge {
+  position: relative;
+  z-index: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e7f7ee;
+  transform: scale(0);
+  animation: au-badge-pop .5s cubic-bezier(.2, .8, .3, 1.4) forwards;
+}
+.au-badge svg { width: 84px; height: 84px; }
+@keyframes au-badge-pop { to { transform: scale(1); } }
+.au-badge-circle { fill: none; stroke: #10b981; stroke-width: 2.5; opacity: .35; }
+.au-badge-check {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: au-check-draw .4s ease-out .35s forwards;
+}
+@keyframes au-check-draw { to { stroke-dashoffset: 0; } }
+
+.au-celebrate-title {
+  margin: 12px 0 0;
+  font-size: var(--font-size-24);
+  font-weight: 800;
+  color: var(--au-dark);
+  animation: au-rise .4s ease .25s both;
+}
+.au-celebrate-sub {
+  margin: 8px 0 0;
+  font-size: var(--font-size-15);
+  color: var(--au-muted);
+  max-width: 460px;
+  animation: au-rise .4s ease .35s both;
+}
+.au-celebrate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--au-line);
+  border-radius: 30px;
+  background: #fff;
+  font-size: var(--font-size-14);
+  font-weight: 600;
+  color: var(--au-dark);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, .06);
+  animation: au-rise .4s ease .45s both;
+}
+.au-mini-ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--au-accent-soft);
+  color: var(--au-accent);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
+.au-mini-ic img { width: 100%; height: 100%; object-fit: cover; }
+.au-celebrate-done { margin-top: 18px; animation: au-rise .4s ease .55s both; }
+@keyframes au-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   .au-modal, .au-step-pane, .au-dropdown, .au-btn-primary { animation: none; transition: none; }
+  .au-confetti, .au-ring { display: none; }
+  .au-badge, .au-badge-check, .au-celebrate-title, .au-celebrate-sub,
+  .au-celebrate-pill, .au-celebrate-done { animation: none; transform: none; opacity: 1; stroke-dashoffset: 0; }
 }

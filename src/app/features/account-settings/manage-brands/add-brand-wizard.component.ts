@@ -30,6 +30,12 @@ export class AddBrandWizardComponent {
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
   readonly totalSteps = 5;
+
+  /** Celebration screen shown after Save. */
+  celebrating = false;
+  private completedOnce = false;
+  /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
+  readonly confetti = this.makeConfetti();
   readonly steps: WizardStep[] = [
     { num: 1, label: 'Brand identity',        subtitle: 'Basics and AI context', icon: 'badge' },
     { num: 2, label: 'Logo & color',          subtitle: 'Visual identity',       icon: 'palette' },
@@ -323,6 +329,15 @@ export class AddBrandWizardComponent {
   // =======================================================================
   onSubmit() {
     if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(3) || !this.isStepValid(4)) return;
+    // Show the celebration, then auto-complete; user can also click Done.
+    this.celebrating = true;
+    setTimeout(() => this.complete(), 3600);
+  }
+
+  /** Emit the saved brand and close — guarded so it only runs once. */
+  complete() {
+    if (this.completedOnce) return;
+    this.completedOnce = true;
     this.saved.emit({
       name: this.brandName.trim(),
       color: this.color,
@@ -334,6 +349,20 @@ export class AddBrandWizardComponent {
 
   close() {
     this.closed.emit();
+  }
+
+  /** A spread of confetti pieces with varied colour, position, timing. */
+  private makeConfetti() {
+    const colors = ['#4f46e5', '#7c6cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'];
+    return Array.from({ length: 28 }, (_, i) => ({
+      left: Math.round(Math.random() * 100),
+      delay: +(Math.random() * 0.5).toFixed(2),
+      duration: +(2 + Math.random() * 1.4).toFixed(2),
+      drift: Math.round((Math.random() - 0.5) * 120),
+      rotate: Math.round(Math.random() * 360),
+      color: colors[i % colors.length],
+      round: i % 3 === 0,
+    }));
   }
 
   // Close any open inline popovers when clicking elsewhere in the dialog.

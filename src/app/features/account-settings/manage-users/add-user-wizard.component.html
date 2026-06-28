@@ -1,6 +1,44 @@
 <div class="au-backdrop"></div>
 
 <div class="au-modal" role="dialog" aria-modal="true">
+
+  <!-- ===== Celebration screen (after Save) ===== -->
+  <div class="au-celebrate" *ngIf="celebrating">
+    <span class="au-confetti">
+      <i *ngFor="let p of confetti" [class.round]="p.round"
+         [style.left.%]="p.left" [style.background]="p.color"
+         [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.duration"
+         [style.--drift.px]="p.drift" [style.--rot.deg]="p.rotate"></i>
+    </span>
+
+    <div class="au-burst">
+      <span class="au-ring"></span>
+      <span class="au-ring r2"></span>
+      <span class="au-badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="au-badge-circle" cx="26" cy="26" r="24"></circle>
+          <path class="au-badge-check" d="M16 27 l7 7 l14 -15"></path>
+        </svg>
+      </span>
+    </div>
+
+    <h2 class="au-celebrate-title">User created!</h2>
+    <p class="au-celebrate-sub">{{ firstName }} {{ lastName }} can now sign in as {{ role?.label }}.</p>
+
+    <div class="au-celebrate-pill">
+      <span class="au-mini-ic">
+        <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
+        <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
+      </span>
+      {{ '@' + username }} · {{ selectedBrandIds.size }} brands
+    </div>
+
+    <button type="button" class="au-btn-primary au-celebrate-done" (click)="complete()">
+      Go to user <span class="msr">arrow_forward</span>
+    </button>
+  </div>
+
+  <ng-container *ngIf="!celebrating">
   <!-- ===== Header ===== -->
   <header class="au-head">
     <div class="au-head-text">
@@ -551,4 +589,5 @@
       </button>
     </div>
   </footer>
+  </ng-container>
 </div>
