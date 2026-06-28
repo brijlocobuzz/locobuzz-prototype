@@ -1,0 +1,158 @@
+<div class="ca-page">
+  <!-- Toolbar -->
+  <header class="ca-toolbar">
+    <button class="ca-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+    <div class="ca-head-text">
+      <h1>Data Consumption Alert</h1>
+      <p>Get notified by email about your data-consumption activity.</p>
+    </div>
+  </header>
+
+  <div class="ca-scroll">
+    <!-- Whitelist note -->
+    <div class="ca-note" role="note">
+      <span class="msr">mark_email_read</span>
+      <p>Alerts are sent from <strong>{{ senderEmail }}</strong>. Add it to your safe-senders list so emails don't land in spam.</p>
+    </div>
+
+    <!-- ===== Threshold alerts ===== -->
+    <section class="ca-card" [class.off]="!threshold.enabled">
+      <header class="ca-card-head">
+        <span class="ca-card-icon"><span class="msr">notifications_active</span></span>
+        <div class="ca-card-title">
+          <h2>Threshold alerts</h2>
+          <p>Fire the moment usage crosses any selected threshold — a safety net for unexpected spikes.</p>
+        </div>
+        <button class="ca-switch" role="switch" [attr.aria-checked]="threshold.enabled"
+                [class.on]="threshold.enabled" (click)="threshold.enabled = !threshold.enabled"
+                aria-label="Enable threshold alerts">
+          <span class="ca-knob"></span>
+        </button>
+      </header>
+
+      <div class="ca-card-body" *ngIf="threshold.enabled">
+        <!-- Subject -->
+        <div class="ca-field">
+          <label for="th-subject">Email subject line</label>
+          <input id="th-subject" type="text" [(ngModel)]="threshold.subject"
+                 placeholder="Data Consumption Update – limit alert – {Client Name}" />
+          <span class="ca-hint">Use <code>&#123;Client Name&#125;</code> to insert the client's name automatically.</span>
+        </div>
+
+        <!-- Recipients -->
+        <div class="ca-field">
+          <label>Send alerts to <span class="req">*</span></label>
+          <div class="ca-chip-input" [class.invalid]="threshold.emailError">
+            <span class="ca-email-chip" *ngFor="let e of threshold.recipients">
+              {{ e }}
+              <button type="button" (click)="removeEmail(threshold, e)" [attr.aria-label]="'Remove ' + e"><span class="msr">close</span></button>
+            </span>
+            <input type="email" [(ngModel)]="threshold.draftEmail"
+                   (keydown)="onEmailKey($event, threshold)" (blur)="addEmail(threshold)"
+                   placeholder="Add email and press Enter" aria-label="Add recipient email" />
+          </div>
+          <span class="ca-error" *ngIf="threshold.emailError">{{ threshold.emailError }}</span>
+          <span class="ca-error" *ngIf="!threshold.recipients.length">Add at least one recipient.</span>
+        </div>
+
+        <!-- Thresholds -->
+        <fieldset class="ca-field ca-fieldset">
+          <legend>Alert me at these usage levels <span class="req">*</span></legend>
+          <div class="ca-thresholds">
+            <button type="button" class="ca-th-chip" *ngFor="let p of presetThresholds"
+                    [class.on]="isThresholdSelected(p)" [attr.aria-pressed]="isThresholdSelected(p)"
+                    (click)="toggleThreshold(p)">
+              {{ p }}%
+            </button>
+          </div>
+
+          <!-- visual usage scale -->
+          <div class="ca-scale" *ngIf="threshold.thresholds.length">
+            <span class="ca-scale-cap">Where alerts fire across your usage</span>
+            <div class="ca-scale-track">
+              <span class="ca-scale-tick" *ngFor="let t of threshold.thresholds" [style.left.%]="t">
+                <span class="ca-scale-tag">{{ t }}%</span>
+              </span>
+            </div>
+            <div class="ca-scale-axis"><span>0%</span><span>50%</span><span>100%</span></div>
+          </div>
+          <span class="ca-error" *ngIf="!threshold.thresholds.length">Select at least one usage level.</span>
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- ===== Daily digest ===== -->
+    <section class="ca-card" [class.off]="!digest.enabled">
+      <header class="ca-card-head">
+        <span class="ca-card-icon"><span class="msr">schedule</span></span>
+        <div class="ca-card-title">
+          <h2>Daily digest</h2>
+          <p>A scheduled summary of today's consumption, delivered at the times you choose.</p>
+        </div>
+        <button class="ca-switch" role="switch" [attr.aria-checked]="digest.enabled"
+                [class.on]="digest.enabled" (click)="digest.enabled = !digest.enabled"
+                aria-label="Enable daily digest">
+          <span class="ca-knob"></span>
+        </button>
+      </header>
+
+      <div class="ca-card-body" *ngIf="digest.enabled">
+        <!-- Subject -->
+        <div class="ca-field">
+          <label for="dg-subject">Email subject line</label>
+          <input id="dg-subject" type="text" [(ngModel)]="digest.subject"
+                 placeholder="Data Consumption Update – daily digest – {Client Name}" />
+        </div>
+
+        <!-- Recipients -->
+        <div class="ca-field">
+          <label>Send digest to <span class="req">*</span></label>
+          <div class="ca-chip-input" [class.invalid]="digest.emailError">
+            <span class="ca-email-chip" *ngFor="let e of digest.recipients">
+              {{ e }}
+              <button type="button" (click)="removeEmail(digest, e)" [attr.aria-label]="'Remove ' + e"><span class="msr">close</span></button>
+            </span>
+            <input type="email" [(ngModel)]="digest.draftEmail"
+                   (keydown)="onEmailKey($event, digest)" (blur)="addEmail(digest)"
+                   placeholder="Add email and press Enter" aria-label="Add recipient email" />
+          </div>
+          <span class="ca-error" *ngIf="digest.emailError">{{ digest.emailError }}</span>
+          <span class="ca-error" *ngIf="!digest.recipients.length">Add at least one recipient.</span>
+        </div>
+
+        <!-- Times -->
+        <div class="ca-field">
+          <label class="ca-group-label">Delivery times</label>
+          <div class="ca-times">
+            <div class="ca-time">
+              <span class="ca-time-label">First notification <span class="req">*</span></span>
+              <input type="time" [(ngModel)]="digest.time1" aria-label="First notification time" />
+            </div>
+            <div class="ca-time" [class.disabled]="!digest.time2Enabled">
+              <label class="ca-time-label ca-check">
+                <input type="checkbox" [(ngModel)]="digest.time2Enabled" />
+                Second notification
+              </label>
+              <input type="time" [(ngModel)]="digest.time2" [disabled]="!digest.time2Enabled" aria-label="Second notification time" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="ca-alloff" *ngIf="!anyEnabled" role="alert">
+      <span class="msr">notifications_off</span>
+      Both alert types are off — you won't receive any data-consumption emails. Enable at least one to save.
+    </div>
+  </div>
+
+  <!-- Sticky footer -->
+  <footer class="ca-footer">
+    <span class="ca-saved" *ngIf="saved"><span class="msr">check_circle</span>Settings saved</span>
+    <span class="ca-dirty" *ngIf="dirty && !saved"><span class="msr">edit</span>Unsaved changes</span>
+    <button class="ca-btn ghost" [disabled]="!dirty" (click)="cancel()">Cancel Changes</button>
+    <button class="ca-btn primary" [disabled]="!canSave" (click)="save()">
+      <span class="msr">save</span>Save Settings
+    </button>
+  </footer>
+</div>
