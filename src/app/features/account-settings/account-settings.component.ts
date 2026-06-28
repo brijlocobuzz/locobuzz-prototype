@@ -38,6 +38,11 @@ export class AccountSettingsComponent {
     }
   }
 
+  openAiHub() {
+    this.active = 'Explore AI Features';
+    this.router.navigate(['/account-settings', 'ai-hub']);
+  }
+
   back() {
     this.router.navigate(['/tickets']);
   }

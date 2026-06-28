@@ -4,6 +4,7 @@ import { TicketsPageComponent } from './features/tickets/tickets-page.component'
 import { PlaceholderPageComponent } from './features/placeholder/placeholder-page.component';
 import { AccountSettingsComponent } from './features/account-settings/account-settings.component';
 import { ChannelConfigComponent } from './features/account-settings/channel-config/channel-config.component';
+import { AiHubComponent } from './features/account-settings/ai-hub/ai-hub.component';
 import { YourProfileComponent } from './features/account-settings/your-profile/your-profile.component';
 import { AccountPlaceholderComponent } from './features/account-settings/account-placeholder.component';
 import { ConsumptionComponent } from './features/account-settings/data-consumption/consumption.component';
@@ -35,6 +36,7 @@ export const routes: Routes = [
     component: AccountSettingsComponent,
     children: [
       { path: '', redirectTo: 'channel-configuration', pathMatch: 'full' },
+      { path: 'ai-hub', component: AiHubComponent },
       { path: 'your-profile', component: YourProfileComponent },
       { path: 'channel-configuration', component: ChannelConfigComponent },
       { path: 'data-consumption/consumption', component: ConsumptionComponent },

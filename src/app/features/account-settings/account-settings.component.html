@@ -7,7 +7,9 @@
 
   <!-- Sidebar -->
   <aside class="acct-sidebar">
-    <button class="ai-btn" [matTooltip]="collapsed ? 'Explore AI Features' : ''" matTooltipPosition="right">
+    <button class="ai-btn" [class.active]="active === 'Explore AI Features'"
+            [matTooltip]="collapsed ? 'Explore AI Features' : ''" matTooltipPosition="right"
+            (click)="openAiHub()">
       <span class="msr">auto_awesome</span>
       <span class="ai-text">Explore AI Features</span>
     </button>

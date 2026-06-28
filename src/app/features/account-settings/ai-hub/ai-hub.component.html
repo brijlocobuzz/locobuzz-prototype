@@ -1,0 +1,206 @@
+<div class="ai-hub" [class.is-active]="aiActive">
+
+  <!-- ===== top bar ===== -->
+  <header class="ai-top">
+    <div class="ai-brand">
+      <span class="ai-logo"><span class="msr">auto_awesome</span></span>
+      <div class="ai-brand-txt">
+        <span class="ai-brand-name">Locobuzz AI Platform</span>
+        <span class="ai-brand-sub">AI Plan {{ aiActive ? 'Active' : 'Inactive' }}</span>
+      </div>
+    </div>
+
+    <div class="ai-top-actions">
+      <div class="ai-toggle theme" role="tablist">
+        <button [class.on]="theme === 'dark'" (click)="theme = 'dark'"><span class="msr">dark_mode</span>Dark</button>
+        <button [class.on]="theme === 'light'" (click)="theme = 'light'"><span class="msr">light_mode</span>Light</button>
+      </div>
+      <div class="ai-toggle" role="tablist">
+        <button [class.on]="!aiActive" (click)="aiActive = false">Inactive</button>
+        <button [class.on]="aiActive" (click)="aiActive = true">Active</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= INACTIVE / ACTIVATION VIEW ================= -->
+  <ng-container *ngIf="!aiActive">
+
+    <!-- hero -->
+    <section class="ai-hero">
+      <div class="ai-hero-img"></div>
+      <div class="ai-hero-body">
+        <span class="ai-pill"><span class="dot"></span>AI PLAN NOT YET ACTIVE</span>
+        <h1 class="ai-hero-title">Transform your workflow with <span class="grad">Autonomous Insight.</span></h1>
+        <p class="ai-hero-desc">Stop manually processing data. Our AI engine learns your brand voice,
+          automates routine replies, and surfaces hidden sentiment patterns before they trend.</p>
+
+        <div class="ai-hero-feats">
+          <div class="ai-feat" *ngFor="let f of heroFeatures">
+            <span class="ai-feat-ic"><span class="msr">{{ f.icon }}</span></span>
+            <div class="ai-feat-txt">
+              <span class="ai-feat-title">{{ f.title }}</span>
+              <span class="ai-feat-desc">{{ f.desc }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-cta-row">
+          <button class="ai-cta">Activate AI Experience <span class="msr">arrow_forward</span></button>
+          <span class="ai-cta-note">No credit card required · Configure in under 5 minutes</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- what changes -->
+    <h4 class="ai-sec-title"><span class="bar"></span>WHAT CHANGES AFTER ACTIVATION</h4>
+    <div class="ai-stats">
+      <div class="ai-stat" *ngFor="let s of stats">
+        <span class="ai-stat-lbl">{{ s.label }}</span>
+        <span class="ai-stat-val">{{ s.value }}</span>
+      </div>
+    </div>
+
+    <!-- why teams -->
+    <h4 class="ai-sec-title"><span class="bar"></span>WHY TEAMS ACTIVATE AI</h4>
+    <div class="ai-why">
+      <div class="ai-why-card" *ngFor="let f of whyCards">
+        <span class="ai-feat-ic"><span class="msr">{{ f.icon }}</span></span>
+        <span class="ai-why-title">{{ f.title }}</span>
+        <span class="ai-why-desc">{{ f.desc }}</span>
+      </div>
+    </div>
+
+    <!-- modules you unlock -->
+    <h4 class="ai-sec-title"><span class="bar"></span>MODULES YOU UNLOCK</h4>
+    <div class="ai-modules">
+      <div class="ai-mod locked" *ngFor="let m of lockedModules">
+        <div class="ai-mod-top">
+          <span class="ai-mod-ic"><span class="msr">{{ m.icon }}</span></span>
+          <span class="ai-lock"><span class="msr">lock</span>LOCKED</span>
+        </div>
+        <span class="ai-mod-name">{{ m.name }}</span>
+        <span class="ai-mod-desc">{{ m.desc }}</span>
+      </div>
+    </div>
+
+    <!-- bottom CTA -->
+    <section class="ai-final">
+      <h2>Ready to activate?</h2>
+      <p>Activate the AI plan and start configuring your first module in minutes.</p>
+      <button class="ai-cta" (click)="aiActive = true">Activate AI Experience <span class="msr">arrow_forward</span></button>
+    </section>
+  </ng-container>
+
+  <!-- ================= ACTIVE / DASHBOARD VIEW ================= -->
+  <ng-container *ngIf="aiActive">
+
+    <!-- profile completion -->
+    <section class="ai-progress">
+      <div class="ai-progress-body">
+        <h4 class="ai-sec-title in"><span class="bar"></span>AI PROFILE COMPLETION</h4>
+        <h1 class="ai-progress-title">You're {{ completion }}% set up. Almost there.</h1>
+        <p class="ai-progress-desc">Finish the remaining {{ completionTotal - completionDone }} steps to unlock
+          autonomous decision-making and cross-channel predictive routing.</p>
+
+        <div class="ai-check-grid">
+          <div class="ai-check" *ngFor="let c of checklist" [class.done]="c.done">
+            <span class="ai-check-ic"><span class="msr">{{ c.done ? 'check_circle' : 'radio_button_unchecked' }}</span></span>
+            <span class="ai-check-lbl">{{ c.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-ring">
+        <svg viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="aiRingGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"></stop>
+              <stop offset="100%" stop-color="#7c5cff"></stop>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
+          <circle class="ring-fg" cx="60" cy="60" r="54"
+                  [attr.stroke-dasharray]="ringCirc" [attr.stroke-dashoffset]="ringOffset"></circle>
+        </svg>
+        <div class="ai-ring-txt">
+          <span class="ai-ring-pct">{{ completion }}%</span>
+          <span class="ai-ring-sub">{{ completionDone }}/{{ completionTotal }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- configured & live -->
+    <div class="ai-row-head">
+      <h4 class="ai-sec-title green"><span class="bar"></span>CONFIGURED &amp; LIVE</h4>
+      <span class="ai-row-count">{{ liveModules.length }} modules</span>
+    </div>
+    <div class="ai-live">
+      <div class="ai-live-card" *ngFor="let m of liveModules">
+        <div class="ai-mod-top">
+          <span class="ai-mod-ic glow"><span class="msr">{{ m.icon }}</span></span>
+          <span class="ai-badge-active"><span class="led"></span>ACTIVE</span>
+        </div>
+        <span class="ai-mod-name">{{ m.name }}</span>
+        <span class="ai-mod-desc">{{ m.desc }}</span>
+
+        <div class="ai-live-metric">
+          <span class="ai-live-num">{{ m.metric }}</span>
+          <span class="ai-live-mlbl">{{ m.metricLabel }}</span>
+        </div>
+
+        <div class="ai-conf" *ngIf="m.confidence as conf">
+          <div class="ai-conf-head"><span>Confidence</span><span class="ai-conf-pct">{{ conf }}%</span></div>
+          <div class="ai-conf-bar"><span [style.width.%]="conf"></span></div>
+        </div>
+        <div class="ai-live-foot" *ngIf="m.footnote">{{ m.footnote }}</div>
+
+        <button class="ai-manage"><span class="msr">settings</span>Manage</button>
+      </div>
+    </div>
+
+    <!-- action required -->
+    <div class="ai-row-head">
+      <h4 class="ai-sec-title"><span class="bar"></span>ACTION REQUIRED — FINISH SETUP</h4>
+      <span class="ai-row-count">{{ pendingModules.length }} pending</span>
+    </div>
+    <div class="ai-pending">
+      <div class="ai-pend-card" *ngFor="let m of pendingModules">
+        <div class="ai-pend-head">
+          <span class="ai-mod-ic grad"><span class="msr">{{ m.icon }}</span></span>
+          <div class="ai-pend-txt">
+            <span class="ai-pend-name">{{ m.name }} <span class="ai-tag">NOT CONFIGURED</span></span>
+            <span class="ai-pend-benefit-row">
+              <span class="ai-pend-benefit"><span class="msr">trending_up</span>{{ m.benefit }}</span>
+              <span class="ai-pend-setup">{{ m.setup }}</span>
+            </span>
+          </div>
+        </div>
+        <button class="ai-cta full"><span class="msr">add</span>Configure now</button>
+      </div>
+    </div>
+
+    <!-- when you reach 100% -->
+    <section class="ai-autonomous">
+      <div class="ai-auto-left">
+        <h4 class="ai-sec-title"><span class="bar"></span>WHEN YOU REACH 100%</h4>
+        <h2 class="ai-auto-title">Your AI becomes truly autonomous.</h2>
+        <ul class="ai-auto-list">
+          <li *ngFor="let p of autonomousPerks"><span class="bullet"></span>{{ p }}</li>
+        </ul>
+      </div>
+
+      <div class="ai-persona">
+        <div class="ai-persona-head">
+          <span class="ai-persona-av">AI</span>
+          <div>
+            <span class="ai-persona-name">Brand Persona</span>
+            <span class="ai-persona-sub">Learning phase: 3/4 complete</span>
+          </div>
+        </div>
+        <p class="ai-persona-quote">"Complete the final modules to enable autonomous decision-making for
+          Level-1 support queries and unlock cross-channel orchestration."</p>
+        <div class="ai-persona-bar"><span style="width: 75%"></span></div>
+      </div>
+    </section>
+  </ng-container>
+</div>
