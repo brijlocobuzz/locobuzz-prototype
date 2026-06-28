@@ -1,0 +1,51 @@
+<!-- ===== Header (matches design) ===== -->
+<header class="mb-header">
+  <button class="mb-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+  <div class="mb-header-text">
+    <h1>Manage Brands</h1>
+    <p>You can create, view and manage all your brands with logo, listening channels and assign users to them in one place.</p>
+  </div>
+</header>
+
+<!-- ===== Toolbar ===== -->
+<div class="mb-toolbar">
+  <div class="mb-search">
+    <span class="msr">search</span>
+    <input type="text" placeholder="Search by Brand Name, Users" [(ngModel)]="search" />
+  </div>
+  <button class="mb-add" (click)="wizardOpen = true">
+    <span class="msr">add_circle</span> Add Brand
+  </button>
+</div>
+
+<!-- ===== Brand grid ===== -->
+<div class="mb-grid">
+  <article class="mb-card" *ngFor="let b of filteredBrands">
+    <span class="mb-accent" [style.background]="b.color"></span>
+    <div class="mb-card-head">
+      <span class="mb-logo" [style.background]="b.color + '1a'" [style.color]="b.color">
+        <img [src]="brandLogo(b.domain)" [alt]="b.name" />
+      </span>
+      <div class="mb-card-who">
+        <span class="mb-name">{{ b.name }}</span>
+        <span class="mb-country"><span class="msr">public</span>{{ b.country }}</span>
+      </div>
+      <span class="mb-tickets" [class.on]="b.ticketsEnabled">
+        <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
+        {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+      </span>
+    </div>
+    <div class="mb-card-stats">
+      <span class="mb-stat"><span class="msr">group</span><b>{{ b.users }}</b> Users</span>
+      <span class="mb-stat"><span class="msr">hub</span><b>{{ b.channels }}</b> Channels</span>
+    </div>
+  </article>
+
+  <p class="mb-empty" *ngIf="!filteredBrands.length">No brands match “{{ search }}”.</p>
+</div>
+
+<!-- ===== Add-brand wizard ===== -->
+<app-add-brand-wizard *ngIf="wizardOpen"
+                      (closed)="wizardOpen = false"
+                      (saved)="onBrandSaved($event)">
+</app-add-brand-wizard>

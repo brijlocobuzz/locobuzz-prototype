@@ -1,0 +1,50 @@
+<!-- ===== Header ===== -->
+<header class="mu-header">
+  <button class="mu-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+  <div class="mu-header-text">
+    <h1>Manage Users</h1>
+    <p>Create, view and manage all your user accounts — assign brands, teams and platform permissions in one place.</p>
+  </div>
+</header>
+
+<!-- ===== Toolbar ===== -->
+<div class="mu-toolbar">
+  <div class="mu-search">
+    <span class="msr">search</span>
+    <input type="text" placeholder="Search by name, username, email or role" [(ngModel)]="search" />
+  </div>
+  <button class="mu-add" (click)="wizardOpen = true">
+    <span class="msr">add_circle</span> Add User
+  </button>
+</div>
+
+<!-- ===== User grid ===== -->
+<div class="mu-grid">
+  <article class="mu-card" *ngFor="let u of filteredUsers">
+    <div class="mu-card-head">
+      <span class="mu-avatar" [style.background]="u.color + '1a'" [style.color]="u.color">{{ initials(u) }}</span>
+      <div class="mu-card-who">
+        <span class="mu-name">{{ u.firstName }} {{ u.lastName }}</span>
+        <span class="mu-username">{{ '@' + u.username }}</span>
+      </div>
+      <span class="mu-status" [class.on]="u.active">
+        <span class="mu-dot"></span>{{ u.active ? 'Active' : 'Inactive' }}
+      </span>
+    </div>
+
+    <div class="mu-role"><span class="msr">badge</span>{{ u.role }}</div>
+    <div class="mu-email"><span class="msr">mail</span>{{ u.email }}</div>
+
+    <div class="mu-card-stats">
+      <span class="mu-stat"><span class="msr">storefront</span><b>{{ u.brands }}</b> Brands</span>
+    </div>
+  </article>
+
+  <p class="mu-empty" *ngIf="!filteredUsers.length">No users match “{{ search }}”.</p>
+</div>
+
+<!-- ===== Add-user wizard ===== -->
+<app-add-user-wizard *ngIf="wizardOpen"
+                     (closed)="wizardOpen = false"
+                     (saved)="onUserSaved($event)">
+</app-add-user-wizard>

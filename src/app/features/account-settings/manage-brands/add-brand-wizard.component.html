@@ -1,0 +1,403 @@
+<div class="ab-backdrop"></div>
+
+<div class="ab-modal" role="dialog" aria-modal="true">
+
+  <!-- ===== Celebration screen (after Save) ===== -->
+  <div class="ab-celebrate" *ngIf="celebrating">
+    <span class="ab-confetti">
+      <i *ngFor="let p of confetti" [class.round]="p.round"
+         [style.left.%]="p.left" [style.background]="p.color"
+         [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.duration"
+         [style.--drift.px]="p.drift" [style.--rot.deg]="p.rotate"></i>
+    </span>
+
+    <div class="ab-burst">
+      <span class="ab-ring"></span>
+      <span class="ab-ring r2"></span>
+      <span class="ab-badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="ab-badge-circle" cx="26" cy="26" r="24"></circle>
+          <path class="ab-badge-check" d="M16 27 l7 7 l14 -15"></path>
+        </svg>
+      </span>
+    </div>
+
+    <h2 class="ab-celebrate-title">Brand created!</h2>
+    <p class="ab-celebrate-sub">{{ brandName }} is now set up for monitoring and analytics.</p>
+
+    <div class="ab-celebrate-pill">
+      <span class="ab-mini-ic" [style.background]="color + '1a'" [style.color]="color">
+        <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="" />
+        <span *ngIf="!logoDataUrl">{{ brandInitials }}</span>
+      </span>
+      {{ brandName }} · {{ country }}
+    </div>
+
+    <button type="button" class="ab-btn-primary ab-celebrate-done" (click)="complete()">
+      Go to brand <span class="msr">arrow_forward</span>
+    </button>
+  </div>
+
+  <ng-container *ngIf="!celebrating">
+  <!-- ===== Header ===== -->
+  <header class="ab-head">
+    <div class="ab-head-text">
+      <h2>Add Brand</h2>
+      <p>Set up a new brand for monitoring and analytics.</p>
+    </div>
+    <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
+  </header>
+
+  <!-- ===== Stepper ===== -->
+  <nav class="ab-stepper">
+    <ng-container *ngFor="let step of steps; let last = last">
+      <button class="ab-step"
+              [class.is-active]="currentStep === step.num"
+              [class.is-done]="currentStep > step.num"
+              [class.is-clickable]="step.num < currentStep"
+              (click)="goToStep(step.num)">
+        <span class="ab-node">
+          <span class="msr" *ngIf="currentStep > step.num">check</span>
+          <span class="msr" *ngIf="currentStep <= step.num">{{ step.icon }}</span>
+        </span>
+        <span class="ab-step-meta">
+          <span class="ab-step-label">{{ step.label }}</span>
+          <span class="ab-step-sub">{{ step.subtitle }}</span>
+        </span>
+      </button>
+      <span class="ab-conn" *ngIf="!last" [class.is-done]="currentStep > step.num"></span>
+    </ng-container>
+  </nav>
+
+  <!-- ===== Body ===== -->
+  <div class="ab-body">
+
+    <!-- ---------- Step 1 · Brand identity ---------- -->
+    <section class="ab-step-pane" *ngIf="currentStep === 1">
+      <h1 class="ab-pane-title">Brand identity</h1>
+      <p class="ab-pane-sub">Name your brand and write a short description so your team and AI know what it stands for.</p>
+
+      <div class="ab-grid-2">
+        <div class="ab-field">
+          <label class="ab-label">Brand Name <i>*</i></label>
+          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
+        </div>
+
+        <div class="ab-field">
+          <label class="ab-label">Country <i>*</i></label>
+          <div class="ab-select-wrap">
+            <button type="button" class="ab-select" [class.is-open]="countryOpen"
+                    (click)="countryOpen = !countryOpen">
+              <span [class.placeholder]="!country">{{ country || 'Select country' }}</span>
+              <span class="msr chev">expand_more</span>
+            </button>
+            <div class="ab-dropdown" *ngIf="countryOpen">
+              <div class="ab-dropdown-search">
+                <span class="msr">search</span>
+                <input type="text" placeholder="Search country" [(ngModel)]="countrySearch" />
+              </div>
+              <div class="ab-dropdown-list">
+                <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
+                        [class.sel]="c === country" (click)="selectCountry(c)">{{ c }}</button>
+                <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-field">
+        <label class="ab-label">AI Friendly Name <i>*</i></label>
+        <div class="ab-inline-row">
+          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100" [(ngModel)]="aiFriendlyName" />
+          <button type="button" class="ab-ai-btn" [disabled]="!aiFriendlyName.trim() || generating"
+                  (click)="generateDescription()">
+            <span class="msr" *ngIf="!generating">auto_awesome</span>
+            <span class="ab-spinner" *ngIf="generating"></span>
+            {{ generating ? 'Generating…' : 'Generate Description' }}
+          </button>
+        </div>
+        <p class="ab-hint">Used internally so the AI references your brand consistently.</p>
+      </div>
+
+      <div class="ab-field">
+        <div class="ab-label-row">
+          <label class="ab-label">Brand Description <i>*</i></label>
+          <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
+        </div>
+        <textarea class="ab-textarea" rows="4" maxlength="200" [disabled]="descriptionDisabled"
+                  placeholder="Describe what the brand does…" [(ngModel)]="brandDescription"></textarea>
+      </div>
+    </section>
+
+    <!-- ---------- Step 2 · Logo & color ---------- -->
+    <section class="ab-step-pane" *ngIf="currentStep === 2">
+      <h1 class="ab-pane-title">Logo &amp; color</h1>
+      <p class="ab-pane-sub">Upload a logo and pick a color that represents your brand across reports and dashboards.</p>
+
+      <div class="ab-logo-row">
+        <!-- logo uploader -->
+        <div class="ab-logo-col">
+          <div class="ab-logo">
+            <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Brand logo" />
+            <span class="ab-logo-initials" *ngIf="!logoDataUrl">{{ brandInitials }}</span>
+            <label class="ab-logo-cam">
+              <span class="msr">photo_camera</span>
+              <input type="file" accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)" />
+            </label>
+          </div>
+          <p class="ab-logo-title">Upload Brand Logo <i>*</i></p>
+          <p class="ab-logo-hint">PNG or JPG · 1:1 ratio · max 5MB</p>
+        </div>
+
+        <!-- colour picker -->
+        <div class="ab-color-col">
+          <p class="ab-section-title">Select Brand Color</p>
+          <p class="ab-section-sub">Pick a color that matches your brand and sets you apart from competitors.</p>
+
+          <div class="ab-swatches">
+            <button type="button" class="ab-swatch" *ngFor="let c of brandColors"
+                    [class.sel]="c === color" [style.background]="c" (click)="pickColor(c)"></button>
+            <div class="ab-swatch-custom-wrap">
+              <button type="button" class="ab-swatch-add" (click)="customColorOpen = !customColorOpen">
+                <span class="msr">add</span>
+              </button>
+              <div class="ab-color-pop" *ngIf="customColorOpen">
+                <input type="color" [(ngModel)]="color" />
+                <span>Pick a custom color</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ab-selected-color">
+            <span class="ab-selected-dot" [style.background]="color"></span>
+            <span class="ab-selected-meta">
+              <span class="ab-selected-label">Selected color</span>
+              <span class="ab-selected-hex">{{ color | uppercase }}</span>
+            </span>
+            <button type="button" class="ab-link">View other brand colors</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Step 3 · Team & tickets ---------- -->
+    <section class="ab-step-pane" *ngIf="currentStep === 3">
+      <h1 class="ab-pane-title">Team &amp; tickets</h1>
+      <p class="ab-pane-sub">Assign users who can access this brand and configure how mentions become tickets.</p>
+
+      <div class="ab-field">
+        <div class="ab-label-row">
+          <label class="ab-label">Assign Users <i>*</i> <b class="ab-selected-count">({{ selectedUserIds.size }} Selected)</b></label>
+        </div>
+        <p class="ab-hint top">Only users assigned to this brand can access it.</p>
+
+        <div class="ab-users">
+          <div class="ab-pill-input" (click)="usersDropdownOpen = true">
+            <span class="ab-user-pill" *ngFor="let u of selectedUsers">
+              <span class="ab-pill-avatar">{{ userInitials(u) }}</span>
+              {{ u.name }}
+              <button type="button" class="ab-pill-x" (click)="removeUser(u.id); $event.stopPropagation()">
+                <span class="msr">close</span>
+              </button>
+            </span>
+            <span class="ab-search-inline">
+              <span class="msr">search</span>
+              <input type="text" placeholder="Search users…" [(ngModel)]="userSearch"
+                     (focus)="usersDropdownOpen = true" />
+            </span>
+          </div>
+
+          <div class="ab-users-list" *ngIf="usersDropdownOpen">
+            <div class="ab-users-list-head">
+              <span class="ab-users-count">{{ filteredUsers.length }} USERS</span>
+              <button type="button" class="ab-link" (click)="toggleAllUsers()">
+                {{ allUsersSelected ? 'Clear all' : 'Select all' }}
+              </button>
+            </div>
+            <button type="button" class="ab-user-row" *ngFor="let u of filteredUsers" (click)="toggleUser(u.id)">
+              <span class="ab-user-avatar">{{ userInitials(u) }}</span>
+              <span class="ab-user-meta">
+                <span class="ab-user-name">{{ u.name }}</span>
+                <span class="ab-user-role">{{ u.role }}</span>
+              </span>
+              <span class="ab-check" [class.on]="selectedUserIds.has(u.id)">
+                <span class="msr" *ngIf="selectedUserIds.has(u.id)">check</span>
+              </span>
+            </button>
+            <p class="ab-option-empty" *ngIf="!filteredUsers.length">No users found</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-toggle-card">
+        <div class="ab-toggle-text">
+          <p class="ab-toggle-title">Ticket Creation</p>
+          <p class="ab-toggle-sub">When enabled, tickets are created from mentions. When disabled, mentions are captured as non-actionable.</p>
+        </div>
+        <button type="button" class="ab-switch" [class.on]="ticketsEnabled" (click)="ticketsEnabled = !ticketsEnabled">
+          <span class="ab-knob"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ---------- Step 4 · Categories ---------- -->
+    <section class="ab-step-pane" *ngIf="currentStep === 4">
+      <h1 class="ab-pane-title">Categories</h1>
+      <p class="ab-pane-sub">Map mentions into categories automatically. Mentions that don't map will fall under the catch-all category.</p>
+
+      <div class="ab-grid-2">
+        <!-- category group -->
+        <div class="ab-field">
+          <label class="ab-label">Category Group <i>*</i></label>
+          <div class="ab-with-add">
+            <div class="ab-select-wrap">
+              <button type="button" class="ab-select" [class.is-open]="groupOpen" (click)="groupOpen = !groupOpen">
+                <span [class.placeholder]="!categoryGroup">{{ categoryGroup || 'Select group' }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="ab-dropdown" *ngIf="groupOpen">
+                <div class="ab-dropdown-search">
+                  <span class="msr">search</span>
+                  <input type="text" placeholder="Search category group" [(ngModel)]="groupSearch" />
+                </div>
+                <div class="ab-dropdown-list">
+                  <button type="button" class="ab-option" *ngFor="let g of filteredGroups"
+                          [class.sel]="g === categoryGroup" (click)="selectGroup(g)">{{ g }}</button>
+                  <p class="ab-option-empty" *ngIf="!filteredGroups.length">No groups found</p>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="ab-add-square" aria-label="Add category group"><span class="msr">add</span></button>
+          </div>
+        </div>
+
+        <!-- catch-all category -->
+        <div class="ab-field">
+          <label class="ab-label">Catch-all Category <i>*</i></label>
+          <div class="ab-with-add">
+            <div class="ab-select-wrap">
+              <button type="button" class="ab-select" [class.is-open]="catchAllOpen" (click)="catchAllOpen = !catchAllOpen">
+                <span [class.placeholder]="!catchAll">{{ catchAll || 'Select catch-all' }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="ab-dropdown" *ngIf="catchAllOpen">
+                <div class="ab-dropdown-search">
+                  <span class="msr">search</span>
+                  <input type="text" placeholder="Search catch-all category" [(ngModel)]="catchAllSearch" />
+                </div>
+                <div class="ab-dropdown-list">
+                  <button type="button" class="ab-option" *ngFor="let c of filteredCatchAll"
+                          [class.sel]="c === catchAll" (click)="selectCatchAll(c)">{{ c }}</button>
+                  <p class="ab-option-empty" *ngIf="!filteredCatchAll.length">No categories found</p>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="ab-add-square" aria-label="Add catch-all category"><span class="msr">add</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Step 5 · Products & Competitors ---------- -->
+    <section class="ab-step-pane" *ngIf="currentStep === 5">
+      <h1 class="ab-pane-title">Products &amp; Competitors</h1>
+      <p class="ab-pane-sub">List your products and competitors to give the AI richer market context.</p>
+
+      <!-- products -->
+      <div class="ab-card">
+        <div class="ab-card-head">
+          <p class="ab-card-title">Products &amp; Services</p>
+          <p class="ab-card-sub">List your key offerings for better AI context and analytics.</p>
+        </div>
+
+        <div class="ab-list-row" *ngFor="let p of products">
+          <span class="ab-row-icon"><span class="msr">deployed_code</span></span>
+          <span class="ab-row-meta">
+            <span class="ab-row-name">{{ p.name }}</span>
+            <span class="ab-row-sub" *ngIf="p.synonyms.length">Synonyms: {{ p.synonyms.join(', ') }}</span>
+          </span>
+          <button type="button" class="ab-icon-btn" (click)="editProduct(p)"><span class="msr">edit</span></button>
+          <button type="button" class="ab-icon-btn danger" (click)="deleteProduct(p)"><span class="msr">delete</span></button>
+        </div>
+
+        <div class="ab-inline-edit" *ngIf="addingProduct">
+          <input class="ab-input" type="text" placeholder="Product name" [(ngModel)]="productDraftName" />
+          <input class="ab-input" type="text" placeholder="Synonyms (comma separated)" [(ngModel)]="productDraftSynonyms" />
+          <button type="button" class="ab-confirm" (click)="saveProduct()"><span class="msr">check</span></button>
+          <button type="button" class="ab-cancel-x" (click)="cancelProduct()"><span class="msr">close</span></button>
+        </div>
+
+        <button type="button" class="ab-add-dashed" *ngIf="!addingProduct" (click)="startAddProduct()">
+          <span class="msr">add</span> Add Product
+        </button>
+      </div>
+
+      <!-- competitors -->
+      <div class="ab-card">
+        <div class="ab-card-head">
+          <p class="ab-card-title">Competitors</p>
+          <p class="ab-card-sub">Add competitors to help AI understand your market context.</p>
+        </div>
+
+        <div class="ab-toggle-card inset">
+          <div class="ab-toggle-text">
+            <p class="ab-toggle-title">Use Mapped Competitors</p>
+            <p class="ab-toggle-sub">Auto-populate from competitors mapped in Listening Settings.</p>
+          </div>
+          <button type="button" class="ab-switch" [class.on]="useMappedCompetitors"
+                  (click)="useMappedCompetitors = !useMappedCompetitors">
+            <span class="ab-knob"></span>
+          </button>
+        </div>
+
+        <div class="ab-mapped" *ngIf="useMappedCompetitors">
+          <div class="ab-list-row muted" *ngFor="let c of mappedCompetitors">
+            <span class="ab-row-icon"><span class="msr">storefront</span></span>
+            <span class="ab-row-meta"><span class="ab-row-name">{{ c.name }}</span></span>
+            <span class="ab-mapped-tag">Mapped</span>
+          </div>
+        </div>
+
+        <p class="ab-subhead">ADD COMPETITORS</p>
+        <div class="ab-list-row" *ngFor="let c of competitors">
+          <span class="ab-row-avatar">{{ c.name.slice(0, 2) | uppercase }}</span>
+          <span class="ab-row-meta"><span class="ab-row-name">{{ c.name }}</span></span>
+          <button type="button" class="ab-icon-btn" (click)="editCompetitor(c)"><span class="msr">edit</span></button>
+          <button type="button" class="ab-icon-btn danger" (click)="removeCompetitor(c)"><span class="msr">delete</span></button>
+        </div>
+
+        <div class="ab-inline-edit competitor" *ngIf="addingCompetitor">
+          <input class="ab-input" type="text" placeholder="Enter competitor name" maxlength="50" [(ngModel)]="competitorDraft" />
+          <button type="button" class="ab-confirm" (click)="saveCompetitor()"><span class="msr">check</span></button>
+          <button type="button" class="ab-cancel-x" (click)="cancelCompetitor()"><span class="msr">close</span></button>
+          <span class="ab-mini-counter">{{ competitorDraft.length }}/50</span>
+        </div>
+
+        <button type="button" class="ab-add-dashed" *ngIf="!addingCompetitor" (click)="startAddCompetitor()">
+          <span class="msr">add</span> Add Competitor
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer class="ab-foot">
+    <button type="button" class="ab-btn-text" (click)="close()">Cancel</button>
+    <div class="ab-foot-right">
+      <button type="button" class="ab-btn-stroked" *ngIf="currentStep > 1" (click)="prevStep()">
+        <span class="msr">chevron_left</span> Back
+      </button>
+      <button type="button" class="ab-btn-primary" *ngIf="currentStep < totalSteps"
+              [disabled]="!isStepValid(currentStep)" (click)="nextStep()">
+        Next <span class="msr">chevron_right</span>
+      </button>
+      <button type="button" class="ab-btn-primary" *ngIf="currentStep === totalSteps"
+              [disabled]="!isStepValid(1) || !isStepValid(2) || !isStepValid(3) || !isStepValid(4)"
+              (click)="onSubmit()">
+        Save Brand
+      </button>
+    </div>
+  </footer>
+  </ng-container>
+</div>
