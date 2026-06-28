@@ -33,19 +33,33 @@
         </button>
 
         <div class="subnav" *ngIf="item.children && open[item.label]">
-          <button
-            class="nav-row level-1"
-            *ngFor="let child of item.children"
-            [class.active]="active === child.label"
-            [matTooltip]="collapsed ? child.label : ''"
-            matTooltipPosition="right"
-            (click)="toggle(child)">
-            <span class="n-icon msr">{{ child.icon }}</span>
-            <span class="n-label">{{ child.label }}</span>
-            <span class="n-chev msr" *ngIf="child.expandable">
-              {{ open[child.label] ? 'expand_less' : 'expand_more' }}
-            </span>
-          </button>
+          <ng-container *ngFor="let child of item.children">
+            <button
+              class="nav-row level-1"
+              [class.active]="active === child.label"
+              [matTooltip]="collapsed ? child.label : ''"
+              matTooltipPosition="right"
+              (click)="toggle(child)">
+              <span class="n-icon msr">{{ child.icon }}</span>
+              <span class="n-label">{{ child.label }}</span>
+              <span class="n-chev msr" *ngIf="child.expandable">
+                {{ open[child.label] ? 'expand_less' : 'expand_more' }}
+              </span>
+            </button>
+
+            <div class="subnav" *ngIf="child.children && open[child.label]">
+              <button
+                class="nav-row level-2"
+                *ngFor="let grandchild of child.children"
+                [class.active]="active === grandchild.label"
+                [matTooltip]="collapsed ? grandchild.label : ''"
+                matTooltipPosition="right"
+                (click)="toggle(grandchild)">
+                <span class="n-icon msr">{{ grandchild.icon }}</span>
+                <span class="n-label">{{ grandchild.label }}</span>
+              </button>
+            </div>
+          </ng-container>
         </div>
       </ng-container>
     </nav>
