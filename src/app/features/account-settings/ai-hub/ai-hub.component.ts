@@ -26,7 +26,7 @@ export class AiHubComponent {
   aiActive = false;
 
   /** Visual theme — toggled from the top bar. */
-  theme: 'dark' | 'light' = 'dark';
+  theme: 'dark' | 'light' = 'light';
 
   // ---- inactive (activation) view ----
   heroFeatures: Feature[] = [
