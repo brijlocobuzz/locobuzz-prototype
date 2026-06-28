@@ -17,7 +17,13 @@ export const ACCOUNT_NAV: AccountNavItem[] = [
   {
     label: 'Account Settings', icon: 'manage_accounts', expandable: true,
     children: [
-      { label: 'Data Consumption', icon: 'data_usage', route: 'data-consumption' },
+      {
+        label: 'Data Consumption', icon: 'data_usage', expandable: true,
+        children: [
+          { label: 'Consumption', icon: 'fiber_manual_record', route: 'data-consumption/consumption' },
+          { label: 'Consumption Alert', icon: 'fiber_manual_record', route: 'data-consumption/consumption-alert' },
+        ],
+      },
       { label: 'Manage Brands', icon: 'storefront', route: 'manage-brands' },
       { label: 'Manage Users', icon: 'group', route: 'manage-users' },
     ],

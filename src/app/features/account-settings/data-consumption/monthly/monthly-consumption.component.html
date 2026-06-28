@@ -1,0 +1,267 @@
+<div class="mc-page">
+  <!-- Toolbar -->
+  <header class="mc-toolbar">
+    <button class="mc-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+    <h1>Monthly Data Consumption</h1>
+  </header>
+
+  <div class="mc-scroll">
+    <!-- Over-limit alert -->
+    <div class="mc-alert" [class.danger]="isOverLimit" role="alert">
+      <span class="msr">{{ isOverLimit ? 'error' : 'info' }}</span>
+      <p>
+        You've used <strong>{{ compact(billable) }}</strong> mentions — that's
+        <strong>{{ compact(exceededBy) }} over</strong> your monthly limit of <strong>{{ compact(limit) }}</strong>.
+        At this pace you'll reach about <strong>{{ compact(projectedTotal) }}</strong> by month end
+        ({{ compact(projectedOver) }} over). Consider increasing your limit to avoid disruption.
+      </p>
+      <button class="mc-alert-btn" (click)="limitDialogOpen = true">
+        <span class="msr">trending_up</span>Increase Limit
+      </button>
+    </div>
+
+    <!-- Summary row -->
+    <section class="mc-summary">
+      <div class="mc-sum-item">
+        <span class="mc-sum-label">Monthly Consumption</span>
+        <span class="mc-sum-sub">{{ periodLabel }}</span>
+      </div>
+      <div class="mc-sum-divider"></div>
+      <div class="mc-sum-item">
+        <span class="mc-sum-label">Usage</span>
+        <span class="mc-sum-value" [title]="fmt(billable) + ' of ' + fmt(limit)">
+          {{ compact(billable) }} <span class="of">/ {{ compact(limit) }}</span>
+        </span>
+      </div>
+      <div class="mc-sum-divider"></div>
+      <div class="mc-sum-item">
+        <span class="mc-sum-label">{{ isOverLimit ? 'Exceeded by' : 'Remaining' }}</span>
+        <span class="mc-sum-value" [class.over]="isOverLimit" [title]="fmt(exceededBy)">
+          {{ compact(exceededBy) }} <span class="mc-renew">· renews in {{ daysToRenew }} days</span>
+        </span>
+      </div>
+
+      <div class="mc-spacer"></div>
+
+      <div class="mc-date-wrap">
+        <span class="mc-date-cap">Duration</span>
+        <button class="mc-date" (click)="toggleDate()">
+          <span class="msr">calendar_today</span>
+          <span class="val">{{ selectedRange }}</span>
+          <span class="msr chev">expand_more</span>
+        </button>
+        <div class="mc-menu" *ngIf="dateOpen">
+          <button class="mc-opt" *ngFor="let o of dateOptions" [class.active]="o === selectedRange" (click)="selectRange(o)">{{ o }}</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Show Data Consumption ===== -->
+    <section class="mc-panel">
+      <header class="mc-panel-head"><h2>Mentions by Brand</h2></header>
+
+      <div class="mc-brand-body">
+        <!-- Left totals -->
+        <aside class="mc-totals">
+          <div class="mc-stat">
+            <span class="mc-stat-label">Total Mentions</span>
+            <span class="mc-stat-value" [title]="fmt(totalMentions)">{{ compact(totalMentions) }}</span>
+          </div>
+          <div class="mc-stat">
+            <span class="mc-stat-label">Billable mentions <span class="mc-muted">(Public Data)</span></span>
+            <span class="mc-stat-value" [title]="fmt(billable)">{{ compact(billable) }}</span>
+            <span class="mc-stat-pill over">{{ compact(exceededBy) }} over limit</span>
+          </div>
+          <div class="mc-stat">
+            <span class="mc-stat-label">Non-billable mentions <span class="mc-muted">(Owned Brand)</span></span>
+            <span class="mc-stat-value">{{ compact(nonBillable) }}</span>
+            <span class="mc-stat-pill">Not charged</span>
+          </div>
+        </aside>
+
+        <!-- Right: breakdown + chart -->
+        <div class="mc-brand-main">
+          <div class="mc-brand-tiles">
+            <div class="mc-tile" *ngFor="let b of brands"
+                 [class.dim]="hoverBrand && hoverBrand !== b.name"
+                 [class.active]="hoverBrand === b.name"
+                 (mouseenter)="onTileEnter(b.name)" (mouseleave)="onLineLeave()">
+              <span class="mc-tile-top">
+                <span class="mc-dot" [style.background]="b.color"></span>
+                <span class="mc-tile-name">{{ b.name }}</span>
+              </span>
+              <span class="mc-tile-row">
+                <span class="mc-tile-val">{{ compact(b.total) }}</span>
+                <span class="mc-tile-pct">{{ b.pct }}%</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Line chart -->
+          <figure class="mc-chart" #lineFig>
+            <div class="mc-chart-bar">
+              <figcaption>Weekly mention trend <span class="mc-count">{{ lineSeries.length }} brands</span></figcaption>
+              <div class="mc-zoom">
+                <button (click)="zoomLine(-0.5)" [disabled]="lineZoom <= 1" aria-label="Zoom out"><span class="msr">remove</span></button>
+                <span class="mc-zoom-lvl">{{ lineZoom }}×</span>
+                <button (click)="zoomLine(0.5)" [disabled]="lineZoom >= 6" aria-label="Zoom in"><span class="msr">add</span></button>
+                <button class="mc-zoom-reset" (click)="resetLine()" [disabled]="lineZoom === 1">Reset</button>
+                <button class="mc-zoom-fs" (click)="fullscreen(lineFig)" aria-label="Toggle fullscreen"><span class="msr">fullscreen</span></button>
+              </div>
+            </div>
+            <div class="mc-chart-vp" [class.zoomed]="lineZoom > 1"
+                 (mousedown)="onPanStart($event)" (mousemove)="onPanMove($event)"
+                 (mouseup)="onPanEnd()" (mouseleave)="onPanEnd()">
+              <svg [attr.viewBox]="'0 0 ' + lc.w + ' ' + lc.h" [style.width.%]="lineZoom * 100"
+                   preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weekly mention trend by brand">
+                <g class="grid">
+                  <line *ngFor="let t of lineYTicks" [attr.x1]="lc.padL" [attr.x2]="lc.w - lc.padR" [attr.y1]="t.y" [attr.y2]="t.y"></line>
+                  <text *ngFor="let t of lineYTicks" [attr.x]="lc.padL - 12" [attr.y]="t.y + 4" class="ax-y">{{ t.label }}</text>
+                </g>
+                <text *ngFor="let xl of xLabels" [attr.x]="xl.x" [attr.y]="lc.h - 14" class="ax-x">{{ xl.label }}</text>
+                <g *ngFor="let s of lineSeries" class="series"
+                   [class.dim]="hoverBrand && hoverBrand !== s.name"
+                   [class.active]="hoverBrand === s.name"
+                   (mouseenter)="onLineEnter(s.name)" (mouseleave)="onLineLeave()">
+                  <polyline [attr.points]="s.points" class="hit"></polyline>
+                  <polyline [attr.points]="s.points" [attr.stroke]="s.color" class="ln"></polyline>
+                  <circle *ngFor="let d of s.dots" [attr.cx]="d.x" [attr.cy]="d.y" r="2.8" [attr.fill]="s.color" class="pt"
+                          (mousemove)="showDotTip($event, s, d)"></circle>
+                </g>
+              </svg>
+            </div>
+
+            <div class="mc-tip" *ngIf="tip && tip.chart === 'line'" [style.left.px]="tip.x" [style.top.px]="tip.y">
+              <span class="mc-tip-dot" [style.background]="tip.color"></span>
+              <span class="mc-tip-text">
+                <span class="mc-tip-title">{{ tip.title }}</span>
+                <span class="mc-tip-sub">{{ tip.sub }}</span>
+              </span>
+            </div>
+            <p class="mc-hint"><span class="msr">info</span>Hover a line or legend to highlight it · zoom and drag to inspect · open fullscreen for more room.</p>
+            <div class="mc-legend">
+              <span class="mc-leg" *ngFor="let s of lineSeries"
+                    [class.dim]="hoverBrand && hoverBrand !== s.name"
+                    (mouseenter)="onLineEnter(s.name)" (mouseleave)="onLineLeave()">
+                <span class="mc-dot" [style.background]="s.color"></span>{{ s.name }}
+              </span>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Channel Wise Consumption ===== -->
+    <section class="mc-panel">
+      <header class="mc-panel-head"><h2>Channel-wise Consumption</h2></header>
+
+      <div class="mc-channel-body">
+        <!-- Left: brand filter + table -->
+        <div class="mc-channel-left">
+          <div class="mc-field">
+            <label>Select brand</label>
+            <div class="mc-date-wrap">
+              <button class="mc-select" (click)="toggleBrand()">
+                <span class="val">{{ selectedBrand }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="mc-menu full" *ngIf="brandFilterOpen">
+                <button class="mc-opt" *ngFor="let o of brandOptions" [class.active]="o === selectedBrand" (click)="selectBrand(o)">{{ o }}</button>
+              </div>
+            </div>
+          </div>
+
+          <table class="mc-table">
+            <thead>
+              <tr><th>Channel</th><th class="num">Mentions</th><th class="num">Share</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of channels">
+                <td>
+                  <span class="mc-avatar" [style.background]="c.color">{{ c.initials }}</span>
+                  {{ c.name }}
+                </td>
+                <td class="num" [title]="fmt(c.total)">{{ compact(c.total) }}</td>
+                <td class="num">
+                  <span class="mc-share">
+                    <span class="mc-share-bar"><span [style.width.%]="c.pct" [style.background]="c.color"></span></span>
+                    {{ c.pct }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right: split + chart -->
+        <div class="mc-channel-right">
+          <div class="mc-split">
+            <div class="mc-stat compact">
+              <span class="mc-stat-label">Configured channels</span>
+              <span class="mc-stat-value" [title]="fmt(channelConfiguredTotal)">{{ compact(channelConfiguredTotal) }}</span>
+              <span class="mc-stat-pill good">{{ channelConfiguredPct | number:'1.0-2' }}%</span>
+            </div>
+            <div class="mc-stat compact">
+              <span class="mc-stat-label">Other channels</span>
+              <span class="mc-stat-value" [title]="fmt(otherChannelTotal)">{{ compact(otherChannelTotal) }}</span>
+              <span class="mc-stat-pill">{{ otherChannelPct | number:'1.0-2' }}%</span>
+            </div>
+          </div>
+
+          <figure class="mc-chart" #barFig>
+            <div class="mc-chart-bar">
+              <figcaption>Weekly mentions by channel</figcaption>
+              <div class="mc-zoom">
+                <button (click)="zoomBar(-0.5)" [disabled]="barZoom <= 1" aria-label="Zoom out"><span class="msr">remove</span></button>
+                <span class="mc-zoom-lvl">{{ barZoom }}×</span>
+                <button (click)="zoomBar(0.5)" [disabled]="barZoom >= 6" aria-label="Zoom in"><span class="msr">add</span></button>
+                <button class="mc-zoom-reset" (click)="resetBar()" [disabled]="barZoom === 1">Reset</button>
+                <button class="mc-zoom-fs" (click)="fullscreen(barFig)" aria-label="Toggle fullscreen"><span class="msr">fullscreen</span></button>
+              </div>
+            </div>
+            <div class="mc-chart-vp" [class.zoomed]="barZoom > 1"
+                 (mousedown)="onPanStart($event)" (mousemove)="onPanMove($event)"
+                 (mouseup)="onPanEnd()" (mouseleave)="onPanEnd()">
+              <svg [attr.viewBox]="'0 0 ' + bc.w + ' ' + bc.h" [style.width.%]="barZoom * 100"
+                   preserveAspectRatio="xMidYMid meet" role="img" aria-label="Weekly mentions by channel">
+                <g class="grid">
+                  <line *ngFor="let t of barYTicks" [attr.x1]="bc.padL" [attr.x2]="bc.w - bc.padR" [attr.y1]="t.y" [attr.y2]="t.y"></line>
+                  <text *ngFor="let t of barYTicks" [attr.x]="bc.padL - 12" [attr.y]="t.y + 4" class="ax-y">{{ t.label }}</text>
+                </g>
+                <g *ngFor="let bar of stackedBars">
+                  <rect *ngFor="let seg of bar.segments" [attr.x]="seg.x" [attr.y]="seg.y"
+                        [attr.width]="seg.w" [attr.height]="seg.h" [attr.fill]="seg.color" class="seg" rx="2"
+                        [class.dim]="hoverChannel && hoverChannel !== seg.name"
+                        (mouseenter)="onBarEnter(seg.name)" (mousemove)="showSegTip($event, seg, bar.label)"
+                        (mouseleave)="onBarLeave()"></rect>
+                  <text [attr.x]="bar.x + bc.barW / 2" [attr.y]="bc.h - 16" class="ax-x">{{ bar.label }}</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="mc-tip" *ngIf="tip && tip.chart === 'bar'" [style.left.px]="tip.x" [style.top.px]="tip.y">
+              <span class="mc-tip-dot" [style.background]="tip.color"></span>
+              <span class="mc-tip-text">
+                <span class="mc-tip-title">{{ tip.title }}</span>
+                <span class="mc-tip-sub">{{ tip.sub }}</span>
+              </span>
+            </div>
+
+            <div class="mc-legend">
+              <span class="mc-leg" *ngFor="let c of channels"
+                    [class.dim]="hoverChannel && hoverChannel !== c.name"
+                    (mouseenter)="onBarEnter(c.name)" (mouseleave)="onBarLeave()">
+                <span class="mc-dot" [style.background]="c.color"></span>{{ c.name }}
+              </span>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Increase-limit dialog (shared) -->
+<app-increase-limit-dialog *ngIf="limitDialogOpen"
+  serviceName="Monthly Data Consumption" [currentLimit]="limit" [usedAmount]="billable" status="critical"
+  (closed)="limitDialogOpen = false"></app-increase-limit-dialog>

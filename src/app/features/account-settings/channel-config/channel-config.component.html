@@ -5,23 +5,52 @@
     <span class="val">singlestore1</span>
     <span class="msr chev">expand_more</span>
   </button>
-  <button class="icon-btn"><span class="msr">filter_alt</span></button>
 
   <div class="spacer"></div>
 
-  <div class="stat">
-    <span class="stat-title">Social Profiles</span>
-    <span class="stat-box">
-      <span class="dot green"></span><b>2,033</b> Active
-      <span class="divider"></span><b>3,000</b> Total
-    </span>
+  <!-- compact pill -> full detail on hover -->
+  <div class="stat green" style="--pct:68">
+    <span class="ring"><i></i></span>
+    <span class="stat-cap">Social <b>68%</b></span>
+
+    <div class="stat-pop">
+      <div class="sp-head">
+        <span class="dot green"></span>
+        <span class="sp-title">Social Profiles</span>
+        <span class="sp-badge healthy">HEALTHY</span>
+      </div>
+      <div class="sp-row">
+        <span class="sp-lbl">Used</span>
+        <span class="sp-val"><b>2,033</b> <span class="sp-mut">/ 3,000</span></span>
+      </div>
+      <div class="sp-bar"><span style="width:68%"></span></div>
+      <div class="sp-stats">
+        <div class="sp-box"><span class="sp-box-lbl">REMAINING</span><span class="sp-box-val">967</span></div>
+        <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">68%</span></div>
+      </div>
+    </div>
   </div>
-  <div class="stat">
-    <span class="stat-title">Other Profiles</span>
-    <span class="stat-box">
-      <span class="dot green"></span><b>1,480</b> Active
-      <span class="divider"></span><b>2,100</b> Total
-    </span>
+
+  <div class="stat purple" style="--pct:70">
+    <span class="ring"><i></i></span>
+    <span class="stat-cap">Other <b>70%</b></span>
+
+    <div class="stat-pop">
+      <div class="sp-head">
+        <span class="dot purple"></span>
+        <span class="sp-title">Other Profiles</span>
+        <span class="sp-badge healthy">HEALTHY</span>
+      </div>
+      <div class="sp-row">
+        <span class="sp-lbl">Used</span>
+        <span class="sp-val"><b>1,480</b> <span class="sp-mut">/ 2,100</span></span>
+      </div>
+      <div class="sp-bar"><span style="width:70%"></span></div>
+      <div class="sp-stats">
+        <div class="sp-box"><span class="sp-box-lbl">REMAINING</span><span class="sp-box-val">620</span></div>
+        <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">70%</span></div>
+      </div>
+    </div>
   </div>
 
   <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Channel</button>
@@ -48,8 +77,12 @@
         </button>
 
         <div class="ch-items" *ngIf="g.channels && expanded[g.label]">
-          <button class="ch-item" *ngFor="let c of g.channels" [class.active]="c.active">
-            <span class="c-icon" [style.background]="c.color"><span class="msr">{{ c.icon }}</span></span>
+          <button class="ch-item" *ngFor="let c of g.channels"
+                  [class.active]="c === activeChannel" (click)="selectChannel(c)">
+            <span class="c-icon" [style.background]="c.color">
+              <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c.id)"><path [attr.d]="brandSvg(c.id)"></path></svg>
+              <span class="msr" *ngIf="!brandSvg(c.id)">{{ c.icon }}</span>
+            </span>
             <span class="c-label">{{ c.label }}</span>
             <span class="c-expired" *ngIf="c.expiredBadge">Expired: {{ c.expiredBadge }}</span>
             <span class="c-count" *ngIf="!c.empty">{{ c.count }}</span>
@@ -64,17 +97,20 @@
   <section class="cc-profiles">
     <div class="pf-head">
       <span class="pf-title">
-        <span class="pf-fb"><span class="msr">thumb_up</span></span>
-        Facebook profiles ({{ profiles.length }})
+        <span class="pf-fb" [style.background]="activeChannel.color">
+          <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg>
+          <span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span>
+        </span>
+        {{ activeChannel.label }} profiles ({{ profiles.length }})
       </span>
       <div class="pf-tools">
-        <div class="style-toggle">
+        <div class="style-toggle" *ngIf="viewMode === 'card'">
           <button [class.active]="cardStyle === 'classic'" (click)="cardStyle = 'classic'">Classic</button>
           <button [class.active]="cardStyle === 'vibrant'" (click)="cardStyle = 'vibrant'">Vibrant</button>
         </div>
         <div class="view-toggle">
-          <button><span class="msr">view_list</span></button>
-          <button class="active"><span class="msr">grid_view</span></button>
+          <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><span class="msr">view_list</span></button>
+          <button [class.active]="viewMode === 'card'" (click)="viewMode = 'card'"><span class="msr">grid_view</span></button>
         </div>
         <div class="pf-search">
           <span class="msr">search</span>
@@ -83,15 +119,249 @@
       </div>
     </div>
 
-    <div class="pf-grid">
-      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" *ngFor="let p of profiles">
-        <span class="card-accent"></span>
+    <!-- ================= VIEW TABS + CUSTOM-VIEW BUILDER ================= -->
+    <div class="pf-tabs">
+      <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="activeViewId = 'all'">All profiles</button>
+
+      <button class="pf-tab" *ngFor="let v of savedViews"
+              [class.active]="activeViewId === v.id" (click)="activeViewId = v.id" [title]="v.label">
+        <span class="pf-tab-lbl">{{ v.label }}</span>
+        <span class="pf-tab-x" (click)="removeView(v.id, $event)"><span class="msr">close</span></span>
+      </button>
+
+      <button class="pf-add" [class.active]="viewBuilderOpen"
+              (click)="viewBuilderOpen ? closeViewBuilder() : openViewBuilder()" title="Create custom view">
+        <span class="msr">add</span>
+      </button>
+
+      <!-- builder popover -->
+      <div class="view-builder" *ngIf="viewBuilderOpen">
+        <div class="vb-grid">
+          <div class="vb-col">
+            <label class="vb-lbl">Field</label>
+            <div class="vb-select">
+              <select [ngModel]="draft.field" (ngModelChange)="onFieldChange($event)">
+                <option *ngFor="let f of fieldOptions" [value]="f">{{ f }}</option>
+              </select>
+              <span class="msr">expand_more</span>
+            </div>
+          </div>
+
+          <div class="vb-col">
+            <label class="vb-lbl">Operator</label>
+            <div class="vb-select">
+              <select [(ngModel)]="draft.operator">
+                <option *ngFor="let o of operatorOptions" [value]="o">{{ o }}</option>
+              </select>
+              <span class="msr">expand_more</span>
+            </div>
+          </div>
+
+          <div class="vb-col">
+            <label class="vb-lbl">Value</label>
+
+            <!-- free text (Profile) -->
+            <input class="vb-input" *ngIf="isTextField(draft.field)"
+                   [(ngModel)]="draft.text" placeholder="Type a page name…" />
+
+            <!-- multi-select dropdown (fixed-value fields) -->
+            <div class="vb-ms" *ngIf="!isTextField(draft.field)">
+              <button type="button" class="vb-select ms-trigger" (click)="valueDropdownOpen = !valueDropdownOpen">
+                <span class="ms-text" [class.placeholder]="!draft.values.length">
+                  {{ draft.values.length ? draft.values.join(', ') : 'Select…' }}
+                </span>
+                <span class="msr">expand_more</span>
+              </button>
+              <div class="vb-options" *ngIf="valueDropdownOpen">
+                <div class="vb-opt" *ngFor="let o of valueOptions(draft.field)" (click)="toggleValue(o)">
+                  <span class="vb-check" [class.on]="draft.values.includes(o)"><span class="msr">check</span></span>
+                  {{ o }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vb-foot">
+          <button class="vb-clear" (click)="clearDraft()">Clear All</button>
+          <button class="vb-save" [disabled]="!canSaveView" (click)="saveView()">
+            <span class="msr">bookmark_add</span>Save view
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= LIST / DATA-GRID VIEW ================= -->
+    <div class="pf-table-wrap" *ngIf="viewMode === 'list'">
+      <table class="pf-table">
+        <thead>
+          <tr>
+            <th class="col-check pin">
+              <span class="cbx" [class.checked]="allSelected" (click)="toggleAll()">
+                <span class="msr">check</span>
+              </span>
+            </th>
+            <th class="col-name pin sortable" (click)="sortBy('profile')">
+              <span class="th-in">Profile <span class="msr sort-ic" [class.on]="sortKey==='profile'">{{ sortIcon('profile') }}</span></span>
+            </th>
+            <th class="sortable" (click)="sortBy('mentions')">
+              <span class="th-in">Mentions types being collected<span class="msr sort-ic" [class.on]="sortKey==='mentions'">{{ sortIcon('mentions') }}</span></span>
+            </th>
+            <th class="sortable" (click)="sortBy('status')">
+              <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
+            </th>
+            <th class="col-act">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of displayProfiles" [class.selected]="selected.has(p.name)">
+            <!-- select -->
+            <td class="col-check pin">
+              <span class="cbx" [class.checked]="selected.has(p.name)" (click)="toggleRow(p.name)">
+                <span class="msr">check</span>
+              </span>
+            </td>
+
+            <!-- profile (with ownership badge right-aligned) -->
+            <td class="col-name pin">
+              <div class="t-profile">
+                <span class="t-avatar" [style.background]="p.avatarColor">
+                  {{ p.initials }}
+                  <span class="t-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
+                </span>
+                <span class="t-who">
+                  <span class="t-name">{{ p.name }}  <span class="t-own" [class.public]="p.status === 'Public'">
+                  <span class="msr">{{ p.status === 'Public' ? 'public' : 'verified' }}</span>{{ p.status }}
+                </span></span>
+                  <span class="t-owner"><span class="msr">person</span>{{ p.owner }}</span>
+                </span>
+               
+                <button class="t-open" title="Open details" (click)="openDetail(p)">
+                  <span class="msr">chevron_right</span>
+                </button>
+              </div>
+            </td>
+
+            <!-- mentions: pills + more (no count) -->
+            <td>
+              <div class="t-chips">
+                <span class="t-chip" *ngFor="let t of p.mentionTypes.slice(0, 2)">
+                  <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
+                </span>
+                <span class="t-chip more" *ngIf="p.mentionTypes.length > 2">+{{ p.mentionTypes.length - 2 }} more</span>
+              </div>
+            </td>
+
+            <!-- status: Active / Token Expired -->
+            <td>
+              <span class="t-badge danger" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
+              <span class="t-badge active" *ngIf="!p.alert"><span class="led"></span>Active</span>
+            </td>
+
+            <!-- actions -->
+            <td class="col-act">
+              <div class="t-acts">
+                <button class="t-act" title="Reauthorize"><span class="msr">autorenew</span></button>
+                <button class="t-act" title="Pause"><span class="msr">pause</span></button>
+                <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- bulk bar — pinned to panel bottom, shown only when rows are selected -->
+    <div class="bulkbar" *ngIf="selected.size > 0" [class.show]="selected.size > 0">
+      <span class="bb-cnt"><span class="bb-pill">{{ selected.size }}</span> selected</span>
+      <span class="bb-sep"></span>
+      <button class="bb-btn"><span class="msr">autorenew</span>Reauthorize</button>
+      <button class="bb-btn"><span class="msr">pause</span>Pause</button>
+      <button class="bb-btn danger"><span class="msr">delete</span>Delete</button>
+      <span class="bb-sep"></span>
+      <button class="bb-btn close" (click)="clearSelection()"><span class="msr">close</span></button>
+    </div>
+
+    <!-- ================= DETAIL DRAWER ================= -->
+    <div class="dw-scrim" [class.show]="detail" (click)="closeDetail()"></div>
+    <aside class="drawer" [class.show]="detail">
+      <ng-container *ngIf="detail as d">
+        <!-- floating close, outside the panel -->
+        <button class="dw-close-out" (click)="closeDetail()"><span class="msr">close</span></button>
+
+        <div class="dw-head">
+          <div class="dw-title">
+            <span class="t-avatar lg" [style.background]="d.avatarColor">
+              {{ d.initials }}
+              <span class="t-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
+            </span>
+            <div class="dw-who">
+              <h2>{{ d.name }}</h2>
+              <span class="dw-owner"><span class="msr">person</span>{{ d.owner }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dw-body">
+          <div class="dw-field">
+            <span class="dw-lbl"><span class="msr">verified</span>Ownership</span>
+            <span class="t-own" [class.public]="d.status === 'Public'">
+              <span class="msr">{{ d.status === 'Public' ? 'public' : 'verified' }}</span>{{ d.status }}
+            </span>
+          </div>
+          <div class="dw-field">
+            <span class="dw-lbl"><span class="msr">favorite</span>Status</span>
+            <span class="t-badge danger" *ngIf="d.alert"><span class="led"></span>Token Expired</span>
+            <span class="t-badge active" *ngIf="!d.alert"><span class="led"></span>Active</span>
+          </div>
+          <div class="dw-field">
+            <span class="dw-lbl"><span class="msr">calendar_today</span>Added</span>
+            <span class="dw-val">{{ shortDate(d.addedOn) }}</span>
+          </div>
+          <div class="dw-field">
+            <span class="dw-lbl"><span class="msr">schedule</span>Updated</span>
+            <span class="dw-val">{{ shortDate(d.updatedOn) }}</span>
+          </div>
+
+          <div class="dw-section">Mentions types being collected</div>
+          <p class="dw-desc">
+            The interaction types Locobuzz collects from this {{ activeChannel.label }} profile — comments, messages,
+            posts, mentions and reviews — so every conversation reaches your inbox.
+          </p>
+          <div class="dw-chips">
+            <span class="t-chip fb" *ngFor="let t of d.mentionTypes"
+                  [style.color]="activeChannel.color" [style.background]="tintColor()"
+                  [style.borderColor]="activeChannel.color + '55'">
+              <span class="msr" [style.color]="activeChannel.color">{{ mentionIcon(t) }}</span>{{ t }}
+            </span>
+          </div>
+        </div>
+
+        <!-- token-expired alert — preview style, pinned just above the footer -->
+        <div class="dw-alert" *ngIf="d.alert">
+          <span class="msr">warning</span>{{ d.alert.text }}
+        </div>
+
+        <div class="dw-foot">
+          <button class="ca-btn"><span class="msr">autorenew</span>Reauthorize</button>
+          <button class="ca-btn"><span class="msr">pause</span>Pause</button>
+          <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+        </div>
+      </ng-container>
+    </aside>
+
+    <!-- ================= CARD GRID VIEW ================= -->
+    <div class="pf-grid" *ngIf="viewMode === 'card'">
+      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" *ngFor="let p of displayProfiles">
+        <!-- <span class="card-accent"
+              [style.background]="'linear-gradient(90deg,' + activeChannel.color + ',' + activeChannel.color + '99)'"></span> -->
 
         <!-- header -->
-        <div class="card-head">
+        <div class="card-head"
+             [style.background]="cardStyle === 'vibrant' ? ('linear-gradient(180deg,' + tintColor() + ',#ffffff)') : ''">
           <div class="card-avatar" [style.background]="p.avatarColor">
             {{ p.initials }}
-            <span class="card-net"><span class="msr">thumb_up</span></span>
+            <span class="card-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
           </div>
           <div class="card-who">
             <span class="card-name">{{ p.name }}</span>
@@ -104,8 +374,8 @@
         <div class="card-mentions">
           <div class="cm-head">
             <span class="cm-title">
-              <span class="dot"></span>MENTIONS COLLECTED
-              <span class="cm-count">{{ p.mentionTypes.length }}</span>
+              Mentions types being collected
+              <!-- <span class="cm-count">{{ p.mentionTypes.length }}</span> -->
             </span>
             <button class="cm-edit"><span class="msr">edit</span>Edit</button>
           </div>

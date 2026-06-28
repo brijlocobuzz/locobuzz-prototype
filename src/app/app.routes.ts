@@ -8,6 +8,10 @@ import { YourProfileComponent } from './features/account-settings/your-profile/y
 import { ManageBrandsComponent } from './features/account-settings/manage-brands/manage-brands.component';
 import { ManageUsersComponent } from './features/account-settings/manage-users/manage-users.component';
 import { AccountPlaceholderComponent } from './features/account-settings/account-placeholder.component';
+import { ConsumptionComponent } from './features/account-settings/data-consumption/consumption.component';
+import { ConsumptionAlertComponent } from './features/account-settings/data-consumption/consumption-alert.component';
+import { MonthlyConsumptionComponent } from './features/account-settings/data-consumption/monthly/monthly-consumption.component';
+import { HistoricConsumptionComponent } from './features/account-settings/data-consumption/historic/historic-consumption.component';
 
 export const routes: Routes = [
   {
@@ -37,6 +41,10 @@ export const routes: Routes = [
       { path: 'channel-configuration', component: ChannelConfigComponent },
       { path: 'manage-brands', component: ManageBrandsComponent },
       { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'data-consumption/consumption', component: ConsumptionComponent },
+      { path: 'data-consumption/consumption-alert', component: ConsumptionAlertComponent },
+      { path: 'data-consumption/monthly', component: MonthlyConsumptionComponent },
+      { path: 'data-consumption/historic', component: HistoricConsumptionComponent },
       // Every other Account Settings section falls through to a placeholder.
       { path: ':section', component: AccountPlaceholderComponent },
     ],

@@ -1,0 +1,182 @@
+<div class="hc-page">
+  <!-- Toolbar -->
+  <header class="hc-toolbar">
+    <button class="hc-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+    <h1>Historic Consumption</h1>
+    <span class="hc-info msr"
+          title="Historic data credits are your lifetime pool of stored mentions. Credits are consumed as historic data is pulled for your brands.">info</span>
+  </header>
+
+  <div class="hc-scroll">
+    <!-- Credits gauge -->
+    <section class="hc-summary">
+      <div class="hc-gauge">
+        <div class="hc-gauge-head">
+          <span class="hc-gauge-label">Historic Data Credits</span>
+          <span class="hc-pill" [class.good]="healthy">
+            {{ healthy ? 'Healthy' : 'Running low' }} · {{ remainingPct | number:'1.0-0' }}% left
+          </span>
+        </div>
+        <div class="hc-gauge-row" [title]="fmt(used) + ' of ' + fmt(limit)">
+          <span class="hc-gauge-used">{{ compact(used) }}</span>
+          <span class="hc-gauge-total">used of {{ compact(limit) }} credits</span>
+        </div>
+        <div class="hc-bar"><div class="hc-bar-fill" [style.width.%]="usedPct"></div></div>
+        <div class="hc-gauge-foot">
+          <span>{{ usedPct | number:'1.0-2' }}% used</span>
+          <span [title]="fmt(remaining)">{{ compact(remaining) }} remaining</span>
+        </div>
+      </div>
+
+      <div class="hc-summary-stats">
+        <div class="hc-stat">
+          <span class="hc-stat-label">Total brands</span>
+          <span class="hc-stat-value">{{ totalBrands }}</span>
+        </div>
+        <div class="hc-stat">
+          <span class="hc-stat-label">Credits used</span>
+          <span class="hc-stat-value" [title]="fmt(used)">{{ compact(used) }}</span>
+        </div>
+        <div class="hc-stat">
+          <span class="hc-stat-label">Remaining</span>
+          <span class="hc-stat-value" [title]="fmt(remaining)">{{ compact(remaining) }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Credits by Brand ===== -->
+    <section class="hc-panel">
+      <header class="hc-panel-head">
+        <h2>Credits by Brand</h2>
+        <span class="hc-panel-sub">Top {{ brands.length - 1 }} of {{ totalBrands }} brands</span>
+      </header>
+
+      <div class="hc-brand-body">
+        <div class="hc-tiles">
+          <div class="hc-tile" *ngFor="let b of brands"
+               [class.dim]="hoverBrand && hoverBrand !== b.name"
+               [class.active]="hoverBrand === b.name"
+               (mouseenter)="onBrandEnter(b.name)" (mouseleave)="onBrandLeave()">
+            <span class="hc-tile-top">
+              <span class="hc-dot" [style.background]="b.color"></span>
+              <span class="hc-tile-name">{{ b.name }}</span>
+            </span>
+            <span class="hc-tile-row">
+              <span class="hc-tile-val" [title]="fmt(b.value)">{{ compact(b.value) }}</span>
+              <span class="hc-tile-pct">{{ b.pct }}%</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="hc-comp">
+          <span class="hc-comp-cap">Share of credits used</span>
+          <div class="hc-compbar">
+            <div class="hc-seg" *ngFor="let b of brands"
+                 [style.width.%]="b.pct" [style.background]="b.color"
+                 [class.dim]="hoverBrand && hoverBrand !== b.name"
+                 (mouseenter)="onBrandEnter(b.name)" (mouseleave)="onBrandLeave()"
+                 (mousemove)="brandTip($event, b)"></div>
+          </div>
+          <div class="hc-legend">
+            <span class="hc-leg" *ngFor="let b of brands"
+                  [class.dim]="hoverBrand && hoverBrand !== b.name"
+                  (mouseenter)="onBrandEnter(b.name)" (mouseleave)="onBrandLeave()">
+              <span class="hc-dot" [style.background]="b.color"></span>{{ b.name }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Channel-wise Consumption ===== -->
+    <section class="hc-panel">
+      <header class="hc-panel-head"><h2>Channel-wise Consumption</h2></header>
+
+      <div class="hc-channel-body">
+        <!-- Left: brand filter + table -->
+        <div class="hc-channel-left">
+          <div class="hc-field">
+            <label>Select brand</label>
+            <div class="hc-select-wrap">
+              <button class="hc-select" (click)="toggleBrand()">
+                <span class="val">{{ selectedBrand }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="hc-menu" *ngIf="brandFilterOpen">
+                <button class="hc-opt" *ngFor="let o of brandOptions"
+                        [class.active]="o === selectedBrand" (click)="selectBrand(o)">{{ o }}</button>
+              </div>
+            </div>
+          </div>
+
+          <table class="hc-table">
+            <thead>
+              <tr><th>Channel</th><th class="num">Historic</th><th class="num">Share</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of channels"
+                  [class.dim]="hoverChannel && hoverChannel !== c.name"
+                  (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()">
+                <td><span class="hc-avatar" [style.background]="c.color">{{ c.initials }}</span>{{ c.name }}</td>
+                <td class="num" [title]="fmt(c.count)">{{ compact(c.count) }}</td>
+                <td class="num">
+                  <span class="hc-share">
+                    <span class="hc-share-bar"><span [style.width.%]="channelPct(c)" [style.background]="c.color"></span></span>
+                    {{ channelPct(c) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right: split + channel composition -->
+        <div class="hc-channel-right">
+          <div class="hc-split">
+            <div class="hc-stat compact">
+              <span class="hc-stat-label">{{ selectedBrand }} total</span>
+              <span class="hc-stat-value" [title]="fmt(selectedBrandTotal)">{{ compact(selectedBrandTotal) }}</span>
+            </div>
+            <div class="hc-stat compact">
+              <span class="hc-stat-label">Configured</span>
+              <span class="hc-stat-value" [title]="fmt(configuredTotal)">{{ compact(configuredTotal) }}</span>
+              <span class="hc-stat-pill good">{{ configuredPct | number:'1.0-1' }}%</span>
+            </div>
+            <div class="hc-stat compact">
+              <span class="hc-stat-label">Other</span>
+              <span class="hc-stat-value" [title]="fmt(otherTotal)">{{ compact(otherTotal) }}</span>
+              <span class="hc-stat-pill">{{ otherPct | number:'1.0-1' }}%</span>
+            </div>
+          </div>
+
+          <div class="hc-comp">
+            <span class="hc-comp-cap">Channel share for {{ selectedBrand }}</span>
+            <div class="hc-compbar">
+              <div class="hc-seg" *ngFor="let c of channels"
+                   [style.width.%]="channelPct(c)" [style.background]="c.color"
+                   [class.dim]="hoverChannel && hoverChannel !== c.name"
+                   (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()"
+                   (mousemove)="channelTip($event, c)"></div>
+            </div>
+            <div class="hc-legend">
+              <span class="hc-leg" *ngFor="let c of channels"
+                    [class.dim]="hoverChannel && hoverChannel !== c.name"
+                    (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()">
+                <span class="hc-dot" [style.background]="c.color"></span>{{ c.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- shared hover tooltip -->
+  <div class="hc-tip" *ngIf="tip" [style.left.px]="tip.x" [style.top.px]="tip.y">
+    <span class="hc-tip-dot" [style.background]="tip.color"></span>
+    <span class="hc-tip-text">
+      <span class="hc-tip-title">{{ tip.title }}</span>
+      <span class="hc-tip-sub">{{ tip.sub }}</span>
+    </span>
+  </div>
+</div>
