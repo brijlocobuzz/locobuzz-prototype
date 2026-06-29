@@ -99,8 +99,10 @@
 .hc-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 
 /* composition bar */
-.hc-comp { min-width: 0; align-self: start; }
+.hc-comp { min-width: 0; }
 .hc-comp-cap { display: block; font-size: var(--font-size-13, 13px); font-weight: 600; color: var(--text-2, #4b5563); margin-bottom: 10px; }
+.hc-comp-val { font-weight: 700; }
+.hc-comp-pct { font-weight: 600; opacity: .8; }
 .hc-compbar { display: flex; height: 22px; border-radius: 7px; overflow: hidden; background: #eef0f4; }
 .hc-seg { height: 100%; cursor: pointer; transition: opacity .12s ease; }
 .hc-seg:not(:last-child) { border-right: 2px solid #fff; }
@@ -108,6 +110,26 @@
 .hc-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
 .hc-leg { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-12, 12px); color: var(--text-2, #4b5563); cursor: default; transition: opacity .12s ease; }
 .hc-leg.dim { opacity: .35; }
+
+/* channel-share donut */
+.hc-comp { display: flex; flex-direction: column; flex: 1; }
+.hc-donut-wrap { flex: 1; display: grid; place-items: center; padding: 8px 0; }
+.hc-donut { width: 210px; height: 210px; flex: none; }
+.hc-donut-track { fill: none; stroke: #eef0f4; stroke-width: 13; }
+.hc-donut-seg {
+  fill: none; stroke-width: 13; cursor: pointer;
+  transition: opacity .12s ease, stroke-width .12s ease;
+}
+.hc-donut-seg.dim { opacity: .2; }
+.hc-donut-seg.active { stroke-width: 16; }
+.hc-donut-c-top { text-anchor: middle; font-size: 8px; font-weight: 600; fill: var(--text-3, #6b7280); }
+.hc-donut-c-val { text-anchor: middle; font-size: 14px; font-weight: 700; fill: var(--text-1, #1c1d22); }
+.hc-donut-c-pct { text-anchor: middle; font-size: 7px; font-weight: 600; fill: var(--text-3, #9aa1ad); }
+.hc-comp-hint {
+  display: inline-flex; align-items: center; gap: 6px; align-self: center;
+  font-size: var(--font-size-12, 12px); color: var(--text-3, #9aa1ad);
+}
+.hc-comp-hint .msr { font-size: 15px; }
 
 /* ---- Channel body ---- */
 .hc-channel-body { display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: 20px; padding: 18px; }
@@ -147,6 +169,7 @@
 .hc-table tbody tr.dim { opacity: .4; }
 .hc-table td:first-child { display: flex; align-items: center; gap: 10px; font-weight: 500; }
 .hc-avatar { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 700; }
+.hc-avatar svg { width: 15px; height: 15px; display: block; }
 .hc-share { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; font-weight: 600; }
 .hc-share-bar { width: 56px; height: 6px; border-radius: 999px; background: #eef0f4; overflow: hidden; }
 .hc-share-bar span { display: block; height: 100%; border-radius: 999px; }
