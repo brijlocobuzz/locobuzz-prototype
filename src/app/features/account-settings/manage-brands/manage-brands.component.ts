@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { MANAGED_BRANDS, brandLogo, ManagedBrand, BrandMember } from './manage-brands-data';
 import { BRAND_ICONS } from '../channel-data';
 import { AddBrandWizardComponent } from './add-brand-wizard.component';
+import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
 /** A single custom-view filter condition (same model as Channel Config). */
 export interface ViewCondition {
@@ -18,7 +19,7 @@ export interface SavedView { id: string; label: string; filter: ViewCondition; }
 @Component({
   selector: 'app-manage-brands',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddBrandWizardComponent],
+  imports: [CommonModule, FormsModule, AddBrandWizardComponent, PaginationBarComponent],
   templateUrl: './manage-brands.component.html',
   styleUrl: './manage-brands.component.scss',
 })
@@ -30,7 +31,7 @@ export class ManageBrandsComponent {
   wizardOpen = false;
 
   /** Listing view — 'card' grid or 'list' data-grid (table). */
-  viewMode: 'card' | 'list' = 'card';
+  viewMode: 'card' | 'list' = 'list';
 
   /** Selected rows (by brand id) in list view. */
   selected = new Set<string>();
@@ -129,12 +130,14 @@ export class ManageBrandsComponent {
       filter: { ...this.draft, values: [...this.draft.values] },
     });
     this.activeViewId = id;
+    this.page = 1;
     this.closeViewBuilder();
   }
   removeView(id: string, ev: Event) {
     ev.stopPropagation();
     this.savedViews = this.savedViews.filter(v => v.id !== id);
     if (this.activeViewId === id) this.activeViewId = 'all';
+    this.page = 1;
   }
 
   /* ---- column sorting ---- */
@@ -159,8 +162,14 @@ export class ManageBrandsComponent {
     }
   }
 
-  /** Brands after search + active view filter + column sort. */
-  get displayBrands(): ManagedBrand[] {
+  /* ---- pagination ---- */
+  page = 1;
+  pageSize = 10;
+  onSearch(q: string) { this.search = q; this.page = 1; }
+  setView(id: string) { this.activeViewId = id; this.page = 1; }
+
+  /** Brands after search + active view filter + column sort (all pages). */
+  get filteredBrands(): ManagedBrand[] {
     const q = this.search.trim().toLowerCase();
     let rows = this.brands.filter(b =>
       !q || b.name.toLowerCase().includes(q) || b.country.toLowerCase().includes(q));
@@ -176,6 +185,12 @@ export class ManageBrandsComponent {
       });
     }
     return rows;
+  }
+  get totalBrands(): number { return this.filteredBrands.length; }
+  /** Just the current page's rows (what the table/grid renders). */
+  get displayBrands(): ManagedBrand[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredBrands.slice(start, start + this.pageSize);
   }
   private matchesCondition(b: ManagedBrand, f: ViewCondition): boolean {
     const inList = (val: string) => f.values.some(x => x.toLowerCase() === val.toLowerCase());

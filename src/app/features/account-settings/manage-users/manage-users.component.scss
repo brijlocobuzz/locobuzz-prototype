@@ -103,7 +103,18 @@
 .pf-add { width: 32px; height: 32px; border: 1px dashed var(--border); border-radius: 8px; background: #fff; cursor: pointer; color: var(--text-3); display: grid; place-items: center; }
 .pf-add:hover, .pf-add.active { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
 .pf-add .msr { font-size: var(--font-size-20); }
-.view-builder { position: absolute; top: calc(100% + 6px); left: 10px; right: 10px; z-index: 25; background: #f7f9fc; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 16px 36px rgba(16, 24, 40, .14); padding: 10px; }
+.view-builder { 
+  position: absolute;
+    top: calc(100%);
+    left: 0px;
+    right: 10px;
+    z-index: 25;
+    background: #f7f9fc;
+    border: 1px solid var(--border);
+    border-radius: 0 0 12px12px;
+    box-shadow: 0 16px 36px rgba(16, 24, 40, 0.14);
+    padding: 10px;
+    width: 500px;}
 .vb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .vb-col { display: flex; flex-direction: column; gap: 6px; }
 .vb-lbl { font-size: var(--font-size-12); font-weight: 600; color: var(--text-2); }

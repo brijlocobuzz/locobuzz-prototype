@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { MANAGED_USERS, ManagedUser } from './manage-users-data';
 import { BRAND_ICONS } from '../channel-data';
 import { AddUserWizardComponent } from './add-user-wizard.component';
+import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
 /** A single custom-view filter condition (same model as Channel Config). */
 export interface ViewCondition {
@@ -18,7 +19,7 @@ export interface SavedView { id: string; label: string; filter: ViewCondition; }
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddUserWizardComponent],
+  imports: [CommonModule, FormsModule, AddUserWizardComponent, PaginationBarComponent],
   templateUrl: './manage-users.component.html',
   styleUrl: './manage-users.component.scss',
 })
@@ -29,7 +30,7 @@ export class ManageUsersComponent {
   wizardOpen = false;
 
   /** Listing view — 'card' grid or 'list' data-grid (table). */
-  viewMode: 'card' | 'list' = 'card';
+  viewMode: 'card' | 'list' = 'list';
 
   /** Selected rows (by user id) in list view. */
   selected = new Set<string>();
@@ -124,12 +125,14 @@ export class ManageUsersComponent {
       filter: { ...this.draft, values: [...this.draft.values] },
     });
     this.activeViewId = id;
+    this.page = 1;
     this.closeViewBuilder();
   }
   removeView(id: string, ev: Event) {
     ev.stopPropagation();
     this.savedViews = this.savedViews.filter(v => v.id !== id);
     if (this.activeViewId === id) this.activeViewId = 'all';
+    this.page = 1;
   }
 
   /* ---- column sorting ---- */
@@ -153,8 +156,14 @@ export class ManageUsersComponent {
     }
   }
 
-  /** Users after search + active view filter + column sort. */
-  get displayUsers(): ManagedUser[] {
+  /* ---- pagination ---- */
+  page = 1;
+  pageSize = 10;
+  onSearch(q: string) { this.search = q; this.page = 1; }
+  setView(id: string) { this.activeViewId = id; this.page = 1; }
+
+  /** Users after search + active view filter + column sort (all pages). */
+  get filteredUsers(): ManagedUser[] {
     const q = this.search.trim().toLowerCase();
     let rows = this.users.filter(u =>
       !q || this.fullName(u).toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
@@ -171,6 +180,12 @@ export class ManageUsersComponent {
       });
     }
     return rows;
+  }
+  get totalUsers(): number { return this.filteredUsers.length; }
+  /** Just the current page's rows (what the table/grid renders). */
+  get displayUsers(): ManagedUser[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredUsers.slice(start, start + this.pageSize);
   }
   private matchesCondition(u: ManagedUser, f: ViewCondition): boolean {
     const inList = (val: string) => f.values.some(x => x.toLowerCase() === val.toLowerCase());

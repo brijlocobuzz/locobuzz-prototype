@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CHANNEL_GROUPS, FACEBOOK_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, mentionTypeIcon } from '../channel-data';
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
+import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
 /** A single custom-view filter condition. */
 export interface ViewCondition {
@@ -21,7 +22,7 @@ export interface SavedView {
 @Component({
   selector: 'app-channel-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddChannelWizardComponent],
+  imports: [CommonModule, FormsModule, AddChannelWizardComponent, PaginationBarComponent],
   templateUrl: './channel-config.component.html',
   styleUrl: './channel-config.component.scss',
 })
@@ -42,6 +43,7 @@ export class ChannelConfigComponent {
     this.clearSelection();
     this.closeDetail();
     this.activeViewId = 'all';
+    this.page = 1;
   }
 
   /** Light tint of a brand colour for soft backgrounds. */
@@ -56,7 +58,7 @@ export class ChannelConfigComponent {
   cardStyle: 'classic' | 'vibrant' = 'classic';
 
   /** Profiles view — 'card' grid or 'list' data-grid (table). */
-  viewMode: 'card' | 'list' = 'card';
+  viewMode: 'card' | 'list' = 'list';
 
   /** Selected rows (by profile name) in list view. */
   selected = new Set<string>();
@@ -157,16 +159,23 @@ export class ChannelConfigComponent {
       filter: { ...this.draft, values: [...this.draft.values] },
     });
     this.activeViewId = id;
+    this.page = 1;
     this.closeViewBuilder();
   }
   removeView(id: string, ev: Event) {
     ev.stopPropagation();
     this.savedViews = this.savedViews.filter(v => v.id !== id);
     if (this.activeViewId === id) this.activeViewId = 'all';
+    this.page = 1;
   }
 
-  /** Profiles after the active view's filter + column sort are applied. */
-  get displayProfiles(): ChannelProfile[] {
+  /* ---- pagination ---- */
+  page = 1;
+  pageSize = 10;
+  setView(id: string) { this.activeViewId = id; this.page = 1; }
+
+  /** Profiles after the active view's filter + column sort are applied (all pages). */
+  get filteredProfiles(): ChannelProfile[] {
     const v = this.savedViews.find(s => s.id === this.activeViewId);
     let rows = v ? this.profiles.filter(p => this.matchesCondition(p, v.filter)) : [...this.profiles];
     if (this.sortKey) {
@@ -177,6 +186,12 @@ export class ChannelConfigComponent {
       });
     }
     return rows;
+  }
+  get totalProfiles(): number { return this.filteredProfiles.length; }
+  /** Just the current page's rows (what the table/grid renders). */
+  get displayProfiles(): ChannelProfile[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredProfiles.slice(start, start + this.pageSize);
   }
   private matchesCondition(p: ChannelProfile, f: ViewCondition): boolean {
     const inList = (val: string) => f.values.some(x => x.toLowerCase() === val.toLowerCase());

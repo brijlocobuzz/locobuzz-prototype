@@ -1,0 +1,34 @@
+<div class="pgn">
+  <!-- left: range summary -->
+  <span class="pgn-info">
+    Showing <b>{{ fromRow }}-{{ toRow }}</b> of <b>{{ total }}</b> {{ noun }}
+  </span>
+
+  <!-- center: page controls -->
+  <div class="pgn-pages">
+    <button class="pgn-arrow" [disabled]="page <= 1" (click)="prev()" aria-label="Previous page">
+      <span class="msr">chevron_left</span>
+    </button>
+
+    <ng-container *ngFor="let p of pages">
+      <span class="pgn-gap" *ngIf="isGap(p)">…</span>
+      <button class="pgn-num" *ngIf="!isGap(p)"
+              [class.active]="p === page" (click)="go($any(p))">{{ p }}</button>
+    </ng-container>
+
+    <button class="pgn-arrow" [disabled]="page >= totalPages" (click)="next()" aria-label="Next page">
+      <span class="msr">chevron_right</span>
+    </button>
+  </div>
+
+  <!-- right: rows-per-page -->
+  <div class="pgn-rows">
+    <span class="pgn-rows-lbl">ROWS</span>
+    <div class="pgn-select">
+      <select [value]="pageSize" (change)="onSize($event)">
+        <option *ngFor="let s of pageSizes" [value]="s">{{ s }}</option>
+      </select>
+      <span class="msr">expand_more</span>
+    </div>
+  </div>
+</div>
