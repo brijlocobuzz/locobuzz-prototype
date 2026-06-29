@@ -82,18 +82,20 @@ export class HistoricConsumptionComponent {
   get otherPct(): number { const t = this.selectedBrandTotal; return t ? (this.otherTotal / t) * 100 : 0; }
   channelPct(c: ChannelSeg): number { const t = this.selectedBrandTotal; return t ? +((c.count / t) * 100).toFixed(2) : 0; }
 
-  /** Donut geometry for the channel-share chart (radius 48 → circumference ≈ 301.6). */
+  /** Donut geometry for the share charts (radius 48 → circumference ≈ 301.6). */
   readonly donutR = 48;
-  get donutSegments() {
+  private donutDash(fracs: number[]): { dash: string; offset: number }[] {
     const C = 2 * Math.PI * this.donutR;
     let acc = 0;
-    return this.channels.map(c => {
-      const frac = this.channelPct(c) / 100;
-      const seg = { name: c.name, color: c.color, count: c.count, pct: this.channelPct(c),
-                    dash: `${frac * C} ${C - frac * C}`, offset: -acc * C };
-      acc += frac;
+    return fracs.map(f => {
+      const seg = { dash: `${f * C} ${C - f * C}`, offset: -acc * C };
+      acc += f;
       return seg;
     });
+  }
+  get donutSegments() {
+    const geo = this.donutDash(this.channels.map(c => this.channelPct(c) / 100));
+    return this.channels.map((c, i) => ({ name: c.name, color: c.color, count: c.count, pct: this.channelPct(c), ...geo[i] }));
   }
 
   /* ---- brand dropdown ---- */

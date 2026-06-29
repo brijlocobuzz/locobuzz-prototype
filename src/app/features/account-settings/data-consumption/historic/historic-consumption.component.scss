@@ -53,8 +53,11 @@
 .hc-gauge-foot span:first-child { color: #1f9d57; font-weight: 600; }
 .hc-gauge-foot span:last-child { color: var(--text-3, #6b7280); }
 
-.hc-summary-stats { display: flex; align-items: center; gap: 8px; }
-.hc-summary-stats .hc-stat { flex: 1; }
+.hc-summary-stats { display: flex; align-items: stretch; gap: 0; }
+.hc-summary-stats .hc-stat {
+  flex: 1; align-items: center; justify-content: center; text-align: center; padding: 4px 16px;
+}
+.hc-summary-stats .hc-stat + .hc-stat { border-left: 1px solid var(--border-soft, #e8eaf0); }
 .hc-stat { display: flex; flex-direction: column; gap: 4px; }
 .hc-stat-label { font-size: var(--font-size-12, 12px); font-weight: 600; color: var(--text-3, #6b7280); }
 .hc-stat-value { font-size: 22px; font-weight: 700; color: var(--text-1, #1c1d22); }
@@ -79,8 +82,8 @@
 .hc-panel-sub { font-size: var(--font-size-13, 13px); color: var(--text-3, #9aa1ad); }
 
 /* ---- Brand body ---- */
-.hc-brand-body { display: grid; grid-template-columns: 300px 1fr; gap: 20px; padding: 18px; }
-.hc-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+.hc-brand-body { display: flex; flex-direction: column; gap: 18px; padding: 18px; }
+.hc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
 .hc-tile {
   border: 1px solid var(--border-soft, #e8eaf0); border-radius: 10px; padding: 10px 12px;
   display: flex; flex-direction: column; gap: 6px;
@@ -98,7 +101,7 @@
 .hc-tile-pct { font-size: var(--font-size-12, 12px); font-weight: 600; color: #1f9d57; }
 .hc-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 
-/* composition bar */
+/* share composition */
 .hc-comp { min-width: 0; }
 .hc-comp-cap { display: block; font-size: var(--font-size-13, 13px); font-weight: 600; color: var(--text-2, #4b5563); margin-bottom: 10px; }
 .hc-comp-val { font-weight: 700; }
@@ -192,4 +195,7 @@
 /* ---- responsive ---- */
 @media (max-width: 1080px) {
   .hc-summary, .hc-brand-body, .hc-channel-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 680px) {
+  .hc-tiles { grid-template-columns: 1fr 1fr; }
 }
