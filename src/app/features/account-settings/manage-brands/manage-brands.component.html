@@ -1,4 +1,4 @@
-<!-- ===== Header (matches design) ===== -->
+<!-- ===== Header ===== -->
 <header class="mb-header">
   <button class="mb-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
   <div class="mb-header-text">
@@ -7,42 +7,306 @@
   </div>
 </header>
 
-<!-- ===== Toolbar ===== -->
-<div class="mb-toolbar">
-  <div class="mb-search">
-    <span class="msr">search</span>
-    <input type="text" placeholder="Search by Brand Name, Users" [(ngModel)]="search" />
-  </div>
-  <button class="mb-add" (click)="wizardOpen = true">
-    <span class="msr">add_circle</span> Add Brand
-  </button>
-</div>
-
-<!-- ===== Brand grid ===== -->
-<div class="mb-grid">
-  <article class="mb-card" *ngFor="let b of filteredBrands">
-    <span class="mb-accent" [style.background]="b.color"></span>
-    <div class="mb-card-head">
-      <span class="mb-logo" [style.background]="b.color + '1a'" [style.color]="b.color">
-        <img [src]="brandLogo(b.domain)" [alt]="b.name" />
-      </span>
-      <div class="mb-card-who">
-        <span class="mb-name">{{ b.name }}</span>
-        <span class="mb-country"><span class="msr">public</span>{{ b.country }}</span>
+<!-- ===== Panel (positioning context for drawer + bulk bar) ===== -->
+<section class="mb-panel">
+  <!-- toolbar -->
+  <div class="pf-head">
+    <span class="pf-title">
+      <span class="pf-fb"><span class="msr">storefront</span></span>
+      Brands ({{ brands.length }})
+    </span>
+    <div class="pf-tools">
+      <div class="view-toggle">
+        <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><span class="msr">view_list</span></button>
+        <button [class.active]="viewMode === 'card'" (click)="viewMode = 'card'"><span class="msr">grid_view</span></button>
       </div>
-      <span class="mb-tickets" [class.on]="b.ticketsEnabled">
-        <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
-        {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
-      </span>
+      <div class="pf-search">
+        <span class="msr">search</span>
+        <input type="text" placeholder="Search by Brand Name, Users" [(ngModel)]="search" />
+      </div>
+      <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Brand</button>
     </div>
-    <div class="mb-card-stats">
-      <span class="mb-stat"><span class="msr">group</span><b>{{ b.users }}</b> Users</span>
-      <span class="mb-stat"><span class="msr">hub</span><b>{{ b.channels }}</b> Channels</span>
-    </div>
-  </article>
+  </div>
 
-  <p class="mb-empty" *ngIf="!filteredBrands.length">No brands match “{{ search }}”.</p>
-</div>
+  <!-- ===== View tabs + custom-view builder ===== -->
+  <div class="pf-tabs">
+    <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="activeViewId = 'all'">All brands</button>
+
+    <button class="pf-tab" *ngFor="let v of savedViews"
+            [class.active]="activeViewId === v.id" (click)="activeViewId = v.id" [title]="v.label">
+      <span class="pf-tab-lbl">{{ v.label }}</span>
+      <span class="pf-tab-x" (click)="removeView(v.id, $event)"><span class="msr">close</span></span>
+    </button>
+
+    <button class="pf-add" [class.active]="viewBuilderOpen"
+            (click)="viewBuilderOpen ? closeViewBuilder() : openViewBuilder()" title="Create custom view">
+      <span class="msr">add</span>
+    </button>
+
+    <!-- builder popover -->
+    <div class="view-builder" *ngIf="viewBuilderOpen">
+      <div class="vb-grid">
+        <div class="vb-col">
+          <label class="vb-lbl">Field</label>
+          <div class="vb-select">
+            <select [ngModel]="draft.field" (ngModelChange)="onFieldChange($event)">
+              <option *ngFor="let f of fieldOptions" [value]="f">{{ f }}</option>
+            </select>
+            <span class="msr">expand_more</span>
+          </div>
+        </div>
+
+        <div class="vb-col">
+          <label class="vb-lbl">Operator</label>
+          <div class="vb-select">
+            <select [(ngModel)]="draft.operator">
+              <option *ngFor="let o of operatorOptions" [value]="o">{{ o }}</option>
+            </select>
+            <span class="msr">expand_more</span>
+          </div>
+        </div>
+
+        <div class="vb-col">
+          <label class="vb-lbl">Value</label>
+
+          <input class="vb-input" *ngIf="isTextField(draft.field)"
+                 [(ngModel)]="draft.text" placeholder="Type a brand name…" />
+
+          <div class="vb-ms" *ngIf="!isTextField(draft.field)">
+            <button type="button" class="vb-select ms-trigger" (click)="valueDropdownOpen = !valueDropdownOpen">
+              <span class="ms-text" [class.placeholder]="!draft.values.length">
+                {{ draft.values.length ? draft.values.join(', ') : 'Select…' }}
+              </span>
+              <span class="msr">expand_more</span>
+            </button>
+            <div class="vb-options" *ngIf="valueDropdownOpen">
+              <div class="vb-opt" *ngFor="let o of valueOptions(draft.field)" (click)="toggleValue(o)">
+                <span class="vb-check" [class.on]="draft.values.includes(o)"><span class="msr">check</span></span>
+                {{ o }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vb-foot">
+        <button class="vb-clear" (click)="clearDraft()">Clear All</button>
+        <button class="vb-save" [disabled]="!canSaveView" (click)="saveView()">
+          <span class="msr">bookmark_add</span>Save view
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LIST / DATA-GRID VIEW ===== -->
+  <div class="pf-table-wrap" *ngIf="viewMode === 'list'">
+    <table class="pf-table">
+      <thead>
+        <tr>
+          <th class="col-check pin">
+            <span class="cbx" [class.checked]="allSelected" (click)="toggleAll()"><span class="msr">check</span></span>
+          </th>
+          <th class="col-name pin sortable" (click)="sortBy('brand')">
+            <span class="th-in">Brand <span class="msr sort-ic" [class.on]="sortKey==='brand'">{{ sortIcon('brand') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('users')">
+            <span class="th-in">Users <span class="msr sort-ic" [class.on]="sortKey==='users'">{{ sortIcon('users') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('channels')">
+            <span class="th-in">Channels <span class="msr sort-ic" [class.on]="sortKey==='channels'">{{ sortIcon('channels') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('tickets')">
+            <span class="th-in">Tickets creation <span class="msr sort-ic" [class.on]="sortKey==='tickets'">{{ sortIcon('tickets') }}</span></span>
+          </th>
+          <th class="col-act">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of displayBrands" [class.selected]="selected.has(b.id)">
+          <td class="col-check pin">
+            <span class="cbx" [class.checked]="selected.has(b.id)" (click)="toggleRow(b.id)"><span class="msr">check</span></span>
+          </td>
+
+          <td class="col-name pin">
+            <div class="t-profile">
+              <span class="t-avatar" [style.background]="b.color + '1a'"><img [src]="brandLogo(b.domain)" [alt]="b.name" /></span>
+              <span class="t-who">
+                <span class="t-name">{{ b.name }}</span>
+                <span class="t-owner"><span class="msr">language</span>{{ b.domain }}</span>
+              </span>
+              <button class="t-open" title="Open details" (click)="openDetail(b)"><span class="msr">chevron_right</span></button>
+            </div>
+          </td>
+
+          <!-- users: first 2 square avatars + count -->
+          <td>
+            <div class="stack">
+              <span class="stack-av" *ngFor="let u of (b.userPreview || []).slice(0, 2)"
+                    [style.background]="b.color + '1a'" [style.color]="b.color" [title]="u.name + ' · ' + u.role">{{ userInitials(u) }}</span>
+              <span class="stack-more" *ngIf="b.users > 2">+{{ b.users - 2 }}</span>
+            </div>
+          </td>
+
+          <!-- channels: first 2 colour-tile logos + count -->
+          <td>
+            <div class="stack">
+              <span class="stack-logo" *ngFor="let c of (b.channelIds || []).slice(0, 2)" [style.background]="channelColor(c)" [title]="c">
+                <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c)"><path [attr.d]="brandSvg(c)"></path></svg>
+              </span>
+              <span class="stack-more" *ngIf="b.channels > 2">+{{ b.channels - 2 }}</span>
+            </div>
+          </td>
+
+          <!-- tickets creation: segmented control -->
+          <td>
+            <div class="seg" (click)="$event.stopPropagation()">
+              <button class="seg-btn" [class.on]="b.ticketsEnabled" (click)="setTickets(b, true, $event)">On</button>
+              <button class="seg-btn" [class.off]="!b.ticketsEnabled" (click)="setTickets(b, false, $event)">Off</button>
+            </div>
+          </td>
+
+          <td class="col-act">
+            <div class="t-acts">
+              <button class="t-act" title="Edit"><span class="msr">edit</span></button>
+              <button class="t-act" title="{{ b.ticketsEnabled ? 'Disable tickets' : 'Enable tickets' }}">
+                <span class="msr">{{ b.ticketsEnabled ? 'block' : 'check_circle' }}</span>
+              </button>
+              <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- bulk bar -->
+  <div class="bulkbar" *ngIf="selected.size > 0" [class.show]="selected.size > 0">
+    <span class="bb-cnt"><span class="bb-pill">{{ selected.size }}</span> selected</span>
+    <span class="bb-sep"></span>
+    <button class="bb-btn"><span class="msr">block</span>Disable tickets</button>
+    <button class="bb-btn"><span class="msr">group_add</span>Assign users</button>
+    <button class="bb-btn danger"><span class="msr">delete</span>Delete</button>
+    <span class="bb-sep"></span>
+    <button class="bb-btn close" (click)="clearSelection()"><span class="msr">close</span></button>
+  </div>
+
+  <!-- ===== CARD GRID VIEW ===== -->
+  <div class="pf-grid" *ngIf="viewMode === 'card'">
+    <article class="card" *ngFor="let b of displayBrands" (click)="openDetail(b)">
+      <div class="card-head">
+        <span class="card-avatar" [style.background]="b.color + '1a'"><img [src]="brandLogo(b.domain)" [alt]="b.name" /></span>
+        <div class="card-who">
+          <span class="card-name">{{ b.name }}</span>
+          <span class="card-owner"><span class="msr">public</span>{{ b.country }}</span>
+        </div>
+        <span class="t-badge active" *ngIf="b.ticketsEnabled"><span class="led"></span>Tickets On</span>
+        <span class="t-badge off" *ngIf="!b.ticketsEnabled"><span class="led"></span>Tickets Off</span>
+      </div>
+
+      <div class="card-bstats">
+        <div class="bstat"><span class="bstat-ic"><span class="msr">group</span></span><span class="bstat-txt"><b>{{ b.users }}</b> Users</span></div>
+        <div class="bstat"><span class="bstat-ic"><span class="msr">hub</span></span><span class="bstat-txt"><b>{{ b.channels }}</b> Channels</span></div>
+      </div>
+
+      <div class="card-actions" (click)="$event.stopPropagation()">
+        <button class="ca-btn"><span class="msr">edit</span>Edit</button>
+        <button class="ca-btn"><span class="msr">{{ b.ticketsEnabled ? 'block' : 'check_circle' }}</span>{{ b.ticketsEnabled ? 'Disable' : 'Enable' }}</button>
+        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+      </div>
+    </article>
+
+    <p class="mb-empty" *ngIf="!displayBrands.length">No brands match your filters.</p>
+  </div>
+
+  <!-- ===== DETAIL DRAWER ===== -->
+  <div class="dw-scrim" [class.show]="detail" (click)="closeDetail()"></div>
+  <aside class="drawer" [class.show]="detail">
+    <ng-container *ngIf="detail as d">
+      <button class="dw-close-out" (click)="closeDetail()"><span class="msr">close</span></button>
+
+      <div class="dw-head">
+        <div class="dw-title">
+          <span class="t-avatar lg" [style.background]="d.color + '1a'"><img [src]="brandLogo(d.domain)" [alt]="d.name" /></span>
+          <div class="dw-who">
+            <h2>{{ d.name }}</h2>
+            <span class="dw-owner"><span class="msr">language</span>{{ d.domain }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dw-body">
+        <!-- Brand identity (step 1) -->
+        <div class="dw-section">Brand identity</div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">smart_toy</span>AI-friendly name</span>
+          <span class="dw-val">{{ d.aiFriendlyName || d.name }}</span>
+        </div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">public</span>Country</span>
+          <span class="dw-val">{{ d.country }}</span>
+        </div>
+        <p class="dw-desc" *ngIf="d.description">{{ d.description }}</p>
+
+        <!-- Team & tickets (step 3) -->
+        <div class="dw-section">Assigned users ({{ d.users }})</div>
+        <div class="dw-users" *ngIf="d.userPreview?.length">
+          <div class="dw-user" *ngFor="let u of d.userPreview">
+            <span class="dw-uav">{{ userInitials(u) }}</span>
+            <span class="dw-uinfo"><span class="dw-uname">{{ u.name }}</span><span class="dw-urole">{{ u.role }}</span></span>
+          </div>
+          <span class="dw-umore" *ngIf="d.users > (d.userPreview?.length || 0)">+{{ d.users - (d.userPreview?.length || 0) }} more users</span>
+        </div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">confirmation_number</span>Ticket creation</span>
+          <div class="seg" (click)="$event.stopPropagation()">
+            <button class="seg-btn" [class.on]="d.ticketsEnabled" (click)="setTickets(d, true, $event)">On</button>
+            <button class="seg-btn" [class.off]="!d.ticketsEnabled" (click)="setTickets(d, false, $event)">Off</button>
+          </div>
+        </div>
+
+        <!-- Listening channels -->
+        <div class="dw-section">Listening channels ({{ d.channels }})</div>
+        <div class="dw-chan" *ngIf="d.channelIds?.length">
+          <span class="dw-clogo" *ngFor="let c of d.channelIds" [style.background]="channelColor(c)" [title]="c">
+            <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c)"><path [attr.d]="brandSvg(c)"></path></svg>
+          </span>
+          <span class="dw-cmore" *ngIf="d.channels > (d.channelIds?.length || 0)">+{{ d.channels - (d.channelIds?.length || 0) }}</span>
+        </div>
+
+        <!-- Categories (step 4) -->
+        <div class="dw-section">Category mapping</div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">sell</span>Category group</span>
+          <span class="dw-val">{{ d.categoryGroup || '—' }}</span>
+        </div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">label</span>Catch-all category</span>
+          <span class="dw-val">{{ d.catchAll || '—' }}</span>
+        </div>
+
+        <!-- Products (step 5) -->
+        <div class="dw-section" *ngIf="d.products?.length">Products ({{ d.products?.length }})</div>
+        <div class="dw-pills" *ngIf="d.products?.length">
+          <span class="dw-pill" *ngFor="let p of d.products">
+            {{ p.name }}<small *ngIf="p.synonyms.length"> · {{ p.synonyms.join(', ') }}</small>
+          </span>
+        </div>
+
+        <!-- Competitors (step 5) -->
+        <div class="dw-section" *ngIf="d.competitors?.length">Competitors ({{ d.competitors?.length }})</div>
+        <div class="dw-pills" *ngIf="d.competitors?.length">
+          <span class="dw-pill alt" *ngFor="let c of d.competitors">{{ c }}</span>
+        </div>
+      </div>
+
+      <div class="dw-foot">
+        <button class="ca-btn"><span class="msr">edit</span>Edit</button>
+        <button class="ca-btn"><span class="msr">{{ d.ticketsEnabled ? 'block' : 'check_circle' }}</span>{{ d.ticketsEnabled ? 'Disable' : 'Enable' }}</button>
+        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+      </div>
+    </ng-container>
+  </aside>
+</section>
 
 <!-- ===== Add-brand wizard ===== -->
 <app-add-brand-wizard *ngIf="wizardOpen"

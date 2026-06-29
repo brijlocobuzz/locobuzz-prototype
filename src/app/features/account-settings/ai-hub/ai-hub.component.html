@@ -11,14 +11,14 @@
     </div>
 
     <div class="ai-top-actions">
-      <div class="ai-toggle theme" role="tablist">
-        <button [class.on]="theme === 'dark'" (click)="theme = 'dark'"><span class="msr">dark_mode</span>Dark</button>
-        <button [class.on]="theme === 'light'" (click)="theme = 'light'"><span class="msr">light_mode</span>Light</button>
-      </div>
       <div class="ai-toggle" role="tablist">
         <button [class.on]="!aiActive" (click)="aiActive = false">Inactive</button>
         <button [class.on]="aiActive" (click)="aiActive = true">Active</button>
       </div>
+      <button class="ai-theme-btn" (click)="theme = theme === 'dark' ? 'light' : 'dark'"
+              [title]="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+        <span class="msr">{{ theme === 'dark' ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
     </div>
   </header>
 

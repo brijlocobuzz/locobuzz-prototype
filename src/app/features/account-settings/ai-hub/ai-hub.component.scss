@@ -63,8 +63,17 @@
   padding: 6px 16px; border-radius: 18px; transition: all .18s ease;
 }
 .ai-toggle button.on { background: var(--ai-grad); color: #fff; box-shadow: 0 3px 10px rgba(91, 124, 250, .4); }
-.ai-toggle.theme button { padding: 6px 13px; }
-.ai-toggle.theme .msr { font-size: var(--font-size-16); }
+
+/* circular dark/light theme switch */
+.ai-theme-btn {
+  width: 38px; height: 38px; flex: 0 0 auto;
+  display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--ai-border); border-radius: 50%;
+  background: var(--ai-toggle-bg); color: var(--ai-text-2);
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.ai-theme-btn:hover { color: var(--ai-text); border-color: #5b7cfa; }
+.ai-theme-btn .msr { font-size: var(--font-size-20); }
 
 /* ---- section titles ---- */
 .ai-sec-title {
@@ -91,6 +100,11 @@
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%);
           mask-image: linear-gradient(90deg, transparent, #000 55%);
 }
+/* light theme: keep the hero bright — soft gradient + faint neural texture */
+:host(.theme-light) .ai-hero {
+  background: linear-gradient(115deg, #ffffff 0%, #eff3fc 55%, #e7edfb 100%);
+}
+:host(.theme-light) .ai-hero-img { opacity: .2; }
 .ai-hero-body { position: relative; padding: 40px; max-width: 640px; }
 .ai-pill {
   display: inline-flex; align-items: center; gap: 7px;
