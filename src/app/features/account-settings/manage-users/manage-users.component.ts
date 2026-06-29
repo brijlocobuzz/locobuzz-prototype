@@ -67,7 +67,7 @@ export class ManageUsersComponent {
      =================================================================== */
   activeViewId = 'all';
   savedViews: SavedView[] = [];
-  viewBuilderOpen = true;
+  viewBuilderOpen = false;
   valueDropdownOpen = false;
   private viewSeq = 0;
 
@@ -92,7 +92,7 @@ export class ManageUsersComponent {
     this.viewBuilderOpen = true;
   }
   closeViewBuilder() {
-    this.viewBuilderOpen = true;
+    this.viewBuilderOpen = false;
     this.valueDropdownOpen = false;
   }
   onFieldChange(field: string) {
