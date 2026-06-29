@@ -446,6 +446,17 @@
         </div>
       </div>
 
+      <!-- welcome email -->
+      <label class="au-welcome-card">
+        <input type="checkbox" [(ngModel)]="sendWelcomeEmail" />
+        <span class="au-check-box"><span class="msr">check</span></span>
+        <span class="au-welcome-text">
+          <span class="au-welcome-title">Send a Welcome Email to this user</span>
+          <span class="au-welcome-sub">Emails {{ email || 'the user' }} their login details and a getting-started guide.</span>
+        </span>
+        <span class="au-welcome-ic"><span class="msr">mark_email_read</span></span>
+      </label>
+
       <!-- notify users -->
       <div class="au-card">
         <div class="au-card-head">

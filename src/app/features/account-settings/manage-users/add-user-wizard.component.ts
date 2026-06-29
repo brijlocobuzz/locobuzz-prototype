@@ -98,6 +98,8 @@ export class AddUserWizardComponent {
   perBrandSignatures = false;
   signature = '';
   brandSignatures: Record<string, string> = {};
+  /** Send the new user an onboarding/welcome email. */
+  sendWelcomeEmail = true;
   selectedNotifyEmails = new Set<string>();
   notifyDropdownOpen = false;
   notifySearch = '';
