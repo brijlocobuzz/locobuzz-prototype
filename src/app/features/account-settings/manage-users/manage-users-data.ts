@@ -349,149 +349,157 @@ export const NOTIFY_USERS: string[] = [
 ];
 
 /* ===================================================================
-   Platform permission tree
+   Platform permissions — seven tonal groups (1:1 with Your Profile)
+   Each group → capabilities → individual child permissions.
    =================================================================== */
-export interface PermissionChild {
-  key: string;
-  label: string;
-  /** Optional info tooltip (e.g. masked-data warning). */
-  info?: string;
+export type PermissionRisk = 'Sensitive' | 'High risk';
+
+export interface PermissionCapability {
+  id: string;
+  name: string;
+  note: string;
+  risk?: PermissionRisk;
+  /** Individual permissions toggled under the capability. */
+  children: string[];
 }
 
-export interface PermissionModule {
-  key: string;
-  label: string;
-  /** "Response Dashboard" or "Account Settings". */
-  group: 'Response Dashboard' | 'Account Settings';
-  /** Material Symbols glyph for the platform chip. */
+export interface PermissionGroup {
+  id: string;
+  name: string;
+  /** Material Symbols Rounded glyph. */
   icon: string;
-  children: PermissionChild[];
+  tone: 'blue' | 'teal' | 'indigo' | 'amber' | 'violet' | 'green' | 'slate';
+  description: string;
+  capabilities: PermissionCapability[];
 }
 
-export const PERMISSION_MODULES: PermissionModule[] = [
-  // ---- Response Dashboard --------------------------------------------
-  { key: 'analytics', label: 'Analytics', group: 'Response Dashboard', icon: 'insights', children: [
-    { key: 'an-create', label: 'Create Dashboard' },
-    { key: 'an-share', label: 'Share Dashboard' },
-    { key: 'an-share-internal', label: 'Share Dashboard with Internal Team' },
-    { key: 'an-share-public', label: 'Share Dashboard as Public Link' },
-    { key: 'an-widget', label: 'Widget Maker' },
-  ] },
-  { key: 'reports', label: 'Reports', group: 'Response Dashboard', icon: 'description', children: [
-    { key: 'rp-create', label: 'Create Report' },
-    { key: 'rp-edit', label: 'Edit Report Template' },
-  ] },
-  { key: 'socialInbox', label: 'Social Inbox', group: 'Response Dashboard', icon: 'forum', children: [
-    { key: 'si-like', label: 'Allow Like' },
-    { key: 'si-del-lb', label: 'Allow Delete from Locobuzz' },
-    { key: 'si-retweet', label: 'Allow Retweet (Only for Twitter)' },
-    { key: 'si-hide', label: 'Allow Hide/Unhide (Only for Facebook)' },
-    { key: 'si-del-sm', label: 'Allow Delete from Social Media' },
-    { key: 'si-assign', label: 'Allow Assignment' },
-    { key: 'si-masked', label: 'Allow to View Masked Data', info: 'Lets the user see unmasked PII such as phone numbers and emails.' },
-    { key: 'si-ticket', label: 'Create New Ticket' },
-    { key: 'si-escalate', label: 'Ticket Escalation' },
-    { key: 'si-actionable', label: 'Make Non-actionable to Actionable' },
-    { key: 'si-translate', label: 'Translate' },
-    { key: 'si-reply', label: 'Reply' },
-    { key: 'si-influencer', label: 'Mark Influencer' },
-    { key: 'si-category', label: 'Assign Mention / Ticket Category' },
-    { key: 'si-tab', label: 'Tab Creation' },
-    { key: 'si-crm', label: 'CRM Integration' },
-    { key: 'si-priority', label: 'Change Ticket Priority' },
-    { key: 'si-personal', label: 'Edit Personal Details' },
-    { key: 'si-chat', label: 'Chat Section' },
-    { key: 'si-multi', label: 'Multiple Selection of Mentions/Tickets' },
-    { key: 'si-emails', label: 'Send Emails to Locobuzz Users' },
-    { key: 'si-block', label: 'Block/Unblock (Only for Twitter)' },
-  ] },
-  { key: 'tokenManagement', label: 'Token Management', group: 'Response Dashboard', icon: 'vpn_key', children: [
-    { key: 'tm-add', label: 'Add Token' },
-    { key: 'tm-refresh', label: 'Refresh Token' },
-    { key: 'tm-delete', label: 'Delete Token' },
-  ] },
-
-  // ---- Account Settings ----------------------------------------------
-  { key: 'dataConsumption', label: 'Data Consumption', group: 'Account Settings', icon: 'data_usage', children: [
-    { key: 'dc-view', label: 'View Consumption' },
-  ] },
-  { key: 'manageBrands', label: 'Manage Brands', group: 'Account Settings', icon: 'storefront', children: [
-    { key: 'mb-create', label: 'Create Brand' },
-    { key: 'mb-edit', label: 'Edit Brand' },
-    { key: 'mb-delete', label: 'Delete Brand' },
-  ] },
-  { key: 'manageUsers', label: 'Manage Users', group: 'Account Settings', icon: 'group', children: [
-    { key: 'mu-create', label: 'Create User' },
-    { key: 'mu-edit', label: 'Edit User' },
-    { key: 'mu-delete', label: 'Delete User' },
-  ] },
-  { key: 'channelConfiguration', label: 'Channel Configuration', group: 'Account Settings', icon: 'settings_input_component', children: [
-    { key: 'cc-add', label: 'Add Channel' },
-    { key: 'cc-edit', label: 'Edit Channel' },
-    { key: 'cc-delete', label: 'Delete Channel' },
-  ] },
-  { key: 'keywordConfiguration', label: 'Keywords Configuration', group: 'Account Settings', icon: 'key', children: [
-    { key: 'kc-add', label: 'Add Keyword' },
-    { key: 'kc-edit', label: 'Edit Keyword' },
-  ] },
-  { key: 'categoryMapping', label: 'Category Mapping', group: 'Account Settings', icon: 'category', children: [
-    { key: 'cm-create', label: 'Create Category' },
-    { key: 'cm-edit', label: 'Edit Category' },
-  ] },
-  { key: 'competitors', label: 'Competitors', group: 'Account Settings', icon: 'groups', children: [
-    { key: 'cp-map', label: 'Map New Competitors' },
-  ] },
-  { key: 'alerts', label: 'Alerts', group: 'Account Settings', icon: 'notifications', children: [
-    { key: 'al-create', label: 'Create New Alert' },
-    { key: 'al-pause', label: 'Play/Pause Alerts' },
-    { key: 'al-edit', label: 'Edit Alerts' },
-    { key: 'al-delete', label: 'Delete Alerts' },
-  ] },
-  { key: 'publishSettings', label: 'Publish Settings', group: 'Account Settings', icon: 'send', children: [
-    { key: 'pb-approval', label: 'Edit Users for Approval' },
-  ] },
-  { key: 'engagementFormula', label: 'Engagement Formula', group: 'Account Settings', icon: 'functions', children: [
-    { key: 'ef-create', label: 'Create Formula' },
-    { key: 'ef-edit', label: 'Edit Formula' },
-    { key: 'ef-delete', label: 'Delete Formula' },
-  ] },
-  { key: 'tokenExpiryAlert', label: 'Token Expiry Alert', group: 'Account Settings', icon: 'timer', children: [
-    { key: 'te-edit', label: "Edit Email Id's" },
-  ] },
-  { key: 'actionableNonActionable', label: 'Actionable / Non Actionable', group: 'Account Settings', icon: 'rule', children: [
-    { key: 'na-actionable', label: 'Edit Actionable' },
-    { key: 'na-nonactionable', label: 'Edit Non Actionable' },
-    { key: 'na-custom', label: 'Add/Edit Customized' },
-  ] },
-  { key: 'teamManagement', label: 'Team Management', group: 'Account Settings', icon: 'groups_2', children: [
-    { key: 'tg-create', label: 'Create Team' },
-    { key: 'tg-edit', label: 'Edit Team' },
-    { key: 'tg-delete', label: 'Delete Team' },
-  ] },
-  { key: 'viralAlerts', label: 'Viral Alerts', group: 'Account Settings', icon: 'trending_up', children: [
-    { key: 'va-create', label: 'Create Viral Alert' },
-    { key: 'va-pause', label: 'Play/Pause Viral Alerts' },
-    { key: 'va-edit', label: 'Edit Viral Alerts' },
-    { key: 'va-delete', label: 'Delete Viral Alerts' },
-  ] },
-  { key: 'manageSkills', label: 'Manage Skills', group: 'Account Settings', icon: 'psychology', children: [
-    { key: 'ms-create', label: 'Create Skill' },
-    { key: 'ms-edit', label: 'Edit Skill' },
-    { key: 'ms-delete', label: 'Delete Skill' },
-  ] },
+export const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    id: 'insights',
+    name: 'Insights & Reporting',
+    icon: 'bar_chart',
+    tone: 'blue',
+    description: 'Dashboards, widgets, reports, and sharing controls.',
+    capabilities: [
+      { id: 'dashboard-work', name: 'Dashboard work', note: 'Create dashboards and add custom widgets.',
+        children: ['Create Dashboard', 'Custom Widgets'] },
+      { id: 'dashboard-sharing', name: 'Dashboard sharing', note: 'Public links remain separate because they expose data outside the team.', risk: 'Sensitive',
+        children: ['Share Dashboard', 'Share Dashboard with Internal Team', 'Share Dashboard as Public Link'] },
+      { id: 'reports', name: 'Reports', note: 'Create reports and update report templates.',
+        children: ['Create Report', 'Edit Report Template'] },
+    ],
+  },
+  {
+    id: 'social-inbox',
+    name: 'Social Inbox Operations',
+    icon: 'forum',
+    tone: 'teal',
+    description: 'Ticket lifecycle, response, moderation, and profile access.',
+    capabilities: [
+      { id: 'ticket-lifecycle', name: 'Ticket lifecycle', note: 'Supervisor style controls for ticket status and urgency.',
+        children: ['Create New Ticket', 'Reopen Ticket', 'Ticket Escalation', 'Change Ticket Priority', 'Make Non-actionable to Actionable'] },
+      { id: 'assignment-classification', name: 'Assignment and classification', note: 'Ownership, categories, notes, and bulk selection.',
+        children: ['Allow Assignment', 'Assign Mention / Ticket Category', 'Edit Notes', 'Multiple Selection of Mentions/Tickets'] },
+      { id: 'reply-assist', name: 'Reply and agent assist', note: 'Agent response tools, translation, email, and AI disposition.',
+        children: ['Reply', 'Translate', 'Chat Section', 'Send Emails to LocoBuzz Users', 'Allow AI Disposition'] },
+      { id: 'network-actions', name: 'Social network actions', note: 'Channel-native engagement actions.',
+        children: ['Allow Like', 'Allow Retweet', 'Block/Unblock', 'Follow/Unfollow', 'Mute/Unmute'] },
+      { id: 'moderation-delete', name: 'Moderation and deletion', note: 'Deleting from LocoBuzz and deleting from social media are kept separate.', risk: 'High risk',
+        children: ['Allow Hide/Unhide', 'Allow Delete from LocoBuzz', 'Allow Delete from Social Media'] },
+      { id: 'customer-profile', name: 'Customer profile and privacy', note: 'Sensitive customer data and CRM/profile controls.', risk: 'Sensitive',
+        children: ['Allow to View Masked Data', 'Edit Personal Details', 'CRM Integration', 'Mark Influencer'] },
+      { id: 'workspace-setup', name: 'Inbox workspace setup', note: 'Workspace configuration for inbox tabs.',
+        children: ['Tab Creation'] },
+    ],
+  },
+  {
+    id: 'brand-listening',
+    name: 'Brand, Listening & Taxonomy Setup',
+    icon: 'apartment',
+    tone: 'indigo',
+    description: 'Brand setup, channels, listening keywords, categories, and competitors.',
+    capabilities: [
+      { id: 'brand-admin', name: 'Brand administration', note: 'Brand CRUD actions. Delete remains destructive.', risk: 'High risk',
+        children: ['Add Brand', 'Edit Brand', 'Delete Brand'] },
+      { id: 'channel-admin', name: 'Channel administration', note: 'Connections and listening data collection settings.',
+        children: ['Add Channel', 'Pause Channel Listening', 'Edit Sub-Channel Data Collection', 'Enable Historic Data Collection'] },
+      { id: 'keyword-admin', name: 'Keyword administration', note: 'Real-time and historic listening keyword setup.',
+        children: ['Add Real Time Keywords', 'Add Historic Keywords', 'Pause Keyword Listening'] },
+      { id: 'category-taxonomy', name: 'Category and taxonomy', note: 'Category structure, imports, catch-all, and strict checking.',
+        children: ['Create New Category', 'Enable/Disable Skip Strict Checking', 'Import Excel', 'Change Catch-All Category', 'Create Upper Category'] },
+      { id: 'competitors', name: 'Competitor setup', note: 'Map competitors for comparison views.',
+        children: ['Map New Competitors'] },
+    ],
+  },
+  {
+    id: 'governance',
+    name: 'Governance, Users & Teams',
+    icon: 'verified_user',
+    tone: 'amber',
+    description: 'User access, MFA, reassignment, and team administration.',
+    capabilities: [
+      { id: 'user-admin', name: 'User administration', note: 'User CRUD actions and access status.', risk: 'High risk',
+        children: ['Add User', 'Edit User', 'Delete User', 'User Enable/Disable'] },
+      { id: 'security-reassignment', name: 'Security and reassignment', note: 'Security policy and ticket ownership controls.', risk: 'Sensitive',
+        children: ['MFA Access', 'Ticket Re-Assignment Enable/Disable'] },
+      { id: 'team-management', name: 'Team management', note: 'Team CRUD actions.',
+        children: ['Create Team', 'Edit Team', 'Delete Team'] },
+    ],
+  },
+  {
+    id: 'automation',
+    name: 'Automation & Notifications',
+    icon: 'notifications',
+    tone: 'violet',
+    description: 'Alerts, viral alerts, and token expiry recipients.',
+    capabilities: [
+      { id: 'alerts', name: 'Alerts', note: 'Create, pause, edit, and delete alert rules.',
+        children: ['Create New Alert', 'Play/Pause Alerts', 'Edit Alerts', 'Delete Alerts'] },
+      { id: 'viral-alerts', name: 'Viral alerts', note: 'Create, pause, edit, and delete viral alert rules.',
+        children: ['Create Viral Alert', 'Play/Pause Viral Alerts', 'Edit Viral Alerts', 'Delete Viral Alerts'] },
+      { id: 'token-expiry', name: 'Token expiry recipients', note: 'Recipient list for token expiry emails.',
+        children: ['Edit Token Expiry Recipients'] },
+    ],
+  },
+  {
+    id: 'response-rules',
+    name: 'Response, Publishing & Rules',
+    icon: 'layers',
+    tone: 'green',
+    description: 'Publishing approvers, formulas, and actionability rules.',
+    capabilities: [
+      { id: 'approval-routing', name: 'Approval routing', note: 'Publishing approval users.',
+        children: ['Manage Publishing Approvers'] },
+      { id: 'engagement-formula', name: 'Engagement formula', note: 'Create, edit, and delete formulas.',
+        children: ['Create Formula', 'Edit Formula', 'Delete Formula'] },
+      { id: 'actionability-rules', name: 'Actionability rules', note: 'Actionable, non-actionable, and custom response rules.',
+        children: ['Edit Actionable', 'Edit Non-actionable', 'Add/Edit Customized'] },
+    ],
+  },
+  {
+    id: 'quota',
+    name: 'Quotas & Data Limits',
+    icon: 'database',
+    tone: 'slate',
+    description: 'Quota increase requests for data consumption.',
+    capabilities: [
+      { id: 'quota-request', name: 'Quota requests', note: 'Request-only permission. It does not change quota instantly.',
+        children: ['More Quota Request'] },
+    ],
+  },
 ];
 
 /**
- * Default permission module keys pre-selected per role id.
+ * Default permission-group ids pre-selected per role id.
  * Mirrors the role-driven posture of the real dialog (Agent = inbox-only,
  * Supervisor / Configurator = broad access, etc.).
  */
-export const ROLE_DEFAULT_MODULES: Record<number, string[]> = {
-  1: ['socialInbox'],                                                   // Agent
-  9: ['analytics', 'reports', 'socialInbox'],                          // Team Lead
-  2: ['analytics', 'reports', 'socialInbox'],                          // Customer Care
-  8: ['socialInbox', 'publishSettings'],                              // Brand Account
-  6: ['socialInbox'],                                                  // Read-Only Supervisor
-  3: PERMISSION_MODULES.map(m => m.key),                               // Supervisor Agent — all
-  7: PERMISSION_MODULES.map(m => m.key),                               // Account Configurator — all
+export const ROLE_DEFAULT_GROUPS: Record<number, string[]> = {
+  1: ['social-inbox'],                                                  // Agent
+  9: ['insights', 'social-inbox'],                                      // Team Lead
+  2: ['insights', 'social-inbox'],                                      // Customer Care
+  8: ['social-inbox', 'response-rules'],                                // Brand Account
+  6: ['social-inbox'],                                                  // Read-Only Supervisor
+  3: PERMISSION_GROUPS.map(g => g.id),                                  // Supervisor Agent — all
+  7: PERMISSION_GROUPS.map(g => g.id),                                  // Account Configurator — all
 };

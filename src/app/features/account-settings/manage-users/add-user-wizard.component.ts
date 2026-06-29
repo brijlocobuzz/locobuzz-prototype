@@ -1,11 +1,10 @@
-import { Component, EventEmitter, HostListener, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  USER_ROLES, COUNTRY_CODES, ASSIGNABLE_BRANDS, TEAMS, SKILLS, CHANNEL_GROUPS,
-  CONFIGURED_EMAILS, NOTIFY_USERS, PERMISSION_MODULES, ROLE_DEFAULT_MODULES,
-  UserRole, CountryCode, AssignableBrand, Team, Skill, ChannelGroup,
-  ConfiguredEmail, PermissionModule,
+  USER_ROLES, COUNTRY_CODES, ASSIGNABLE_BRANDS, TEAMS,
+  NOTIFY_USERS, PERMISSION_GROUPS, ROLE_DEFAULT_GROUPS,
+  UserRole, CountryCode, AssignableBrand, Team, PermissionGroup, PermissionCapability,
 } from './manage-users-data';
 
 interface WizardStep {
@@ -33,7 +32,7 @@ export class AddUserWizardComponent {
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
-  readonly totalSteps = 5;
+  readonly totalSteps = 4;
 
   /** Celebration screen shown after Save. */
   celebrating = false;
@@ -42,11 +41,10 @@ export class AddUserWizardComponent {
   readonly confetti = this.makeConfetti();
 
   readonly steps: WizardStep[] = [
-    { num: 1, label: 'User profile',      subtitle: 'Identity & role',     icon: 'badge' },
-    { num: 2, label: 'Brands & team',     subtitle: 'Access & tickets',    icon: 'group' },
-    { num: 3, label: 'Channels',          subtitle: 'Inbox & ratings',     icon: 'hub' },
-    { num: 4, label: 'Permissions',       subtitle: 'Platform access',     icon: 'shield' },
-    { num: 5, label: 'Signature & notify', subtitle: 'Finishing touches',  icon: 'draw' },
+    { num: 1, label: 'User profile',       subtitle: 'Identity & role',    icon: 'badge' },
+    { num: 2, label: 'Brands & team',      subtitle: 'Access & teams',     icon: 'group' },
+    { num: 3, label: 'Permissions',        subtitle: 'Platform access',    icon: 'shield' },
+    { num: 4, label: 'Signature & notify', subtitle: 'Finishing touches',  icon: 'draw' },
   ];
 
   // ---- reference data ----------------------------------------------------
@@ -54,11 +52,8 @@ export class AddUserWizardComponent {
   readonly countryCodes = COUNTRY_CODES;
   readonly allBrands = ASSIGNABLE_BRANDS;
   readonly allTeams = TEAMS;
-  readonly allSkills = SKILLS;
-  readonly channelGroups = CHANNEL_GROUPS;
-  readonly allEmails = CONFIGURED_EMAILS;
   readonly notifyUsers = NOTIFY_USERS;
-  readonly modules = PERMISSION_MODULES;
+  readonly groups = PERMISSION_GROUPS;
 
   // =======================================================================
   //  Step 1 · user profile
@@ -86,34 +81,19 @@ export class AddUserWizardComponent {
   selectedTeam: Team | null = null;
   teamOpen = false;
   teamSearch = '';
-  assignToOthers = false;
-  assignLevel: 1 | 2 = 2;       // 1 = team-level, 2 = user-level (all)
-  ticketView: 1 | 2 | 3 = 1;    // 1 = all, 2 = assigned to me, 3 = others
-  selectedSkillIds = new Set<string>();
-  skillSearch = '';
 
   // =======================================================================
-  //  Step 3 · channels & ratings
+  //  Step 3 · permissions
   // =======================================================================
-  selectedChannelIds = new Set<string>();
-  channelSearch = '';
-  selectedEmailIds = new Set<string>();
-  playStoreRatings = new Set<number>();
-  googleReviewRatings = new Set<number>();
-  readonly stars = [1, 2, 3, 4, 5];
-
-  // =======================================================================
-  //  Step 4 · permissions
-  // =======================================================================
-  selectedModuleKeys = new Set<string>();
-  /** Flat set of checked permission child keys. */
+  /** Which permission groups (the 7 platforms) are granted to this user. */
+  selectedGroupIds = new Set<string>();
+  /** Flat set of checked permission child keys (`capId::child`). */
   checkedPermissions = new Set<string>();
-  permissionSearch = '';
   platformsDropdownOpen = false;
   platformSearch = '';
 
   // =======================================================================
-  //  Step 5 · signature & notify
+  //  Step 4 · signature & notify
   // =======================================================================
   perBrandSignatures = false;
   signature = '';
@@ -138,9 +118,8 @@ export class AddUserWizardComponent {
           && (!this.contactNumber || this.contactNumber.length >= 4);
       }
       case 2: return this.selectedBrandIds.size > 0;
-      case 3: return true;
-      case 4: return this.checkedPermissions.size > 0;
-      case 5: return true;
+      case 3: return this.checkedPermissions.size > 0;
+      case 4: return true;
       default: return false;
     }
   }
@@ -194,14 +173,15 @@ export class AddUserWizardComponent {
     return !!this.role && (this.role.id === 3 || this.role.id === 7);
   }
 
-  /** Pre-seed the permission tree from the role's default module set. */
+  /** Pre-seed platform access + its properties from the role's default set. */
   private applyRoleDefaults(r: UserRole) {
-    const defaults = ROLE_DEFAULT_MODULES[r.id] ?? [];
-    this.selectedModuleKeys = new Set(defaults);
+    const defaults = ROLE_DEFAULT_GROUPS[r.id] ?? [];
+    this.selectedGroupIds = new Set(defaults);
     this.checkedPermissions.clear();
-    for (const key of defaults) {
-      const mod = this.modules.find(m => m.key === key);
-      mod?.children.forEach(c => this.checkedPermissions.add(c.key));
+    for (const id of defaults) {
+      const grp = this.groups.find(g => g.id === id);
+      grp?.capabilities.forEach(cap =>
+        cap.children.forEach(child => this.checkedPermissions.add(this.childKey(cap, child))));
     }
   }
 
@@ -268,152 +248,86 @@ export class AddUserWizardComponent {
     this.teamSearch = '';
   }
 
-  get filteredSkills(): Skill[] {
-    const q = this.skillSearch.trim().toLowerCase();
-    return q ? this.allSkills.filter(s => s.name.toLowerCase().includes(q)) : this.allSkills;
-  }
-
-  toggleSkill(id: string) {
-    this.selectedSkillIds.has(id) ? this.selectedSkillIds.delete(id) : this.selectedSkillIds.add(id);
-  }
-
-  /** Skills & ticket-view settings only apply to Agent / Team Lead. */
-  get showAgentSettings(): boolean {
-    return !!this.role && (this.role.id === 1 || this.role.id === 9);
-  }
-
   // =======================================================================
-  //  Step 3 helpers
+  //  Step 3 helpers (permissions)
   // =======================================================================
-  get filteredChannelGroups(): ChannelGroup[] {
-    const q = this.channelSearch.trim().toLowerCase();
-    if (!q) return this.channelGroups;
-    return this.channelGroups
-      .map(g => ({ ...g, children: g.children.filter(c => c.name.toLowerCase().includes(q)) }))
-      .filter(g => g.name.toLowerCase().includes(q) || g.children.length);
+  /** Stable key for a single child permission within its capability. */
+  childKey(cap: PermissionCapability, child: string): string {
+    return `${cap.id}::${child}`;
   }
 
-  groupChecked(g: ChannelGroup): boolean {
-    return g.children.every(c => this.selectedChannelIds.has(c.id));
+  get selectedGroups(): PermissionGroup[] {
+    return this.groups.filter(g => this.selectedGroupIds.has(g.id));
   }
 
-  groupIndeterminate(g: ChannelGroup): boolean {
-    const some = g.children.some(c => this.selectedChannelIds.has(c.id));
-    return some && !this.groupChecked(g);
+  /** Search-filtered groups for the platform-access dropdown. */
+  get filteredGroups(): PermissionGroup[] {
+    const q = this.platformSearch.trim().toLowerCase();
+    return q ? this.groups.filter(g => g.name.toLowerCase().includes(q)) : this.groups;
   }
 
-  toggleChannelGroup(g: ChannelGroup) {
-    if (this.groupChecked(g)) g.children.forEach(c => this.selectedChannelIds.delete(c.id));
-    else g.children.forEach(c => this.selectedChannelIds.add(c.id));
+  togglePlatform(id: string) {
+    const grp = this.groups.find(g => g.id === id);
+    if (!grp) return;
+    const apply = (fn: (k: string) => void) =>
+      grp.capabilities.forEach(cap => cap.children.forEach(c => fn(this.childKey(cap, c))));
+    if (this.selectedGroupIds.has(id)) {
+      this.selectedGroupIds.delete(id);
+      apply(k => this.checkedPermissions.delete(k));
+    } else {
+      this.selectedGroupIds.add(id);
+      apply(k => this.checkedPermissions.add(k));
+    }
   }
 
-  toggleChannel(id: string) {
-    this.selectedChannelIds.has(id) ? this.selectedChannelIds.delete(id) : this.selectedChannelIds.add(id);
+  removePlatform(id: string) {
+    this.togglePlatform(id);   // selected platforms are always currently-on
   }
 
-  /** The Email channel toggles the configured-emails picker. */
-  get emailChannelSelected(): boolean {
-    const grp = this.channelGroups.find(g => g.isEmail);
-    return !!grp && grp.children.some(c => this.selectedChannelIds.has(c.id));
+  // ---- count helpers -----------------------------------------------------
+  /** Total child permissions in a group (across all capabilities). */
+  groupTotal(g: PermissionGroup): number {
+    return g.capabilities.reduce((n, cap) => n + cap.children.length, 0);
   }
 
-  get playStoreSelected(): boolean {
-    const grp = this.channelGroups.find(g => g.isRating === 'playstore');
-    return !!grp && grp.children.some(c => this.selectedChannelIds.has(c.id));
+  /** Enabled child permissions in a group. */
+  groupEnabled(g: PermissionGroup): number {
+    return g.capabilities.reduce(
+      (n, cap) => n + cap.children.filter(c => this.checkedPermissions.has(this.childKey(cap, c))).length, 0);
   }
 
-  get googleReviewSelected(): boolean {
-    const grp = this.channelGroups.find(g => g.isRating === 'googlereview');
-    return !!grp && grp.children.some(c => this.selectedChannelIds.has(c.id));
+  capEnabled(cap: PermissionCapability): number {
+    return cap.children.filter(c => this.checkedPermissions.has(this.childKey(cap, c))).length;
   }
 
-  get anyRatingSelected(): boolean {
-    return this.playStoreSelected || this.googleReviewSelected;
+  groupAllChecked(g: PermissionGroup): boolean {
+    return this.groupEnabled(g) === this.groupTotal(g);
   }
 
-  get selectedEmails(): ConfiguredEmail[] {
-    return this.allEmails.filter(e => this.selectedEmailIds.has(e.id));
+  toggleGroupAll(g: PermissionGroup) {
+    const on = !this.groupAllChecked(g);
+    g.capabilities.forEach(cap => cap.children.forEach(c => {
+      const k = this.childKey(cap, c);
+      on ? this.checkedPermissions.add(k) : this.checkedPermissions.delete(k);
+    }));
   }
 
-  toggleEmail(id: string) {
-    this.selectedEmailIds.has(id) ? this.selectedEmailIds.delete(id) : this.selectedEmailIds.add(id);
+  togglePermission(key: string) {
+    this.checkedPermissions.has(key)
+      ? this.checkedPermissions.delete(key)
+      : this.checkedPermissions.add(key);
   }
 
-  toggleRating(kind: 'playstore' | 'googlereview', star: number) {
-    const set = kind === 'playstore' ? this.playStoreRatings : this.googleReviewRatings;
-    set.has(star) ? set.delete(star) : set.add(star);
+  // ---- collapsible permission groups (my-profile style) ------------------
+  /** Which permission groups are expanded in the properties accordion. */
+  expandedModules: Record<string, boolean> = {};
+
+  toggleModuleExpand(id: string) {
+    this.expandedModules[id] = !this.expandedModules[id];
   }
 
   // =======================================================================
   //  Step 4 helpers
-  // =======================================================================
-  get selectedModules(): PermissionModule[] {
-    return this.modules.filter(m => this.selectedModuleKeys.has(m.key));
-  }
-
-  get filteredPlatforms(): PermissionModule[] {
-    const q = this.platformSearch.trim().toLowerCase();
-    return q ? this.modules.filter(m => m.label.toLowerCase().includes(q)) : this.modules;
-  }
-
-  togglePlatform(key: string) {
-    const mod = this.modules.find(m => m.key === key);
-    if (!mod) return;
-    if (this.selectedModuleKeys.has(key)) {
-      this.selectedModuleKeys.delete(key);
-      mod.children.forEach(c => this.checkedPermissions.delete(c.key));
-    } else {
-      this.selectedModuleKeys.add(key);
-      mod.children.forEach(c => this.checkedPermissions.add(c.key));
-    }
-  }
-
-  removePlatform(key: string) {
-    this.togglePlatform(key);   // selected platforms are always currently-on
-  }
-
-  /** Permission modules visible in the properties list, filtered by search. */
-  get visibleModules(): PermissionModule[] {
-    const q = this.permissionSearch.trim().toLowerCase();
-    let mods = this.selectedModules;
-    if (q) {
-      mods = mods
-        .map(m => ({ ...m, children: m.children.filter(c => c.label.toLowerCase().includes(q)) }))
-        .filter(m => m.label.toLowerCase().includes(q) || m.children.length);
-    }
-    return mods;
-  }
-
-  moduleChecked(m: PermissionModule): boolean {
-    return m.children.every(c => this.checkedPermissions.has(c.key));
-  }
-
-  moduleIndeterminate(m: PermissionModule): boolean {
-    const some = m.children.some(c => this.checkedPermissions.has(c.key));
-    return some && !this.moduleChecked(m);
-  }
-
-  toggleModule(m: PermissionModule) {
-    if (this.moduleChecked(m)) m.children.forEach(c => this.checkedPermissions.delete(c.key));
-    else m.children.forEach(c => this.checkedPermissions.add(c.key));
-  }
-
-  togglePermission(childKey: string) {
-    this.checkedPermissions.has(childKey)
-      ? this.checkedPermissions.delete(childKey)
-      : this.checkedPermissions.add(childKey);
-  }
-
-  /** Response-Dashboard vs Account-Settings group of the currently-visible modules. */
-  modulesInGroup(group: PermissionModule['group']): PermissionModule[] {
-    return this.visibleModules.filter(m => m.group === group);
-  }
-
-  get hasResponseDashboard(): boolean { return this.modulesInGroup('Response Dashboard').length > 0; }
-  get hasAccountSettings(): boolean { return this.modulesInGroup('Account Settings').length > 0; }
-
-  // =======================================================================
-  //  Step 5 helpers
   // =======================================================================
   onTogglePerBrand() {
     this.perBrandSignatures = !this.perBrandSignatures;
@@ -430,6 +344,33 @@ export class AddUserWizardComponent {
   clearSignatures() {
     this.signature = '';
     for (const k of Object.keys(this.brandSignatures)) this.brandSignatures[k] = '';
+  }
+
+  /** Emoji quick-inserts for the signature editor. */
+  readonly signatureEmojis = ['🙌', '😊', '🙏', '✨', '💙'];
+
+  /** The signature shown in the live preview (common, or the first brand's). */
+  get previewSignature(): string {
+    if (this.perBrandSignatures) {
+      const first = this.selectedBrands[0];
+      return first ? (this.brandSignatures[first.id] ?? '') : '';
+    }
+    return this.signature;
+  }
+
+  /** Brand name shown beside the preview author when in per-brand mode. */
+  get previewBrand(): string {
+    return this.perBrandSignatures && this.selectedBrands[0] ? this.selectedBrands[0].name : '';
+  }
+
+  /** Replace the common signature with a token (e.g. the user's name). */
+  insertSignatureToken(text: string) {
+    this.signature = text.slice(0, 30);
+  }
+
+  /** Append an emoji to the common signature if there's room. */
+  appendSignatureEmoji(emoji: string) {
+    if ((this.signature + emoji).length <= 30) this.signature += emoji;
   }
 
   get filteredNotifyUsers(): string[] {
@@ -455,7 +396,7 @@ export class AddUserWizardComponent {
   //  Save / cancel
   // =======================================================================
   onSubmit() {
-    if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(4)) return;
+    if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(3)) return;
     // Show the celebration, then auto-complete; user can also click Done.
     this.celebrating = true;
     setTimeout(() => this.complete(), 3600);
@@ -494,9 +435,26 @@ export class AddUserWizardComponent {
     }));
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape() {
+  constructor(private host: ElementRef<HTMLElement>) {}
+
+  private closeAllDropdowns() {
     this.roleOpen = this.countryOpen = this.teamOpen = false;
     this.brandsDropdownOpen = this.platformsDropdownOpen = this.notifyDropdownOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.closeAllDropdowns();
+  }
+
+  /** Click outside any open picker closes it (autocomplete behaviour). */
+  @HostListener('document:click', ['$event'])
+  onDocClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+    // Clicks landing inside a multiselect or a custom select keep it open;
+    // their own handlers manage toggling/selection.
+    if (target.closest('.au-multi') || target.closest('.au-select-wrap')) return;
+    this.closeAllDropdowns();
   }
 }
