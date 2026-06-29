@@ -38,9 +38,9 @@
   <!-- toolbar -->
   <div class="pf-head">
       <div class="pf-tabs">
-    <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="activeViewId = 'all'">All users ({{ users.length }})</button>
+    <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">All users ({{ users.length }})</button>
     <button class="pf-tab" *ngFor="let v of savedViews"
-            [class.active]="activeViewId === v.id" (click)="activeViewId = v.id" [title]="v.label">
+            [class.active]="activeViewId === v.id" (click)="setView(v.id)" [title]="v.label">
       <span class="pf-tab-lbl">{{ v.label }}</span>
       <span class="pf-tab-x" (click)="removeView(v.id, $event)"><span class="msr">close</span></span>
     </button>
@@ -101,7 +101,7 @@
       </div>
       <div class="pf-search">
         <span class="msr">search</span>
-        <input type="text" placeholder="Search by Name, Username, Email, Role" [(ngModel)]="search" />
+        <input type="text" placeholder="Search by Name, Username, Email, Role" [ngModel]="search" (ngModelChange)="onSearch($event)" />
       </div>
     </div>
   </div>
@@ -224,6 +224,12 @@
 
     <p class="mb-empty" *ngIf="!displayUsers.length">No users match your filters.</p>
   </div>
+
+  <!-- ===== PAGINATION ===== -->
+  <app-pagination-bar *ngIf="totalUsers"
+                      [total]="totalUsers" [page]="page" [pageSize]="pageSize" noun="users"
+                      (pageChange)="page = $event" (pageSizeChange)="pageSize = $event; page = 1">
+  </app-pagination-bar>
 
   <!-- ===== DETAIL DRAWER ===== -->
   <div class="dw-scrim" [class.show]="detail" (click)="closeDetail()"></div>

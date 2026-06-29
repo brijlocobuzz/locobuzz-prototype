@@ -12,8 +12,12 @@
   color: var(--text-2); cursor: pointer; display: grid; place-items: center; margin-top: 2px;
 }
 .mb-back:hover { background: #f1f3f8; color: var(--text-1); }
+.mb-header-text { flex: 1; min-width: 0; }
 .mb-header-text h1 { margin: 0; font-size: var(--font-size-22); font-weight: 700; color: var(--text-1); }
 .mb-header-text p { margin: 4px 0 0; font-size: var(--font-size-14); color: var(--text-3); max-width: 760px; }
+
+/* header right side — Add Brand */
+.mb-header-actions { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
 
 /* ===== Panel ===== */
 .mb-panel {
@@ -27,7 +31,8 @@
 
 /* toolbar */
 .pf-head {
-  display: flex; align-items: center; justify-content: space-between;
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px; border-bottom: 1px solid var(--border-soft);
 }
 .pf-title { display: flex; align-items: center; gap: 10px; font-size: var(--font-size-17); font-weight: 600; }
@@ -64,9 +69,8 @@
 
 /* ===== view tabs + builder ===== */
 .pf-tabs {
-  position: relative;
+  flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  padding: 8px 10px; border-bottom: 1px solid var(--border-soft);
 }
 .pf-tab {
   display: inline-flex; align-items: center; gap: 6px;
@@ -90,9 +94,17 @@
 .pf-add .msr { font-size: var(--font-size-20); }
 
 .view-builder {
-  position: absolute; top: calc(100% + 6px); left: 10px; right: 10px; z-index: 25;
-  background: #f7f9fc; border: 1px solid var(--border); border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(16, 24, 40, .14); padding: 10px;
+position: absolute;
+    top: calc(100%);
+    left: 0px;
+    right: 10px;
+    z-index: 25;
+    background: #f7f9fc;
+    border: 1px solid var(--border);
+    border-radius: 0 0 12px12px;
+    box-shadow: 0 16px 36px rgba(16, 24, 40, 0.14);
+    padding: 10px;
+    width: 500px;
 }
 .vb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .vb-col { display: flex; flex-direction: column; gap: 6px; }
