@@ -509,6 +509,22 @@
 .au-check.on { background: var(--au-accent); border-color: var(--au-accent); }
 .au-check.ind { background: var(--au-accent); border-color: var(--au-accent); }
 .au-check .msr { font-size: var(--font-size-16); }
+
+/* ticketing status pill on each brand row */
+.au-ticket-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  background: #e7f7ee;
+  color: #1f9d5a;
+}
+.au-ticket-pill .msr { font-size: var(--font-size-16); }
+.au-ticket-pill.off { background: #f1f5f9; color: #64748b; }
 .au-link {
   border: none;
   background: transparent;

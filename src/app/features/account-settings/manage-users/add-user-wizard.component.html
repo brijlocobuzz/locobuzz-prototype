@@ -230,6 +230,10 @@
                 {{ b.name.slice(0, 2) | uppercase }}
               </span>
               <span class="au-row-name">{{ b.name }}</span>
+              <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
+                <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
+                {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+              </span>
               <span class="au-check" [class.on]="selectedBrandIds.has(b.id)">
                 <span class="msr" *ngIf="selectedBrandIds.has(b.id)">check</span>
               </span>
