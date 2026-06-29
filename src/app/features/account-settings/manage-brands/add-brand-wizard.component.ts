@@ -60,6 +60,13 @@ export class AddBrandWizardComponent {
   generating = false;
   countryOpen = false;
   countrySearch = '';
+  /** Progressive reveal on step 1: AI name appears after the first generate, country last. */
+  aiNameRevealed = false;
+  countryRevealed = false;
+
+  /** Lightweight toast/snackbar shown over the dialog. */
+  snackbarMsg = '';
+  private snackbarTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ---- step 2 · logo & color ---------------------------------------------
   logoDataUrl: string | null = null;
@@ -147,6 +154,32 @@ export class AddBrandWizardComponent {
     this.countrySearch = '';
   }
 
+  /**
+   * First "Generate Description" click — the AI needs an AI-friendly name before it
+   * can write anything, so this reveals that field instead of generating yet.
+   */
+  revealAiName() {
+    if (this.brandName.trim().length < 3 || this.generating) return;
+    this.aiNameRevealed = true;
+    if (!this.aiFriendlyName) this.aiFriendlyName = this.brandName.trim();
+    this.showSnackbar(
+      'The brand name and AI Friendly Name are same. Please change the AI Friendly Name if you want to.',
+    );
+  }
+
+  /** Show a transient snackbar message over the dialog. */
+  showSnackbar(msg: string) {
+    this.snackbarMsg = msg;
+    if (this.snackbarTimer) clearTimeout(this.snackbarTimer);
+    this.snackbarTimer = setTimeout(() => (this.snackbarMsg = ''), 5000);
+  }
+
+  dismissSnackbar() {
+    if (this.snackbarTimer) clearTimeout(this.snackbarTimer);
+    this.snackbarMsg = '';
+  }
+
+  /** Second "Generate Description" click — produce the description, then reveal Country. */
   generateDescription() {
     if (!this.aiFriendlyName.trim() || this.generating) return;
     this.generating = true;
@@ -158,6 +191,7 @@ export class AddBrandWizardComponent {
           .slice(0, 200);
       this.descriptionDisabled = false;
       this.generating = false;
+      this.countryRevealed = true;
     }, 1400);
   }
 
@@ -186,6 +220,10 @@ export class AddBrandWizardComponent {
   pickColor(hex: string) {
     this.color = hex;
     this.customColorOpen = false;
+  }
+
+  removeLogo() {
+    this.logoDataUrl = null;
   }
 
   // =======================================================================
@@ -363,6 +401,17 @@ export class AddBrandWizardComponent {
       color: colors[i % colors.length],
       round: i % 3 === 0,
     }));
+  }
+
+  openUsersDropdown() {
+    this.usersDropdownOpen = true;
+  }
+
+  // Close the assign-users autocomplete on any click outside it. Clicks inside
+  // `.ab-users` call stopPropagation in the template, so they never reach here.
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.usersDropdownOpen = false;
   }
 
   // Close any open inline popovers when clicking elsewhere in the dialog.

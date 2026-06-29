@@ -32,10 +32,6 @@
       </span>
       {{ '@' + username }} · {{ selectedBrandIds.size }} brands
     </div>
-
-    <button type="button" class="au-btn-primary au-celebrate-done" (click)="complete()">
-      Go to user <span class="msr">arrow_forward</span>
-    </button>
   </div>
 
   <ng-container *ngIf="!celebrating">
@@ -77,32 +73,30 @@
       <h1 class="au-pane-title">User profile</h1>
       <p class="au-pane-sub">Fill in the user details to create a new account and pick the role that drives their access.</p>
 
-      <div class="au-profile-row">
-        <!-- photo uploader -->
-        <div class="au-photo-col">
-          <div class="au-photo">
-            <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="User photo" />
-            <span class="au-photo-initials" *ngIf="!photoDataUrl">{{ userInitials }}</span>
-            <label class="au-photo-cam">
-              <span class="msr">photo_camera</span>
-              <input type="file" accept="image/png,image/jpeg,image/gif" hidden (change)="onPhotoSelected($event)" />
-            </label>
-          </div>
-          <p class="au-photo-hint">PNG, JPG or GIF · max 5MB</p>
+      <!-- photo banner: avatar + label across the top, fields full-width below -->
+      <div class="au-photo-banner">
+        <div class="au-photo">
+          <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="User photo" />
+          <span class="au-photo-initials" *ngIf="!photoDataUrl">{{ userInitials }}</span>
+          <label class="au-photo-cam">
+            <span class="msr">photo_camera</span>
+            <input type="file" accept="image/png,image/jpeg,image/gif" hidden (change)="onPhotoSelected($event)" />
+          </label>
         </div>
+        <div class="au-photo-meta">
+          <p class="au-photo-title">Profile photo</p>
+          <p class="au-photo-hint">Upload a square image — PNG, JPG or GIF, up to 5MB.</p>
+        </div>
+      </div>
 
-        <!-- name fields -->
-        <div class="au-profile-fields">
-          <div class="au-grid-2">
-            <div class="au-field">
-              <label class="au-label">First Name <i>*</i></label>
-              <input class="au-input" type="text" placeholder="e.g. Aarav" maxlength="20" [(ngModel)]="firstName" />
-            </div>
-            <div class="au-field">
-              <label class="au-label">Last Name <i>*</i></label>
-              <input class="au-input" type="text" placeholder="e.g. Mehta" maxlength="20" [(ngModel)]="lastName" />
-            </div>
-          </div>
+      <div class="au-grid-2">
+        <div class="au-field">
+          <label class="au-label">First Name <i>*</i></label>
+          <input class="au-input" type="text" placeholder="e.g. Aarav" maxlength="20" [(ngModel)]="firstName" />
+        </div>
+        <div class="au-field">
+          <label class="au-label">Last Name <i>*</i></label>
+          <input class="au-input" type="text" placeholder="e.g. Mehta" maxlength="20" [(ngModel)]="lastName" />
         </div>
       </div>
 
@@ -135,11 +129,6 @@
               </div>
             </div>
           </div>
-          <label class="au-checkbox admin" *ngIf="showSupervisorAdmin">
-            <input type="checkbox" [(ngModel)]="isSupervisorAdmin" />
-            <span class="au-check-box"><span class="msr">check</span></span>
-            Set as Admin
-          </label>
         </div>
       </div>
 
@@ -155,31 +144,41 @@
       </div>
 
       <div class="au-grid-2">
-        <div class="au-field">
-          <label class="au-label">Country Code</label>
-          <div class="au-select-wrap">
-            <button type="button" class="au-select" [class.is-open]="countryOpen" (click)="countryOpen = !countryOpen">
-              <span>{{ country.code }} {{ country.dial }}</span>
-              <span class="msr chev">expand_more</span>
-            </button>
-            <div class="au-dropdown" *ngIf="countryOpen">
-              <div class="au-dropdown-search">
-                <span class="msr">search</span>
-                <input type="text" placeholder="Search country code" [(ngModel)]="countrySearch" />
-              </div>
-              <div class="au-dropdown-list">
-                <button type="button" class="au-option" *ngFor="let c of filteredCountryCodes"
-                        [class.sel]="c.code === country.code" (click)="selectCountry(c)">{{ c.code }} {{ c.dial }}</button>
-                <p class="au-option-empty" *ngIf="!filteredCountryCodes.length">No codes found</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- contact: compact country code + number -->
         <div class="au-field">
           <label class="au-label">Contact Number</label>
-          <input class="au-input" type="tel" inputmode="numeric"
-                 [placeholder]="'Up to ' + country.maxLen + ' digits'"
-                 [value]="contactNumber" (input)="onContactInput($event)" />
+          <div class="au-phone">
+            <div class="au-select-wrap au-cc">
+              <button type="button" class="au-select" [class.is-open]="countryOpen" (click)="countryOpen = !countryOpen">
+                <span>{{ country.dial }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="au-dropdown" *ngIf="countryOpen">
+                <div class="au-dropdown-search">
+                  <span class="msr">search</span>
+                  <input type="text" placeholder="Search code" [(ngModel)]="countrySearch" />
+                </div>
+                <div class="au-dropdown-list">
+                  <button type="button" class="au-option" *ngFor="let c of filteredCountryCodes"
+                          [class.sel]="c.code === country.code" (click)="selectCountry(c)">{{ c.code }} {{ c.dial }}</button>
+                  <p class="au-option-empty" *ngIf="!filteredCountryCodes.length">No codes found</p>
+                </div>
+              </div>
+            </div>
+            <input class="au-input" type="tel" inputmode="numeric"
+                   [placeholder]="'Up to ' + country.maxLen + ' digits'"
+                   [value]="contactNumber" (input)="onContactInput($event)" />
+          </div>
+        </div>
+
+        <!-- admin toggle sits in the second cell so the grid stays aligned -->
+        <div class="au-field" *ngIf="showSupervisorAdmin">
+          <label class="au-label">&nbsp;</label>
+          <label class="au-checkbox admin">
+            <input type="checkbox" [(ngModel)]="isSupervisorAdmin" />
+            <span class="au-check-box"><span class="msr">check</span></span>
+            Set this user as Admin
+          </label>
         </div>
       </div>
     </section>
@@ -187,13 +186,11 @@
     <!-- ---------- Step 2 · Brands & team ---------- -->
     <section class="au-step-pane" *ngIf="currentStep === 2">
       <h1 class="au-pane-title">Brands &amp; team</h1>
-      <p class="au-pane-sub">Assign the brands this user can access, place them on a team, and define how tickets behave.</p>
+      <p class="au-pane-sub">Assign the brands this user can access and place them on a team.</p>
 
       <!-- assign brands -->
       <div class="au-field">
-        <div class="au-label-row">
-          <label class="au-label">Assign Brands <i>*</i> <b class="au-selected-count">({{ selectedBrandIds.size }} Selected)</b></label>
-        </div>
+        <label class="au-label">Assign Brands <i>*</i></label>
         <p class="au-hint top">Only brands assigned here will be visible to the user.</p>
 
         <div class="au-multi">
@@ -254,141 +251,21 @@
         </div>
       </div>
 
-      <!-- assign tickets to others -->
-      <div class="au-toggle-card">
-        <div class="au-toggle-text">
-          <p class="au-toggle-title">Allow Assigning Tickets to Others</p>
-          <p class="au-toggle-sub">Let this user route tickets to teammates instead of only handling their own.</p>
-        </div>
-        <button type="button" class="au-switch" [class.on]="assignToOthers" (click)="assignToOthers = !assignToOthers">
-          <span class="au-knob"></span>
-        </button>
-      </div>
-
-      <div class="au-segmented" *ngIf="assignToOthers">
-        <button type="button" [class.on]="assignLevel === 1" (click)="assignLevel = 1">Team-level</button>
-        <button type="button" [class.on]="assignLevel === 2" (click)="assignLevel = 2">User-level (all)</button>
-      </div>
-
-      <!-- agent-only: view tickets + skills -->
-      <ng-container *ngIf="showAgentSettings">
-        <div class="au-field" style="margin-top: 22px;">
-          <label class="au-label">View Tickets Settings</label>
-          <div class="au-radio-stack">
-            <label class="au-radio big"><input type="radio" name="ticketView" [value]="1" [(ngModel)]="ticketView" /><span>See all tickets</span></label>
-            <label class="au-radio big"><input type="radio" name="ticketView" [value]="2" [(ngModel)]="ticketView" /><span>Only assigned to me</span></label>
-            <label class="au-radio big"><input type="radio" name="ticketView" [value]="3" [(ngModel)]="ticketView" /><span>Assigned to others</span></label>
-          </div>
-        </div>
-
-        <div class="au-field">
-          <div class="au-label-row">
-            <label class="au-label">Select Skills <b class="au-selected-count">({{ selectedSkillIds.size }} Selected)</b></label>
-          </div>
-          <div class="au-chip-grid">
-            <button type="button" class="au-chip" *ngFor="let s of allSkills"
-                    [class.on]="selectedSkillIds.has(s.id)" (click)="toggleSkill(s.id)">
-              <span class="msr" *ngIf="selectedSkillIds.has(s.id)">check</span>
-              {{ s.name }}
-            </button>
-          </div>
-        </div>
-      </ng-container>
     </section>
 
-    <!-- ---------- Step 3 · Channels & ratings ---------- -->
+    <!-- ---------- Step 3 · Permissions ---------- -->
     <section class="au-step-pane" *ngIf="currentStep === 3">
-      <h1 class="au-pane-title">Channels</h1>
-      <p class="au-pane-sub">Choose which channels and sub-channels the user works on. Selecting Email or review channels unlocks extra settings.</p>
-
-      <!-- channel search -->
-      <div class="au-search-box">
-        <span class="msr">search</span>
-        <input type="text" placeholder="Search channels…" [(ngModel)]="channelSearch" />
-      </div>
-
-      <div class="au-channels">
-        <div class="au-channel-group" *ngFor="let g of filteredChannelGroups">
-          <label class="au-channel-head">
-            <span class="au-check"
-                  [class.on]="groupChecked(g)"
-                  [class.ind]="groupIndeterminate(g)"
-                  (click)="toggleChannelGroup(g)">
-              <span class="msr" *ngIf="groupChecked(g)">check</span>
-              <span class="msr" *ngIf="groupIndeterminate(g)">remove</span>
-            </span>
-            <span class="au-channel-icon"><span class="msr">{{ g.icon }}</span></span>
-            <span class="au-channel-name">{{ g.name }}</span>
-          </label>
-          <div class="au-channel-children">
-            <button type="button" class="au-chip" *ngFor="let c of g.children"
-                    [class.on]="selectedChannelIds.has(c.id)" (click)="toggleChannel(c.id)">
-              <span class="msr" *ngIf="selectedChannelIds.has(c.id)">check</span>
-              {{ c.name }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- configured emails (Email channel) -->
-      <div class="au-card" *ngIf="emailChannelSelected">
-        <div class="au-card-head">
-          <p class="au-card-title">Configured Emails</p>
-          <p class="au-card-sub">Pick the incoming email addresses this user should receive tickets from.</p>
-        </div>
-        <div class="au-chip-grid">
-          <button type="button" class="au-chip" *ngFor="let e of allEmails"
-                  [class.on]="selectedEmailIds.has(e.id)" (click)="toggleEmail(e.id)">
-            <span class="msr" *ngIf="selectedEmailIds.has(e.id)">check</span>
-            {{ e.address }}
-          </button>
-        </div>
-      </div>
-
-      <!-- rating-based assignment -->
-      <div class="au-card" *ngIf="anyRatingSelected">
-        <div class="au-card-head">
-          <p class="au-card-title">Rating-Based Ticket Assignment</p>
-          <p class="au-card-sub">Route reviews to this user based on their star rating.</p>
-        </div>
-
-        <div class="au-rating-row" *ngIf="playStoreSelected">
-          <span class="au-rating-label"><span class="msr">shop</span> Play Store</span>
-          <div class="au-stars">
-            <button type="button" class="au-star" *ngFor="let n of stars"
-                    [class.on]="playStoreRatings.has(n)" (click)="toggleRating('playstore', n)">
-              <span class="msr">star</span>{{ n }}
-            </button>
-          </div>
-        </div>
-
-        <div class="au-rating-row" *ngIf="googleReviewSelected">
-          <span class="au-rating-label"><span class="msr">reviews</span> Google Review</span>
-          <div class="au-stars">
-            <button type="button" class="au-star" *ngFor="let n of stars"
-                    [class.on]="googleReviewRatings.has(n)" (click)="toggleRating('googlereview', n)">
-              <span class="msr">star</span>{{ n }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ---------- Step 4 · Permissions ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 4">
       <h1 class="au-pane-title">Permissions</h1>
       <p class="au-pane-sub">Restrict the menus and properties available to this user by role and responsibility.</p>
 
       <!-- platform access -->
       <div class="au-field">
-        <div class="au-label-row">
-          <label class="au-label">Platform Access <b class="au-selected-count">({{ selectedModuleKeys.size }} Selected)</b></label>
-        </div>
+        <label class="au-label">Platform Access</label>
         <div class="au-multi">
           <div class="au-pill-input" (click)="platformsDropdownOpen = true">
-            <span class="au-pill" *ngFor="let m of selectedModules">
-              {{ m.label }}
-              <button type="button" class="au-pill-x" (click)="removePlatform(m.key); $event.stopPropagation()">
+            <span class="au-pill" *ngFor="let g of selectedGroups">
+              {{ g.name }}
+              <button type="button" class="au-pill-x" (click)="removePlatform(g.id); $event.stopPropagation()">
                 <span class="msr">close</span>
               </button>
             </span>
@@ -399,137 +276,158 @@
           </div>
 
           <div class="au-list" *ngIf="platformsDropdownOpen">
-            <button type="button" class="au-row" *ngFor="let m of filteredPlatforms" (click)="togglePlatform(m.key)">
-              <span class="au-row-icon"><span class="msr">{{ m.icon }}</span></span>
+            <button type="button" class="au-row" *ngFor="let g of filteredGroups" (click)="togglePlatform(g.id)">
+              <span class="au-row-icon" [ngClass]="'au-tone-' + g.tone"><span class="msr">{{ g.icon }}</span></span>
               <span class="au-row-meta">
-                <span class="au-row-name">{{ m.label }}</span>
-                <span class="au-row-sub">{{ m.group }}</span>
+                <span class="au-row-name">{{ g.name }}</span>
+                <span class="au-row-sub">{{ g.description }}</span>
               </span>
-              <span class="au-check" [class.on]="selectedModuleKeys.has(m.key)">
-                <span class="msr" *ngIf="selectedModuleKeys.has(m.key)">check</span>
+              <span class="au-check" [class.on]="selectedGroupIds.has(g.id)">
+                <span class="msr" *ngIf="selectedGroupIds.has(g.id)">check</span>
               </span>
             </button>
+            <p class="au-option-empty" *ngIf="!filteredGroups.length">No platforms found</p>
           </div>
         </div>
       </div>
 
       <!-- selected platform properties -->
       <div class="au-field">
-        <div class="au-label-row">
-          <label class="au-label">Selected Platform Properties</label>
-        </div>
+        <label class="au-label">Selected Platform Properties</label>
         <p class="au-hint top">Grant the user selective properties from each platform they can access.</p>
 
-        <div class="au-search-box" *ngIf="selectedModuleKeys.size">
-          <span class="msr">search</span>
-          <input type="text" placeholder="Search platform properties…" [(ngModel)]="permissionSearch" />
-        </div>
-
         <!-- empty state -->
-        <div class="au-empty-state" *ngIf="!selectedModuleKeys.size">
+        <div class="au-empty-state" *ngIf="!selectedGroupIds.size">
           <span class="msr">shield</span>
           <p class="au-empty-title">No platforms selected</p>
           <p class="au-empty-sub">Add platform access above to configure its properties.</p>
         </div>
 
-        <div class="au-empty-state" *ngIf="selectedModuleKeys.size && !visibleModules.length">
-          <span class="msr">search_off</span>
-          <p class="au-empty-title">No properties found</p>
-          <p class="au-empty-sub">Try a different search term.</p>
+        <!-- collapsible permission groups (my-profile style) -->
+        <div class="au-perm-list" *ngIf="selectedGroupIds.size">
+          <article class="au-perm-group" [ngClass]="'au-tone-' + g.tone" *ngFor="let g of selectedGroups">
+            <button type="button" class="au-pg-summary" [attr.aria-expanded]="!!expandedModules[g.id]"
+                    (click)="toggleModuleExpand(g.id)">
+              <span class="msr au-pg-chev">{{ expandedModules[g.id] ? 'expand_more' : 'chevron_right' }}</span>
+              <span class="au-pg-icon"><span class="msr">{{ g.icon }}</span></span>
+              <span class="au-pg-text">
+                <strong>{{ g.name }}</strong>
+                <small>{{ g.description }}</small>
+              </span>
+              <span class="au-pg-count">{{ groupEnabled(g) }}/{{ groupTotal(g) }}</span>
+            </button>
+
+            <div class="au-pg-caps" *ngIf="expandedModules[g.id]">
+              <div class="au-pg-caps-head">
+                <span class="au-pg-caps-label">{{ groupTotal(g) }} permissions</span>
+                <button type="button" class="au-link" (click)="toggleGroupAll(g)">
+                  {{ groupAllChecked(g) ? 'Clear all' : 'Select all' }}
+                </button>
+              </div>
+
+              <div class="au-cap" *ngFor="let cap of g.capabilities">
+                <div class="au-cap-head">
+                  <strong>{{ cap.name }}</strong>
+                  <span class="au-risk" *ngIf="cap.risk" [class.high]="cap.risk === 'High risk'">
+                    <span class="msr">warning</span>{{ cap.risk }}
+                  </span>
+                  <span class="au-cap-count">{{ capEnabled(cap) }}/{{ cap.children.length }}</span>
+                </div>
+                <p class="au-cap-note">{{ cap.note }}</p>
+                <div class="au-perm-grid">
+                  <label class="au-checkbox" *ngFor="let child of cap.children">
+                    <input type="checkbox" [checked]="checkedPermissions.has(childKey(cap, child))"
+                           (change)="togglePermission(childKey(cap, child))" />
+                    <span class="au-check-box"><span class="msr">check</span></span>
+                    {{ child }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
-
-        <!-- Response Dashboard group -->
-        <ng-container *ngIf="hasResponseDashboard">
-          <p class="au-group-head">Response Dashboard</p>
-          <div class="au-perm-module" *ngFor="let m of modulesInGroup('Response Dashboard')">
-            <label class="au-perm-head">
-              <span class="au-check"
-                    [class.on]="moduleChecked(m)"
-                    [class.ind]="moduleIndeterminate(m)"
-                    (click)="toggleModule(m)">
-                <span class="msr" *ngIf="moduleChecked(m)">check</span>
-                <span class="msr" *ngIf="moduleIndeterminate(m)">remove</span>
-              </span>
-              <span class="au-perm-icon"><span class="msr">{{ m.icon }}</span></span>
-              <span class="au-perm-name">{{ m.label }}</span>
-            </label>
-            <div class="au-perm-grid">
-              <label class="au-checkbox" *ngFor="let c of m.children">
-                <input type="checkbox" [checked]="checkedPermissions.has(c.key)" (change)="togglePermission(c.key)" />
-                <span class="au-check-box"><span class="msr">check</span></span>
-                {{ c.label }}
-                <span class="au-info" *ngIf="c.info" [title]="c.info"><span class="msr">info</span></span>
-              </label>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- Account Settings group -->
-        <ng-container *ngIf="hasAccountSettings">
-          <p class="au-group-head">Account Settings</p>
-          <div class="au-perm-module" *ngFor="let m of modulesInGroup('Account Settings')">
-            <label class="au-perm-head">
-              <span class="au-check"
-                    [class.on]="moduleChecked(m)"
-                    [class.ind]="moduleIndeterminate(m)"
-                    (click)="toggleModule(m)">
-                <span class="msr" *ngIf="moduleChecked(m)">check</span>
-                <span class="msr" *ngIf="moduleIndeterminate(m)">remove</span>
-              </span>
-              <span class="au-perm-icon"><span class="msr">{{ m.icon }}</span></span>
-              <span class="au-perm-name">{{ m.label }}</span>
-            </label>
-            <div class="au-perm-grid">
-              <label class="au-checkbox" *ngFor="let c of m.children">
-                <input type="checkbox" [checked]="checkedPermissions.has(c.key)" (change)="togglePermission(c.key)" />
-                <span class="au-check-box"><span class="msr">check</span></span>
-                {{ c.label }}
-                <span class="au-info" *ngIf="c.info" [title]="c.info"><span class="msr">info</span></span>
-              </label>
-            </div>
-          </div>
-        </ng-container>
       </div>
     </section>
 
-    <!-- ---------- Step 5 · Signature & notify ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 5">
+    <!-- ---------- Step 4 · Signature & notify ---------- -->
+    <section class="au-step-pane" *ngIf="currentStep === 4">
       <h1 class="au-pane-title">Signature &amp; notify</h1>
       <p class="au-pane-sub">Add a reply signature for social channels and choose who gets notified about this new account.</p>
 
       <!-- signature -->
-      <div class="au-card">
+      <div class="au-card au-sig-card">
         <div class="au-card-head with-action">
           <div>
-            <p class="au-card-title">Add Signature</p>
-            <p class="au-card-sub">Appended to responses the user posts on social channels. 3–30 characters.</p>
+            <p class="au-card-title">Reply Signature</p>
+            <p class="au-card-sub">Appended to the end of replies this user posts on social channels.</p>
           </div>
-          <button type="button" class="au-link" (click)="clearSignatures()">Clear All</button>
+          <button type="button" class="au-link" (click)="clearSignatures()">Clear all</button>
         </div>
 
-        <div class="au-toggle-card inset">
-          <div class="au-toggle-text">
-            <p class="au-toggle-title">Different signature per brand</p>
-            <p class="au-toggle-sub">Create a separate signature for each assigned brand instead of one common signature.</p>
-          </div>
-          <button type="button" class="au-switch" [class.on]="perBrandSignatures" (click)="onTogglePerBrand()">
-            <span class="au-knob"></span>
+        <!-- per-brand toggle -->
+        <div class="au-seg-toggle">
+          <button type="button" [class.on]="!perBrandSignatures" (click)="perBrandSignatures && onTogglePerBrand()">
+            <span class="msr">badge</span> One common signature
+          </button>
+          <button type="button" [class.on]="perBrandSignatures" (click)="!perBrandSignatures && onTogglePerBrand()">
+            <span class="msr">store</span> Per-brand signature
           </button>
         </div>
 
-        <!-- common signature -->
-        <div class="au-field" *ngIf="!perBrandSignatures" style="margin: 16px 0 0;">
-          <textarea class="au-textarea" rows="2" maxlength="30" placeholder="Signature for social channels…" [(ngModel)]="signature"></textarea>
-        </div>
+        <div class="au-sig-layout">
+          <!-- editor -->
+          <div class="au-sig-editor">
+            <!-- common -->
+            <ng-container *ngIf="!perBrandSignatures">
+              <div class="au-sig-input-wrap">
+                <textarea class="au-textarea" rows="3" maxlength="30"
+                          placeholder="e.g. — Team Locobuzz" [(ngModel)]="signature"></textarea>
+                <span class="au-sig-counter" [class.over]="signature.length >= 30">{{ signature.length }}/30</span>
+              </div>
+              <div class="au-sig-quick">
+                <span class="au-sig-quick-label">Quick insert</span>
+                <button type="button" class="au-chip sm" (click)="insertSignatureToken('— ' + (firstName || 'Your name'))">
+                  <span class="msr">person</span> Your name
+                </button>
+                <button type="button" class="au-emoji-btn" *ngFor="let e of signatureEmojis"
+                        (click)="appendSignatureEmoji(e)">{{ e }}</button>
+              </div>
+            </ng-container>
 
-        <!-- per-brand signatures -->
-        <div class="au-field" *ngIf="perBrandSignatures" style="margin: 16px 0 0;">
-          <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in step 2 to add per-brand signatures.</p>
-          <div class="au-sig-row" *ngFor="let b of selectedBrands">
-            <span class="au-sig-brand">
-              <span class="au-pill-dot" [style.background]="b.color"></span> {{ b.name }}
-            </span>
-            <input class="au-input" type="text" maxlength="30" placeholder="Signature…" [(ngModel)]="brandSignatures[b.id]" />
+            <!-- per-brand -->
+            <ng-container *ngIf="perBrandSignatures">
+              <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in step 2 to add per-brand signatures.</p>
+              <div class="au-sig-brand-list">
+                <div class="au-sig-row" *ngFor="let b of selectedBrands">
+                  <span class="au-sig-brand">
+                    <span class="au-pill-dot" [style.background]="b.color"></span> {{ b.name }}
+                  </span>
+                  <input class="au-input" type="text" maxlength="30" placeholder="Signature…" [(ngModel)]="brandSignatures[b.id]" />
+                </div>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- live preview -->
+          <div class="au-sig-preview">
+            <span class="au-sig-preview-tag"><span class="msr">bolt</span> Live preview</span>
+            <div class="au-reply">
+              <span class="au-reply-avatar">
+                <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
+                <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
+              </span>
+              <div class="au-reply-body">
+                <span class="au-reply-name">
+                  {{ (firstName || 'New') + ' ' + (lastName || 'User') }}
+                  <span class="au-reply-handle" *ngIf="previewBrand"> · {{ previewBrand }}</span>
+                </span>
+                <p class="au-reply-text">
+                  Thanks for reaching out! We're looking into this for you. 🙌
+                  <span class="au-reply-sig" *ngIf="previewSignature">{{ previewSignature }}</span>
+                </p>
+              </div>
+            </div>
+            <p class="au-sig-preview-note">This is how your signature appears at the end of a reply.</p>
           </div>
         </div>
       </div>
@@ -583,7 +481,7 @@
         Next <span class="msr">chevron_right</span>
       </button>
       <button type="button" class="au-btn-primary" *ngIf="currentStep === totalSteps"
-              [disabled]="!isStepValid(1) || !isStepValid(2) || !isStepValid(4)"
+              [disabled]="!isStepValid(1) || !isStepValid(2) || !isStepValid(3)"
               (click)="onSubmit()">
         Save User
       </button>

@@ -32,10 +32,6 @@
       </span>
       {{ brandName }} · {{ country }}
     </div>
-
-    <button type="button" class="ab-btn-primary ab-celebrate-done" (click)="complete()">
-      Go to brand <span class="msr">arrow_forward</span>
-    </button>
   </div>
 
   <ng-container *ngIf="!celebrating">
@@ -77,56 +73,64 @@
       <h1 class="ab-pane-title">Brand identity</h1>
       <p class="ab-pane-sub">Name your brand and write a short description so your team and AI know what it stands for.</p>
 
-      <div class="ab-grid-2">
-        <div class="ab-field">
-          <label class="ab-label">Brand Name <i>*</i></label>
-          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
-        </div>
+      <!-- 1 · Brand name + AI friendly name + Generate (single line) -->
+      <div class="ab-field">
+        <div class="ab-identity-row">
+          <div class="ab-id-col">
+            <label class="ab-label">Brand Name <i>*</i></label>
+            <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
+          </div>
 
-        <div class="ab-field">
-          <label class="ab-label">Country <i>*</i></label>
-          <div class="ab-select-wrap">
-            <button type="button" class="ab-select" [class.is-open]="countryOpen"
-                    (click)="countryOpen = !countryOpen">
-              <span [class.placeholder]="!country">{{ country || 'Select country' }}</span>
-              <span class="msr chev">expand_more</span>
+          <div class="ab-id-col" *ngIf="aiNameRevealed">
+            <label class="ab-label">AI Friendly Name <i>*</i></label>
+            <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100" [(ngModel)]="aiFriendlyName" />
+          </div>
+
+          <div class="ab-id-gen">
+            <button type="button" class="ab-ai-btn"
+                    [disabled]="aiNameRevealed ? (!aiFriendlyName.trim() || generating) : (brandName.trim().length < 3)"
+                    (click)="aiNameRevealed ? generateDescription() : revealAiName()">
+              <span class="msr" *ngIf="!generating">auto_awesome</span>
+              <span class="ab-spinner" *ngIf="generating"></span>
+              {{ generating ? 'Generating…' : 'Generate Description' }}
             </button>
-            <div class="ab-dropdown" *ngIf="countryOpen">
-              <div class="ab-dropdown-search">
-                <span class="msr">search</span>
-                <input type="text" placeholder="Search country" [(ngModel)]="countrySearch" />
-              </div>
-              <div class="ab-dropdown-list">
-                <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
-                        [class.sel]="c === country" (click)="selectCountry(c)">{{ c }}</button>
-                <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
-              </div>
-            </div>
           </div>
         </div>
+        <p class="ab-hint" *ngIf="!aiNameRevealed">Let AI draft a description for you. We'll ask for an AI-friendly name first.</p>
+        <p class="ab-hint" *ngIf="aiNameRevealed">AI Friendly Name is used internally so the AI references your brand consistently — then generate.</p>
       </div>
 
-      <div class="ab-field">
-        <label class="ab-label">AI Friendly Name <i>*</i></label>
-        <div class="ab-inline-row">
-          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100" [(ngModel)]="aiFriendlyName" />
-          <button type="button" class="ab-ai-btn" [disabled]="!aiFriendlyName.trim() || generating"
-                  (click)="generateDescription()">
-            <span class="msr" *ngIf="!generating">auto_awesome</span>
-            <span class="ab-spinner" *ngIf="generating"></span>
-            {{ generating ? 'Generating…' : 'Generate Description' }}
-          </button>
-        </div>
-        <p class="ab-hint">Used internally so the AI references your brand consistently.</p>
-      </div>
-
+      <!-- 2 · Brand description -->
       <div class="ab-field">
         <div class="ab-label-row">
           <label class="ab-label">Brand Description <i>*</i></label>
           <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
         </div>
-        <textarea class="ab-textarea" rows="4" maxlength="200" [disabled]="descriptionDisabled"
-                  placeholder="Describe what the brand does…" [(ngModel)]="brandDescription"></textarea>
+        <textarea class="ab-textarea" rows="3" maxlength="200" [disabled]="descriptionDisabled"
+                  placeholder="Generate with AI above, or write your own…" [(ngModel)]="brandDescription"></textarea>
+      </div>
+
+      <!-- 3 · Country (revealed last) -->
+      <div class="ab-field" *ngIf="countryRevealed">
+        <label class="ab-label">Country <i>*</i></label>
+        <div class="ab-select-wrap">
+          <button type="button" class="ab-select" [class.is-open]="countryOpen"
+                  (click)="countryOpen = !countryOpen">
+            <span [class.placeholder]="!country">{{ country || 'Select country' }}</span>
+            <span class="msr chev">expand_more</span>
+          </button>
+          <div class="ab-dropdown" *ngIf="countryOpen">
+            <div class="ab-dropdown-search">
+              <span class="msr">search</span>
+              <input type="text" placeholder="Search country" [(ngModel)]="countrySearch" />
+            </div>
+            <div class="ab-dropdown-list">
+              <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
+                      [class.sel]="c === country" (click)="selectCountry(c)">{{ c }}</button>
+              <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -135,47 +139,87 @@
       <h1 class="ab-pane-title">Logo &amp; color</h1>
       <p class="ab-pane-sub">Upload a logo and pick a color that represents your brand across reports and dashboards.</p>
 
-      <div class="ab-logo-row">
-        <!-- logo uploader -->
-        <div class="ab-logo-col">
-          <div class="ab-logo">
-            <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Brand logo" />
-            <span class="ab-logo-initials" *ngIf="!logoDataUrl">{{ brandInitials }}</span>
-            <label class="ab-logo-cam">
-              <span class="msr">photo_camera</span>
-              <input type="file" accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)" />
-            </label>
-          </div>
-          <p class="ab-logo-title">Upload Brand Logo <i>*</i></p>
-          <p class="ab-logo-hint">PNG or JPG · 1:1 ratio · max 5MB</p>
-        </div>
-
-        <!-- colour picker -->
-        <div class="ab-color-col">
-          <p class="ab-section-title">Select Brand Color</p>
-          <p class="ab-section-sub">Pick a color that matches your brand and sets you apart from competitors.</p>
-
-          <div class="ab-swatches">
-            <button type="button" class="ab-swatch" *ngFor="let c of brandColors"
-                    [class.sel]="c === color" [style.background]="c" (click)="pickColor(c)"></button>
-            <div class="ab-swatch-custom-wrap">
-              <button type="button" class="ab-swatch-add" (click)="customColorOpen = !customColorOpen">
-                <span class="msr">add</span>
-              </button>
-              <div class="ab-color-pop" *ngIf="customColorOpen">
-                <input type="color" [(ngModel)]="color" />
-                <span>Pick a custom color</span>
+      <div class="ab2-grid" [style.--bc]="color">
+        <!-- ===== Live brand preview ===== -->
+        <aside class="ab2-preview">
+          <div class="ab2-card">
+            <div class="ab2-cover">
+              <span class="ab2-cover-glow"></span>
+              <span class="ab2-live"><span class="ab2-live-dot"></span>Live preview</span>
+            </div>
+            <div class="ab2-avatar">
+              <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Brand logo" />
+              <span *ngIf="!logoDataUrl">{{ brandInitials }}</span>
+            </div>
+            <div class="ab2-card-body">
+              <p class="ab2-card-name">{{ brandName || 'Your brand' }}</p>
+              <p class="ab2-card-meta">
+                <ng-container *ngIf="aiFriendlyName || country">
+                  <span *ngIf="aiFriendlyName">{{ aiFriendlyName }}</span>
+                  <span class="ab2-sep" *ngIf="aiFriendlyName && country">·</span>
+                  <span *ngIf="country">{{ country }}</span>
+                </ng-container>
+                <span *ngIf="!aiFriendlyName && !country">How your brand appears across the product</span>
+              </p>
+              <div class="ab2-chips">
+                <span class="ab2-chip"><span class="msr">dashboard</span>Dashboards</span>
+                <span class="ab2-chip"><span class="msr">bar_chart</span>Reports</span>
+                <span class="ab2-chip ghost"><span class="msr">forum</span>Mentions</span>
               </div>
             </div>
           </div>
+          <p class="ab2-preview-cap"><span class="msr">visibility</span>Updates as you choose your logo &amp; color</p>
+        </aside>
 
-          <div class="ab-selected-color">
-            <span class="ab-selected-dot" [style.background]="color"></span>
-            <span class="ab-selected-meta">
-              <span class="ab-selected-label">Selected color</span>
-              <span class="ab-selected-hex">{{ color | uppercase }}</span>
-            </span>
-            <button type="button" class="ab-link">View other brand colors</button>
+        <!-- ===== Controls ===== -->
+        <div class="ab2-controls">
+          <!-- logo -->
+          <div class="ab2-block">
+            <p class="ab2-block-title">Brand Logo <i>*</i></p>
+
+            <label class="ab2-drop" *ngIf="!logoDataUrl">
+              <span class="ab2-drop-ic"><span class="msr">add_photo_alternate</span></span>
+              <span class="ab2-drop-main">Click to upload your logo</span>
+              <span class="ab2-drop-sub">PNG or JPG · 1:1 ratio · max 5MB</span>
+              <input type="file" accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)" />
+            </label>
+
+            <div class="ab2-uploaded" *ngIf="logoDataUrl">
+              <span class="ab2-uploaded-thumb"><img [src]="logoDataUrl" alt="" /></span>
+              <span class="ab2-uploaded-meta">
+                <span class="ab2-uploaded-name">Logo uploaded</span>
+                <span class="ab2-uploaded-sub">PNG · 1:1 ratio</span>
+              </span>
+              <label class="ab2-mini-btn">
+                <span class="msr">sync</span>Replace
+                <input type="file" accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)" />
+              </label>
+              <button type="button" class="ab2-mini-btn danger" (click)="removeLogo()" aria-label="Remove logo">
+                <span class="msr">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- color -->
+          <div class="ab2-block">
+            <p class="ab2-block-title">Brand Color</p>
+            <div class="ab2-palette">
+              <button type="button" class="ab2-swatch" *ngFor="let c of brandColors"
+                      [class.sel]="c === color" [style.background]="c" (click)="pickColor(c)">
+                <span class="msr">check</span>
+              </button>
+              <label class="ab2-swatch custom" [style.background]="color" title="Pick a custom color">
+                <span class="msr">colorize</span>
+                <input type="color" [(ngModel)]="color" hidden />
+              </label>
+            </div>
+            <div class="ab2-hex">
+              <span class="ab2-hex-dot" [style.background]="color"></span>
+              <span class="ab2-hex-meta">
+                <span class="ab2-hex-label">Selected color</span>
+                <span class="ab2-hex-val">{{ color | uppercase }}</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -188,12 +232,12 @@
 
       <div class="ab-field">
         <div class="ab-label-row">
-          <label class="ab-label">Assign Users <i>*</i> <b class="ab-selected-count">({{ selectedUserIds.size }} Selected)</b></label>
+          <label class="ab-label">Assign Users <i>*</i></label>
         </div>
         <p class="ab-hint top">Only users assigned to this brand can access it.</p>
 
-        <div class="ab-users">
-          <div class="ab-pill-input" (click)="usersDropdownOpen = true">
+        <div class="ab-users" (click)="$event.stopPropagation()">
+          <div class="ab-pill-input" (click)="openUsersDropdown()">
             <span class="ab-user-pill" *ngFor="let u of selectedUsers">
               <span class="ab-pill-avatar">{{ userInitials(u) }}</span>
               {{ u.name }}
@@ -208,6 +252,7 @@
             </span>
           </div>
 
+          <!-- autocomplete panel: overlays below the input, closes on outside click -->
           <div class="ab-users-list" *ngIf="usersDropdownOpen">
             <div class="ab-users-list-head">
               <span class="ab-users-count">{{ filteredUsers.length }} USERS</span>
@@ -400,4 +445,13 @@
     </div>
   </footer>
   </ng-container>
+</div>
+
+<!-- ===== Snackbar / toast ===== -->
+<div class="ab-snackbar" *ngIf="snackbarMsg" role="status">
+  <span class="msr">info</span>
+  <span class="ab-snackbar-msg">{{ snackbarMsg }}</span>
+  <button type="button" class="ab-snackbar-x" (click)="dismissSnackbar()" aria-label="Dismiss">
+    <span class="msr">close</span>
+  </button>
 </div>
