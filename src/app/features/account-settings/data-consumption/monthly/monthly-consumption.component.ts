@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IncreaseLimitDialogComponent } from '../increase-limit-dialog.component';
+import { BRAND_ICONS } from '../../channel-data';
 
 interface BrandRow {
   name: string;
@@ -14,6 +15,7 @@ interface BrandRow {
 interface ChannelRow {
   name: string;
   initials: string;
+  id?: string;          // BRAND_ICONS key → real brand logo
   color: string;
   total: number;
   pct: number;
@@ -63,12 +65,12 @@ export class MonthlyConsumptionComponent {
 
   /* ---- Channel breakdown + weekly trend ---- */
   readonly channels: ChannelRow[] = [
-    { name: 'Facebook',         initials: 'Fb', color: '#1877F2', total: 81183, pct: 39.32, weekly: [27000, 24000, 21000, 9183] },
-    { name: 'Reddit',           initials: 'Rd', color: '#FF4500', total: 65406, pct: 31.67, weekly: [20000, 18000, 16000, 11406] },
-    { name: 'Tiktok',           initials: 'Tt', color: '#111827', total: 22311, pct: 10.80, weekly: [7000, 6000, 5500, 3811] },
-    { name: 'App Store',        initials: 'As', color: '#0A84FF', total: 10381, pct: 5.03,  weekly: [3000, 3000, 2500, 1881] },
-    { name: 'Google Play Store',initials: 'GP', color: '#34A853', total: 9760,  pct: 4.73,  weekly: [2800, 2700, 2400, 1860] },
-    { name: 'Other Channel',    initials: 'Oc', color: '#9aa1ad', total: 17450, pct: 8.45,  weekly: [5000, 4800, 4200, 3450] },
+    { name: 'Facebook',         initials: 'Fb', id: 'facebook',  color: '#1877F2', total: 81183, pct: 39.32, weekly: [27000, 24000, 21000, 9183] },
+    { name: 'Reddit',           initials: 'Rd', id: 'reddit',    color: '#FF4500', total: 65406, pct: 31.67, weekly: [20000, 18000, 16000, 11406] },
+    { name: 'Tiktok',           initials: 'Tt', id: 'tiktok',    color: '#111827', total: 22311, pct: 10.80, weekly: [7000, 6000, 5500, 3811] },
+    { name: 'App Store',        initials: 'As', id: 'appstore',  color: '#0A84FF', total: 10381, pct: 5.03,  weekly: [3000, 3000, 2500, 1881] },
+    { name: 'Google Play Store',initials: 'GP', id: 'playstore', color: '#34A853', total: 9760,  pct: 4.73,  weekly: [2800, 2700, 2400, 1860] },
+    { name: 'Other Channel',    initials: 'Oc',                  color: '#9aa1ad', total: 17450, pct: 8.45,  weekly: [5000, 4800, 4200, 3450] },
   ];
 
   get channelConfiguredTotal(): number {
@@ -193,6 +195,9 @@ export class MonthlyConsumptionComponent {
   }
   private trim(v: number): string { return v.toFixed(2).replace(/\.?0+$/, ''); }
   fmt(n: number): string { return n.toLocaleString('en-IN'); }
+
+  /** Real brand-logo path for a channel, or null to fall back to initials. */
+  brandSvg(id: string | undefined): string | null { return id ? (BRAND_ICONS[id] ?? null) : null; }
 
   /* ---------- chart zoom ---------- */
   private clampZoom(z: number): number { return Math.min(6, Math.max(1, +z.toFixed(2))); }

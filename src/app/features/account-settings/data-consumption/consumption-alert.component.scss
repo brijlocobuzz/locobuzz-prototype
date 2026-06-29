@@ -18,10 +18,59 @@
 .ca-head-text h1 { margin: 0; font-size: var(--font-size-18, 18px); font-weight: 600; color: var(--text-1, #1c1d22); }
 .ca-head-text p { margin: 2px 0 0; font-size: var(--font-size-13, 13px); color: var(--text-3, #6b7280); }
 
-.ca-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.ca-scroll > * { flex: 0 0 auto; }
-.ca-scroll, .ca-footer { --maxw: 920px; }
-.ca-note, .ca-card, .ca-alloff { width: 100%; max-width: var(--maxw); margin: 0 auto; box-sizing: border-box; }
+.ca-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+.ca-scroll, .ca-footer { --maxw: 1320px; }
+
+/* two-column: settings (left) + change history (right) */
+.ca-layout {
+  width: 100%; max-width: var(--maxw); margin: 0 auto; box-sizing: border-box;
+  display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start;
+}
+.ca-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ca-note, .ca-card, .ca-alloff { width: 100%; box-sizing: border-box; }
+
+/* ---- "Always on" badge (replaces the threshold toggle) ---- */
+.ca-always-on {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; margin-top: 4px;
+  height: 26px; padding: 0 11px; border-radius: 999px;
+  background: #e9f7ef; color: #1f9d57; font-size: var(--font-size-12, 12px); font-weight: 600;
+}
+.ca-always-on .msr { font-size: 16px; }
+
+/* ---- Change history ---- */
+.ca-history {
+  position: sticky; top: 0;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-soft, #e8eaf0); border-radius: 14px;
+  overflow: hidden;
+}
+.ca-history-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border-soft, #eef0f4);
+}
+.ca-history-head .msr { font-size: 20px; color: var(--brand, #6d4af3); }
+.ca-history-head h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: 600; color: var(--text-1, #1c1d22); }
+.ca-timeline { list-style: none; margin: 0; padding: 14px 16px; max-height: 60vh; overflow-y: auto; }
+.ca-tl-item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
+/* connecting line */
+.ca-tl-item::before {
+  content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--border-soft, #eef0f4);
+}
+.ca-tl-item:last-child { padding-bottom: 0; }
+.ca-tl-item:last-child::before { display: none; }
+.ca-tl-dot {
+  flex: none; width: 28px; height: 28px; display: grid; place-items: center; z-index: 1;
+  border-radius: 50%; background: #eef0fe; color: var(--brand, #6d4af3);
+}
+.ca-tl-dot .msr { font-size: 16px; }
+.ca-tl-body { min-width: 0; }
+.ca-tl-text { margin: 3px 0 0; font-size: var(--font-size-13, 13px); line-height: 1.45; color: var(--text-1, #1c1d22); word-break: break-word; }
+.ca-tl-meta { margin: 3px 0 0; font-size: var(--font-size-12, 12px); color: var(--text-3, #9aa1ad); }
+
+@media (max-width: 980px) {
+  .ca-layout { grid-template-columns: 1fr; }
+  .ca-history { position: static; }
+}
 
 /* ---- Whitelist note ---- */
 .ca-note {
@@ -161,11 +210,17 @@
 .ca-scale-axis { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-3, #9aa1ad); }
 
 /* times */
-.ca-times { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ca-times { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 .ca-time { display: flex; flex-direction: column; gap: 7px; }
 .ca-time.disabled .ca-time-label:not(.ca-check) { color: var(--text-3, #9aa1ad); }
-.ca-time-label { font-size: var(--font-size-13, 13px); font-weight: 600; color: var(--text-1, #1c1d22); }
-.ca-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+/* fixed-height labels keep the two time inputs aligned, even though the
+   second label carries a checkbox and the first is plain text */
+.ca-time-label {
+  display: inline-flex; align-items: center; min-height: 22px;
+  font-size: var(--font-size-13, 13px); font-weight: 600; color: var(--text-1, #1c1d22);
+}
+.ca-check { gap: 8px; cursor: pointer; }
+.ca-check input { margin: 0; }
 .ca-check input { width: 17px; height: 17px; accent-color: var(--brand, #6d4af3); cursor: pointer; }
 
 /* all-off warning */
@@ -205,3 +260,40 @@
 @media (max-width: 720px) {
   .ca-times { grid-template-columns: 1fr; }
 }
+
+/* ---- Confirm dialog ---- */
+.ca-scrim {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(20, 22, 34, .48);
+  animation: ca-fade .14s ease;
+}
+.ca-confirm {
+  width: 100%; max-width: 400px; box-sizing: border-box;
+  background: var(--surface, #fff); border-radius: 16px;
+  padding: 24px 24px 20px; text-align: center;
+  box-shadow: 0 24px 60px rgba(16, 18, 30, .28);
+  animation: ca-pop .16s cubic-bezier(.2, .8, .3, 1.1);
+}
+.ca-confirm-icon {
+  width: 52px; height: 52px; margin: 0 auto 14px; display: grid; place-items: center;
+  border-radius: 50%;
+}
+.ca-confirm-icon .msr { font-size: 28px; }
+.ca-confirm[data-tone="brand"]  .ca-confirm-icon { background: #eef0fe; color: var(--brand, #6d4af3); }
+.ca-confirm[data-tone="warn"]   .ca-confirm-icon { background: #fff3df; color: #d98318; }
+.ca-confirm[data-tone="danger"] .ca-confirm-icon { background: #fdecec; color: #d23b3b; }
+.ca-confirm-title { margin: 0; font-size: var(--font-size-17, 17px); font-weight: 600; color: var(--text-1, #1c1d22); }
+.ca-confirm-msg { margin: 8px 0 0; font-size: var(--font-size-14, 14px); line-height: 1.5; color: var(--text-3, #6b7280); }
+.ca-confirm-actions { display: flex; gap: 10px; margin-top: 22px; }
+.ca-confirm-actions .ca-btn { flex: 1; justify-content: center; }
+
+/* confirm button picks up the dialog tone */
+.ca-btn.confirm { border: none; color: #fff; }
+.ca-btn.confirm[data-tone="brand"]  { background: var(--brand, #6d4af3); box-shadow: 0 6px 16px rgba(109,74,243,.3); }
+.ca-btn.confirm[data-tone="warn"]   { background: #e08a1e; box-shadow: 0 6px 16px rgba(224,138,30,.3); }
+.ca-btn.confirm[data-tone="danger"] { background: #d23b3b; box-shadow: 0 6px 16px rgba(210,59,59,.3); }
+.ca-btn.confirm:hover { filter: brightness(1.05); }
+
+@keyframes ca-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ca-pop  { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }

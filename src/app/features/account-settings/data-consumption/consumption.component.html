@@ -89,7 +89,7 @@
       <div class="card-actions" [class.single]="!c.hasDetails">
         <button type="button" class="show" *ngIf="c.hasDetails" (click)="showDetails(c)">Show Details <span class="msr">chevron_right</span></button>
         <button type="button" class="quota" [attr.data-status]="c.status" (click)="openQuota(c)">
-          Increase Quota <span class="msr">open_in_new</span>
+          Increase Limit <span class="msr">open_in_new</span>
         </button>
       </div>
     </article>

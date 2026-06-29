@@ -69,7 +69,9 @@
         </div>
 
         <div class="hc-comp">
-          <span class="hc-comp-cap">Share of credits used</span>
+          <span class="hc-comp-cap">Share of credits used
+            <ng-container *ngIf="hoveredBrand as hb"> · <strong class="hc-comp-val" [style.color]="hb.color">{{ hb.name }} — {{ compact(hb.value) }} <span class="hc-comp-pct">({{ hb.pct }}%)</span></strong></ng-container>
+          </span>
           <div class="hc-compbar">
             <div class="hc-seg" *ngFor="let b of brands"
                  [style.width.%]="b.pct" [style.background]="b.color"
@@ -117,7 +119,12 @@
               <tr *ngFor="let c of channels"
                   [class.dim]="hoverChannel && hoverChannel !== c.name"
                   (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()">
-                <td><span class="hc-avatar" [style.background]="c.color">{{ c.initials }}</span>{{ c.name }}</td>
+                <td>
+                  <span class="hc-avatar" [style.background]="c.color">
+                    <svg *ngIf="brandSvg(c.id) as d; else hcInitials" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path [attr.d]="d"></path></svg>
+                    <ng-template #hcInitials>{{ c.initials }}</ng-template>
+                  </span>{{ c.name }}
+                </td>
                 <td class="num" [title]="fmt(c.count)">{{ compact(c.count) }}</td>
                 <td class="num">
                   <span class="hc-share">
@@ -151,20 +158,23 @@
 
           <div class="hc-comp">
             <span class="hc-comp-cap">Channel share for {{ selectedBrand }}</span>
-            <div class="hc-compbar">
-              <div class="hc-seg" *ngFor="let c of channels"
-                   [style.width.%]="channelPct(c)" [style.background]="c.color"
-                   [class.dim]="hoverChannel && hoverChannel !== c.name"
-                   (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()"
-                   (mousemove)="channelTip($event, c)"></div>
+            <div class="hc-donut-wrap">
+              <svg class="hc-donut" viewBox="0 0 120 120" role="img" aria-label="Channel share donut">
+                <g transform="rotate(-90 60 60)">
+                  <circle class="hc-donut-track" cx="60" cy="60" [attr.r]="donutR"></circle>
+                  <circle *ngFor="let s of donutSegments" class="hc-donut-seg"
+                          cx="60" cy="60" [attr.r]="donutR" [attr.stroke]="s.color"
+                          [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset"
+                          [class.dim]="hoverChannel && hoverChannel !== s.name"
+                          [class.active]="hoverChannel === s.name"
+                          (mouseenter)="onChannelEnter(s.name)" (mouseleave)="onChannelLeave()"></circle>
+                </g>
+                <text x="60" y="54" class="hc-donut-c-top">{{ hoveredChannel ? hoveredChannel.name : 'Total' }}</text>
+                <text x="60" y="71" class="hc-donut-c-val">{{ compact(hoveredChannel ? hoveredChannel.count : selectedBrandTotal) }}</text>
+                <text x="60" y="84" class="hc-donut-c-pct" *ngIf="hoveredChannel">{{ channelPct(hoveredChannel) }}% of total</text>
+              </svg>
             </div>
-            <div class="hc-legend">
-              <span class="hc-leg" *ngFor="let c of channels"
-                    [class.dim]="hoverChannel && hoverChannel !== c.name"
-                    (mouseenter)="onChannelEnter(c.name)" (mouseleave)="onChannelLeave()">
-                <span class="hc-dot" [style.background]="c.color"></span>{{ c.name }}
-              </span>
-            </div>
+            <span class="hc-comp-hint"><span class="msr">touch_app</span>Hover the table or chart to focus a channel</span>
           </div>
         </div>
       </div>

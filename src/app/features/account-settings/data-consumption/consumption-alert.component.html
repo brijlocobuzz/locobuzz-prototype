@@ -9,6 +9,8 @@
   </header>
 
   <div class="ca-scroll">
+   <div class="ca-layout">
+    <div class="ca-main">
     <!-- Whitelist note -->
     <div class="ca-note" role="note">
       <span class="msr">mark_email_read</span>
@@ -16,21 +18,17 @@
     </div>
 
     <!-- ===== Threshold alerts ===== -->
-    <section class="ca-card" [class.off]="!threshold.enabled">
+    <section class="ca-card">
       <header class="ca-card-head">
         <span class="ca-card-icon"><span class="msr">notifications_active</span></span>
         <div class="ca-card-title">
           <h2>Threshold alerts</h2>
           <p>Fire the moment usage crosses any selected threshold — a safety net for unexpected spikes.</p>
         </div>
-        <button class="ca-switch" role="switch" [attr.aria-checked]="threshold.enabled"
-                [class.on]="threshold.enabled" (click)="threshold.enabled = !threshold.enabled"
-                aria-label="Enable threshold alerts">
-          <span class="ca-knob"></span>
-        </button>
+        <span class="ca-always-on"><span class="msr">check_circle</span>Always on</span>
       </header>
 
-      <div class="ca-card-body" *ngIf="threshold.enabled">
+      <div class="ca-card-body">
         <!-- Subject -->
         <div class="ca-field">
           <label for="th-subject">Email subject line</label>
@@ -90,7 +88,7 @@
           <p>A scheduled summary of today's consumption, delivered at the times you choose.</p>
         </div>
         <button class="ca-switch" role="switch" [attr.aria-checked]="digest.enabled"
-                [class.on]="digest.enabled" (click)="digest.enabled = !digest.enabled"
+                [class.on]="digest.enabled" (click)="toggleDigest()"
                 aria-label="Enable daily digest">
           <span class="ca-knob"></span>
         </button>
@@ -144,6 +142,25 @@
       <span class="msr">notifications_off</span>
       Both alert types are off — you won't receive any data-consumption emails. Enable at least one to save.
     </div>
+    </div><!-- /.ca-main -->
+
+    <!-- ===== Change history ===== -->
+    <aside class="ca-history" aria-label="Change history">
+      <header class="ca-history-head">
+        <span class="msr">history</span>
+        <h2>Change history</h2>
+      </header>
+      <ol class="ca-timeline">
+        <li class="ca-tl-item" *ngFor="let h of history">
+          <span class="ca-tl-dot"><span class="msr">{{ h.icon }}</span></span>
+          <div class="ca-tl-body">
+            <p class="ca-tl-text">{{ h.text }}</p>
+            <p class="ca-tl-meta">{{ h.actor }} · {{ relativeTime(h.at) }}</p>
+          </div>
+        </li>
+      </ol>
+    </aside>
+   </div><!-- /.ca-layout -->
   </div>
 
   <!-- Sticky footer -->
@@ -155,4 +172,21 @@
       <span class="msr">save</span>Save Settings
     </button>
   </footer>
+
+  <!-- ===== Confirm dialog ===== -->
+  <div class="ca-scrim" *ngIf="confirmDialog.open" (click)="confirmNo()">
+    <div class="ca-confirm" [attr.data-tone]="confirmDialog.tone"
+         role="alertdialog" aria-modal="true" [attr.aria-label]="confirmDialog.title"
+         (click)="$event.stopPropagation()">
+      <span class="ca-confirm-icon"><span class="msr">{{ confirmDialog.icon }}</span></span>
+      <h3 class="ca-confirm-title">{{ confirmDialog.title }}</h3>
+      <p class="ca-confirm-msg">{{ confirmDialog.message }}</p>
+      <div class="ca-confirm-actions">
+        <button class="ca-btn ghost" (click)="confirmNo()">{{ confirmDialog.cancelLabel }}</button>
+        <button class="ca-btn confirm" [attr.data-tone]="confirmDialog.tone" (click)="confirmYes()">
+          {{ confirmDialog.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
