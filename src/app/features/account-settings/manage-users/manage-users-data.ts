@@ -238,17 +238,19 @@ export interface AssignableBrand {
   id: string;
   name: string;
   color: string;
+  /** Whether mentions create tickets for this brand. */
+  ticketsEnabled: boolean;
 }
 
 export const ASSIGNABLE_BRANDS: AssignableBrand[] = [
-  { id: 'b1', name: 'Amazon', color: '#ff9900' },
-  { id: 'b2', name: 'Nike', color: '#0f172a' },
-  { id: 'b3', name: 'Air India', color: '#c8102e' },
-  { id: 'b4', name: 'Myntra', color: '#e91e63' },
-  { id: 'b5', name: 'Zomato', color: '#ef4444' },
-  { id: 'b6', name: 'Tata Cliq', color: '#2563eb' },
-  { id: 'b7', name: 'Swiggy', color: '#fc8019' },
-  { id: 'b8', name: 'Flipkart', color: '#2874f0' },
+  { id: 'b1', name: 'Amazon', color: '#ff9900', ticketsEnabled: true },
+  { id: 'b2', name: 'Nike', color: '#0f172a', ticketsEnabled: true },
+  { id: 'b3', name: 'Air India', color: '#c8102e', ticketsEnabled: true },
+  { id: 'b4', name: 'Myntra', color: '#e91e63', ticketsEnabled: false },
+  { id: 'b5', name: 'Zomato', color: '#ef4444', ticketsEnabled: true },
+  { id: 'b6', name: 'Tata Cliq', color: '#2563eb', ticketsEnabled: false },
+  { id: 'b7', name: 'Swiggy', color: '#fc8019', ticketsEnabled: true },
+  { id: 'b8', name: 'Flipkart', color: '#2874f0', ticketsEnabled: false },
 ];
 
 export interface Team {
