@@ -24,7 +24,11 @@ export interface SavedView { id: string; label: string; filter: ViewCondition; }
   styleUrl: './manage-users.component.scss',
 })
 export class ManageUsersComponent {
-  users: ManagedUser[] = [...MANAGED_USERS];
+  users: ManagedUser[] = MANAGED_USERS.map((u, i) => ({
+    ...u,
+    // Mock: roughly every other active user already has SSO sign-in enabled.
+    ssoEnabled: u.ssoEnabled ?? (u.active && i % 2 === 0),
+  }));
 
   search = '';
   wizardOpen = false;
@@ -63,6 +67,91 @@ export class ManageUsersComponent {
     u.active = on;
   }
 
+  /** Invite a user to sign in via SSO — flips them to SSO-enabled. */
+  inviteSso(u: ManagedUser, ev: Event) {
+    ev.stopPropagation();
+    u.ssoEnabled = true;
+  }
+
+  /* ===================================================================
+     Single Sign-On (SSO) — merged into Manage Users
+     Manual users log in with username + password; when an SSO org is
+     configured, members can additionally sign in with their work email.
+     =================================================================== */
+  sso = {
+    configured: false,
+    orgName: 'Locobuzz',
+    domain: 'locobuzz.net',
+    createdOn: '26 Mar 2026, 3:58 PM',
+    status: 'Incomplete' as 'Incomplete' | 'Active',
+  };
+  /** "Explore SSO" — expands the inline how-it-works explainer. */
+  ssoInfoOpen = false;
+
+  /* ---- setup modal (Create organization -> remaining steps -> active) ---- */
+  ssoModalOpen = false;
+  ssoModalStep: 'create' | 'pending' | 'done' = 'create';
+  draftOrg = { name: '', domain: '' };
+
+  /** Multi-step setup checklist shown after the org is created. */
+  ssoSteps = [
+    { key: 'org', label: 'Create your organization', desc: 'Name your organization and email domain.', done: false },
+    { key: 'idp', label: 'Connect your identity provider', desc: 'Link Okta, Azure AD or Google Workspace via SAML / OIDC.', done: false },
+    { key: 'verify', label: 'Verify your domain', desc: 'Confirm ownership of your sign-in domain.', done: false },
+    { key: 'activate', label: 'Enable work-email sign-in', desc: 'Switch on SSO login for your members.', done: false },
+  ];
+  /** Index of the first not-yet-done step (the "Next" one). */
+  get firstPending(): number { return this.ssoSteps.findIndex(s => !s.done); }
+  get ssoDoneCount(): number { return this.ssoSteps.filter(s => s.done).length; }
+
+  /** "Configure SSO" — open the create-organization modal (step 1). */
+  openSsoModal() {
+    this.draftOrg = { name: '', domain: '' };
+    this.ssoModalStep = 'create';
+    this.ssoModalOpen = true;
+  }
+  /** Create the org — first step only; SSO is NOT active yet. */
+  createOrg() {
+    if (!this.draftOrg.name.trim() || !this.draftOrg.domain.trim()) return;
+    this.sso.orgName = this.draftOrg.name.trim();
+    this.sso.domain = this.draftOrg.domain.trim();
+    this.sso.createdOn = this.nowStamp();
+    this.sso.configured = true;
+    this.sso.status = 'Incomplete';
+    this.ssoSteps.forEach((s, i) => (s.done = i === 0)); // only "Create organization" is done
+    this.ssoModalStep = 'pending';
+  }
+  /** Reopen the setup to finish the remaining steps. */
+  resumeSetup() {
+    this.ssoModalStep = this.sso.status === 'Active' ? 'done' : 'pending';
+    this.ssoModalOpen = true;
+  }
+  /** Finish the connection + verification — flips Incomplete -> Active. */
+  completeSetup() {
+    this.ssoSteps.forEach(s => (s.done = true));
+    this.sso.status = 'Active';
+    this.ssoModalStep = 'done';
+  }
+  /** Close the modal — status is preserved (stays Incomplete if not finished). */
+  closeSsoModal() { this.ssoModalOpen = false; }
+
+  /** Re-check the IdP verification status (mock). */
+  recheckSso() { /* prototype: no-op refresh */ }
+  /** Remove the SSO org and return to the setup CTA. */
+  disconnectSso() {
+    this.sso.configured = false;
+    this.sso.status = 'Incomplete';
+    this.ssoSteps.forEach(s => (s.done = false));
+  }
+
+  /** "26 Jun 2026, 3:58 PM" style timestamp for the created-on field. */
+  private nowStamp(): string {
+    const d = new Date();
+    const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    return `${date}, ${time}`;
+  }
+
   /* ===================================================================
      Custom views — filter builder behind the "+" tab
      =================================================================== */
@@ -72,7 +161,10 @@ export class ManageUsersComponent {
   valueDropdownOpen = false;
   private viewSeq = 0;
 
-  readonly fieldOptions = ['Name', 'Role', 'Status'];
+  /** Filterable fields — "SSO Enabled" only offered once an SSO org exists. */
+  get fieldOptions(): string[] {
+    return this.sso.configured ? ['Name', 'Role', 'Status', 'SSO Enabled'] : ['Name', 'Role', 'Status'];
+  }
   readonly operatorOptions: ViewCondition['operator'][] = ['In', 'Not In'];
   draft: ViewCondition = { field: 'Role', operator: 'In', text: '', values: [] };
 
@@ -80,6 +172,7 @@ export class ManageUsersComponent {
     switch (field) {
       case 'Role': return Array.from(new Set(this.users.map(u => u.role))).sort();
       case 'Status': return ['Active', 'Inactive'];
+      case 'SSO Enabled': return ['Enabled', 'Not Enabled'];
       default: return [];
     }
   }
@@ -198,6 +291,7 @@ export class ManageUsersComponent {
       }
       case 'Role': ok = inList(u.role); break;
       case 'Status': ok = inList(u.active ? 'Active' : 'Inactive'); break;
+      case 'SSO Enabled': ok = inList(u.ssoEnabled ? 'Enabled' : 'Not Enabled'); break;
     }
     return f.operator === 'Not In' ? !ok : ok;
   }

@@ -66,6 +66,156 @@
 .sp-box-lbl { font-size: var(--font-size-11); font-weight: 600; letter-spacing: .04em; color: var(--text-3); }
 .sp-box-val { font-size: var(--font-size-18); font-weight: 700; color: var(--text-1); }
 
+/* ===== SSO card (single sign-on) ===== */
+.sso-card {
+  margin: 10px 10px 0; flex: 0 0 auto; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface);
+}
+.sso-card.setup { border-color: #cfe0ff; background: linear-gradient(100deg, var(--brand-soft), var(--surface) 58%); }
+
+.sso-main { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; }
+
+.sso-ic {
+  width: 44px; height: 44px; flex: 0 0 auto; border-radius: 12px;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(135deg, var(--brand), #6366f1);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, .25);
+}
+.sso-ic.org { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 6px 16px rgba(124, 92, 255, .25); }
+.sso-ic .msr { font-size: var(--font-size-24); }
+
+.sso-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.sso-title { display: flex; align-items: center; gap: 9px; font-size: var(--font-size-16); font-weight: 700; color: var(--text-1); }
+.sso-lead { font-size: var(--font-size-13); color: var(--text-2); max-width: 760px; line-height: 1.5; }
+.sso-lead b { color: var(--text-1); font-weight: 700; }
+
+.sso-badge { font-size: var(--font-size-11); font-weight: 700; letter-spacing: .02em; padding: 3px 9px; border-radius: 999px; background: var(--brand); color: #fff; }
+.sso-kind { font-size: var(--font-size-11); font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-3); }
+
+.sso-benefits { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 2px; }
+.sso-ben { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-12); font-weight: 600; color: var(--text-2); padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+.sso-ben .msr { font-size: var(--font-size-16); color: var(--brand); }
+
+.sso-actions-col { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 0 0 auto; }
+.sso-cta { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 16px; border: none; border-radius: 10px; cursor: pointer; background: var(--brand); color: #fff; font: inherit; font-size: var(--font-size-14); font-weight: 600; box-shadow: 0 4px 12px rgba(37, 99, 235, .3); white-space: nowrap; }
+.sso-cta .msr { font-size: var(--font-size-20); }
+.sso-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; color: var(--brand); font: inherit; font-size: var(--font-size-13); font-weight: 600; white-space: nowrap; }
+.sso-link:hover { background: #f5f7fb; }
+.sso-link .msr { font-size: var(--font-size-18); }
+
+/* Explore SSO panel */
+.sso-explore { border-top: 1px dashed var(--border); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.sso-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.sso-step { display: flex; align-items: flex-start; gap: 10px; }
+.sso-step-n { width: 24px; height: 24px; flex: 0 0 auto; border-radius: 50%; background: var(--brand); color: #fff; font-size: var(--font-size-13); font-weight: 700; display: grid; place-items: center; }
+.sso-step > div { display: flex; flex-direction: column; gap: 2px; }
+.sso-step b { font-size: var(--font-size-13); color: var(--text-1); }
+.sso-step span { font-size: var(--font-size-12); color: var(--text-3); line-height: 1.45; }
+.sso-note { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-12); color: var(--text-2); padding: 10px 12px; border-radius: 10px; background: #eef4ff; border: 1px solid #cfe0ff; line-height: 1.45; }
+.sso-note .msr { font-size: var(--font-size-18); color: var(--brand); flex: 0 0 auto; }
+
+/* configured meta */
+.sso-meta { display: flex; flex-wrap: wrap; gap: 12px 26px; margin-top: 4px; }
+.sso-mi { display: flex; flex-direction: column; gap: 2px; }
+.sso-mk { font-size: var(--font-size-11); font-weight: 700; letter-spacing: .04em; color: var(--text-3); }
+.sso-mv { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-13); font-weight: 600; color: var(--text-1); }
+.sso-mv .msr { font-size: var(--font-size-16); color: var(--text-3); }
+
+.sso-chip { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-12); font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.sso-chip .msr { font-size: var(--font-size-15); }
+.sso-chip.warn { background: #fff7e6; color: #b7791f; }
+.sso-chip.ok { background: #e8f6ee; color: #1f9d5a; }
+
+.sso-icons { display: flex; gap: 8px; justify-content: center; }
+.sso-icon { width: 36px; height: 36px; flex: 0 0 auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; color: var(--text-2); display: grid; place-items: center; }
+.sso-icon:hover { background: #f5f7fb; border-color: #cfd6e0; }
+.sso-icon.danger:hover { background: #fdecec; border-color: #f3b4b4; color: var(--urgent-fg); }
+.sso-icon .msr { font-size: var(--font-size-20); }
+
+/* incomplete progress bar */
+.sso-progress { display: flex; align-items: center; gap: 8px; margin-top: 2px; max-width: 320px; }
+.sso-progress-bar { flex: 1; height: 6px; border-radius: 999px; background: #eef1f6; overflow: hidden; }
+.sso-progress-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f0a000, #f6c453); transition: width .25s ease; }
+.sso-progress-tx { font-size: var(--font-size-12); font-weight: 700; color: var(--text-3); }
+
+/* ===== SSO setup modal ===== */
+.sso-modal-scrim {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(16, 24, 40, .5); backdrop-filter: blur(2px);
+}
+.sso-modal {
+  position: fixed; z-index: 61; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--surface); border-radius: 16px;
+  box-shadow: 0 30px 70px rgba(16, 24, 40, .35);
+}
+.smo-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--border-soft); }
+.smo-htext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.smo-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-12); font-weight: 700; letter-spacing: .02em; color: var(--brand); }
+.smo-eyebrow .msr { font-size: var(--font-size-16); }
+.smo-head h2 { margin: 0; font-size: var(--font-size-19); font-weight: 700; color: var(--text-1); }
+.smo-x { width: 34px; height: 34px; flex: 0 0 auto; border: none; border-radius: 9px; background: transparent; color: var(--text-3); cursor: pointer; display: grid; place-items: center; }
+.smo-x:hover { background: #f1f3f8; color: var(--text-1); }
+.smo-x .msr { font-size: var(--font-size-22); }
+
+.smo-body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.smo-intro { margin: 0; font-size: var(--font-size-13); color: var(--text-2); line-height: 1.5; }
+
+.smo-field { display: flex; flex-direction: column; gap: 4px; }
+.smo-lbl { font-size: var(--font-size-13); font-weight: 700; color: var(--text-1); }
+.smo-lbl .req { color: var(--urgent-fg); }
+.smo-hint { font-size: var(--font-size-12); color: var(--text-3); }
+.smo-field input {
+  margin-top: 4px; height: 42px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: #fafbfc;
+  font: inherit; font-size: var(--font-size-14); color: var(--text-1);
+}
+.smo-field input:focus { outline: none; border-color: var(--brand); background: var(--surface); box-shadow: 0 0 0 3px var(--brand-soft); }
+
+.smo-note { display: flex; align-items: flex-start; gap: 8px; font-size: var(--font-size-12); color: var(--text-2); line-height: 1.45; padding: 10px 12px; border-radius: 10px; background: #eef4ff; border: 1px solid #cfe0ff; }
+.smo-note .msr { font-size: var(--font-size-18); color: var(--brand); flex: 0 0 auto; }
+
+.smo-banner { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; }
+.smo-banner.warn { background: #fff7e6; border: 1px solid #f6dca0; }
+.smo-banner .msr { font-size: var(--font-size-22); flex: 0 0 auto; color: #b7791f; }
+.smo-banner > div { display: flex; flex-direction: column; gap: 3px; }
+.smo-banner b { font-size: var(--font-size-13); color: var(--text-1); }
+.smo-banner span { font-size: var(--font-size-12); color: var(--text-2); line-height: 1.45; }
+.smo-banner span b { font-weight: 700; }
+
+.smo-stepper { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.smo-stepper li { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; }
+.smo-stepper li:not(:last-child)::before { content: ''; position: absolute; left: 14px; top: 34px; bottom: -2px; width: 2px; background: var(--border); }
+.smo-stepper li.done:not(:last-child)::before { background: #1f9d5a; }
+.smo-step-ic { width: 28px; height: 28px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--border); background: var(--surface); color: var(--text-3); z-index: 1; }
+.smo-step-ic .msr { font-size: var(--font-size-16); }
+.smo-stepper li.done .smo-step-ic { background: #1f9d5a; border-color: #1f9d5a; color: #fff; }
+.smo-stepper li.current .smo-step-ic { border-color: var(--brand); color: var(--brand); }
+.smo-step-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.smo-step-tx b { font-size: var(--font-size-13); color: var(--text-1); }
+.smo-step-tx span { font-size: var(--font-size-12); color: var(--text-3); line-height: 1.4; }
+.smo-step-tag { flex: 0 0 auto; align-self: center; font-size: var(--font-size-11); font-weight: 700; padding: 2px 9px; border-radius: 999px; background: #eef1f6; color: var(--text-3); }
+.smo-step-tag.ok { background: #e8f6ee; color: #1f9d5a; }
+.smo-step-tag.next { background: var(--brand-soft); color: var(--brand); }
+
+.done-body { align-items: center; text-align: center; padding: 28px 24px; gap: 10px; }
+.smo-done-ic { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: #e8f6ee; color: #1f9d5a; }
+.smo-done-ic .msr { font-size: 38px; }
+.done-body h3 { margin: 4px 0 0; font-size: var(--font-size-18); font-weight: 700; color: var(--text-1); }
+.done-body p { margin: 0; font-size: var(--font-size-13); color: var(--text-2); line-height: 1.5; max-width: 420px; }
+.done-body b { color: var(--text-1); font-weight: 700; }
+
+.smo-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-soft); }
+.smo-btn { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 18px; border-radius: 10px; cursor: pointer; font: inherit; font-size: var(--font-size-14); font-weight: 600; border: 1px solid transparent; }
+.smo-btn .msr { font-size: var(--font-size-18); }
+.smo-btn.ghost { background: var(--surface); border-color: var(--border); color: var(--text-2); }
+.smo-btn.ghost:hover { background: #f5f7fb; }
+.smo-btn.primary { background: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, .3); }
+.smo-btn.primary:hover { filter: brightness(1.05); }
+.smo-btn.primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
 /* ===== Panel ===== */
 .mb-panel {
   position: relative; overflow: hidden;
@@ -217,7 +367,7 @@
 
 /* segmented control */
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: #f4f6f9; }
-.seg-btn { border: none; background: transparent; cursor: pointer; height: 28px; padding: 0 12px; min-width: 38px; font: inherit; font-size: var(--font-size-12); font-weight: 700; color: var(--text-3); transition: .14s ease; }
+.seg-btn { border: none; background: transparent; cursor: pointer; height: 24px; padding: 0 8px; min-width: 38px; font: inherit; font-size: var(--font-size-12); font-weight: 700; color: var(--text-3); transition: .14s ease; }
 .seg-btn.on { background: #16b364; color: #fff; }
 .seg-btn.off { background: #e0414b; color: #fff; }
 
@@ -227,6 +377,14 @@
 .t-badge.active .led { background: #16b364; }
 .t-badge.off { background: #eef1f6; color: var(--text-3); }
 .t-badge.off .led { background: #9aa3b0; }
+
+/* ===== SSO-enabled column ===== */
+.col-sso { width: 130px; }
+.sso-on { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; color: #16794c; background: #e7f6ee; }
+.sso-on .msr { font-size: var(--font-size-16); }
+.sso-invite { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; cursor: pointer; color: var(--brand, #4f46e5); background: #eef0fe; border: 1px solid #dcdffb; transition: background .15s, color .15s; }
+.sso-invite:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.sso-invite .msr { font-size: var(--font-size-16); }
 
 .col-act { width: 120px; }
 .t-acts { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
