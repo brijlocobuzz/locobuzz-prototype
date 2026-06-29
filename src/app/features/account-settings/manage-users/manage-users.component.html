@@ -35,13 +35,13 @@
 
 <!-- ===== SSO (single sign-on) ===== -->
 <!-- Not configured: feature promo + setup CTA -->
-<section class="sso-card setup" *ngIf="!sso.configured">
+<section class="sso-card setup" [class.collapsed]="ssoCardCollapsed" *ngIf="!sso.configured">
   <div class="sso-main">
     <span class="sso-ic"><span class="msr">shield</span></span>
     <div class="sso-text">
       <span class="sso-title">Single Sign-On (SSO)<span class="sso-badge">Recommended</span></span>
-      <span class="sso-lead">Give your team <b>secure, one-click access</b> — members sign in with their work email through your identity provider, so there are no extra passwords for you to manage or for them to forget.</span>
-      <div class="sso-benefits">
+      <span class="sso-lead" *ngIf="!ssoCardCollapsed">Give your team <b>secure, one-click access</b> — members sign in with their work email through your identity provider, so there are no extra passwords for you to manage or for them to forget.</span>
+      <div class="sso-benefits" *ngIf="!ssoCardCollapsed">
         <span class="sso-ben"><span class="msr">verified_user</span>Enterprise-grade security</span>
         <span class="sso-ben"><span class="msr">bolt</span>Faster, one-click logins</span>
         <span class="sso-ben"><span class="msr">groups</span>Centralized access control</span>
@@ -50,10 +50,11 @@
     </div>
     <div class="sso-actions-col">
       <button class="sso-cta" (click)="openSsoModal()"><span class="msr">add_business</span>Configure SSO</button>
-      <!-- <button class="sso-link" (click)="ssoInfoOpen = !ssoInfoOpen">
-        <span class="msr">{{ ssoInfoOpen ? 'expand_less' : 'menu_book' }}</span>{{ ssoInfoOpen ? 'Hide details' : 'Explore SSO' }}
-      </button> -->
     </div>
+    <button class="sso-collapse" (click)="ssoCardCollapsed = !ssoCardCollapsed"
+            [title]="ssoCardCollapsed ? 'Expand' : 'Collapse'" [attr.aria-label]="ssoCardCollapsed ? 'Expand SSO card' : 'Collapse SSO card'">
+      <span class="msr">{{ ssoCardCollapsed ? 'expand_more' : 'expand_less' }}</span>
+    </button>
   </div>
 
   <!-- Explore SSO — inline how-it-works explainer -->
@@ -77,7 +78,7 @@
 </section>
 
 <!-- Configured: clear org detail (no table needed for a single org) -->
-<section class="sso-card done" *ngIf="sso.configured">
+<section class="sso-card done" [class.collapsed]="ssoCardCollapsed" *ngIf="sso.configured">
   <div class="sso-main">
     <span class="sso-ic org"><span class="msr">corporate_fare</span></span>
     <div class="sso-text">
@@ -87,17 +88,19 @@
         <span class="sso-chip" [class.ok]="sso.status === 'Active'" [class.warn]="sso.status === 'Incomplete'">
           <span class="msr">{{ sso.status === 'Active' ? 'check_circle' : 'pending' }}</span>{{ sso.status }}
         </span>
+        <!-- collapsed-only inline hint: domain -->
+        <span class="sso-collapsed-hint" *ngIf="ssoCardCollapsed"><span class="msr">language</span>{{ sso.domain }}</span>
       </span>
-      <span class="sso-lead" *ngIf="sso.status === 'Active'">SSO is live — members can sign in with their <b>{{ sso.domain }}</b> work email, alongside the usual username &amp; password.</span>
-      <span class="sso-lead" *ngIf="sso.status === 'Incomplete'">Organization created, but <b>SSO is not active yet</b> — {{ ssoDoneCount }} of {{ ssoSteps.length }} setup steps done. Finish the remaining steps to switch on work-email sign-in.</span>
+      <span class="sso-lead" *ngIf="!ssoCardCollapsed && sso.status === 'Active'">SSO is live — members can sign in with their <b>{{ sso.domain }}</b> work email, alongside the usual username &amp; password.</span>
+      <span class="sso-lead" *ngIf="!ssoCardCollapsed && sso.status === 'Incomplete'">Organization created, but <b>SSO is not active yet</b> — {{ ssoDoneCount }} of {{ ssoSteps.length }} setup steps done. Finish the remaining steps to switch on work-email sign-in.</span>
 
       <!-- progress bar for the incomplete state -->
-      <div class="sso-progress" *ngIf="sso.status === 'Incomplete'">
+      <div class="sso-progress" *ngIf="!ssoCardCollapsed && sso.status === 'Incomplete'">
         <span class="sso-progress-bar"><i [style.width.%]="ssoDoneCount / ssoSteps.length * 100"></i></span>
         <span class="sso-progress-tx">{{ ssoDoneCount }}/{{ ssoSteps.length }}</span>
       </div>
 
-      <div class="sso-meta">
+      <div class="sso-meta" *ngIf="!ssoCardCollapsed">
         <div class="sso-mi"><span class="sso-mk">DOMAIN</span><span class="sso-mv"><span class="msr">language</span>{{ sso.domain }}</span></div>
         <div class="sso-mi"><span class="sso-mk">CREATED ON</span><span class="sso-mv"><span class="msr">schedule</span>{{ sso.createdOn }}</span></div>
         <div class="sso-mi"><span class="sso-mk">SIGN-IN METHOD</span><span class="sso-mv"><span class="msr">mail</span>Work email (IdP)</span></div>
@@ -105,13 +108,13 @@
     </div>
     <div class="sso-actions-col">
       <button class="sso-cta" *ngIf="sso.status === 'Incomplete'" (click)="resumeSetup()"><span class="msr">task_alt</span>Complete configuration</button>
-      <button class="sso-link" *ngIf="sso.status === 'Incomplete'" (click)="recheckSso()"><span class="msr">refresh</span>Refresh status</button>
-      <button class="sso-link" *ngIf="sso.status === 'Active'" (click)="resumeSetup()"><span class="msr">settings</span>Manage SSO</button>
-      <!-- <div class="sso-icons">
-        <button class="sso-icon" title="Refresh current status" (click)="recheckSso()"><span class="msr">refresh</span></button>
-        <button class="sso-icon danger" title="Disconnect SSO" (click)="disconnectSso()"><span class="msr">link_off</span></button>
-      </div> -->
+      <button class="sso-link" *ngIf="!ssoCardCollapsed && sso.status === 'Incomplete'" (click)="recheckSso()"><span class="msr">refresh</span>Refresh status</button>
+      <button class="sso-link" *ngIf="!ssoCardCollapsed && sso.status === 'Active'" (click)="resumeSetup()"><span class="msr">settings</span>Manage SSO</button>
     </div>
+    <button class="sso-collapse" (click)="ssoCardCollapsed = !ssoCardCollapsed"
+            [title]="ssoCardCollapsed ? 'Expand' : 'Collapse'" [attr.aria-label]="ssoCardCollapsed ? 'Expand SSO card' : 'Collapse SSO card'">
+      <span class="msr">{{ ssoCardCollapsed ? 'expand_more' : 'expand_less' }}</span>
+    </button>
   </div>
 </section>
 

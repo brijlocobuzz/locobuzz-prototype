@@ -87,6 +87,8 @@ export class ManageUsersComponent {
   };
   /** "Explore SSO" — expands the inline how-it-works explainer. */
   ssoInfoOpen = false;
+  /** Collapse the SSO card down to just its heading row. */
+  ssoCardCollapsed = false;
 
   /* ---- setup modal (Create organization -> remaining steps -> active) ---- */
   ssoModalOpen = false;

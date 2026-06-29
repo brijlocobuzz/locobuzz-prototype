@@ -98,6 +98,19 @@
 .sso-ben .msr { font-size: var(--font-size-16); color: var(--brand); }
 
 .sso-actions-col { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 0 0 auto; }
+
+/* collapse toggle + collapsed layout */
+.sso-collapse { width: 32px; height: 32px; flex: 0 0 auto; align-self: flex-start; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); cursor: pointer; color: var(--text-3); display: grid; place-items: center; }
+.sso-collapse:hover { background: #f5f7fb; border-color: #cfd6e0; color: var(--text-1); }
+.sso-collapse .msr { font-size: var(--font-size-20); }
+.sso-card.collapsed .sso-main { align-items: center; padding-top: 10px; padding-bottom: 10px; }
+.sso-card.collapsed .sso-ic { width: 36px; height: 36px; border-radius: 10px; }
+.sso-card.collapsed .sso-ic .msr { font-size: var(--font-size-20); }
+.sso-card.collapsed .sso-text { gap: 0; }
+.sso-card.collapsed .sso-collapse { align-self: center; }
+.sso-card.collapsed .sso-title { flex-wrap: wrap; }
+.sso-collapsed-hint { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-12); font-weight: 600; color: var(--text-3); }
+.sso-collapsed-hint .msr { font-size: var(--font-size-15); }
 .sso-cta { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 16px; border: none; border-radius: 10px; cursor: pointer; background: var(--brand); color: #fff; font: inherit; font-size: var(--font-size-14); font-weight: 600; box-shadow: 0 4px 12px rgba(37, 99, 235, .3); white-space: nowrap; }
 .sso-cta .msr { font-size: var(--font-size-20); }
 .sso-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; color: var(--brand); font: inherit; font-size: var(--font-size-13); font-weight: 600; white-space: nowrap; }
