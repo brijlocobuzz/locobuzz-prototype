@@ -271,13 +271,97 @@ export const BRAND_USERS: BrandUser[] = [
   { id: 'u15', name: 'Lokesh_agent', role: 'Agent' },
 ];
 
-export const CATEGORY_GROUPS: string[] = [
-  'Default', 'Default2', 'Customer Care', 'Marketing', 'Product Feedback', 'Operations',
-];
+/**
+ * A single category inside a group's taxonomy. Any of these can also be chosen
+ * as the brand's catch-all (the fallback bucket for unmatched mentions).
+ */
+export interface TaxonomyCategory {
+  name: string;
+  /** What kinds of mentions land here — shown to help the user choose. */
+  description: string;
+  /** Keywords that drive auto-tagging into this category. */
+  keywords: number;
+}
 
-export const CATCH_ALL_CATEGORIES: string[] = [
-  '123 12', 'Account Related', 'ActionabilityTest', 'asish signal', 'asishtest',
-  'General', 'Complaint', 'Query', 'Feedback', 'Escalation', 'Spam',
+/**
+ * A category group: a shared taxonomy template. Brands attached to the same group
+ * inherit its category structure, so the group a brand picks is a meaningful,
+ * one-time decision (it can't be changed after creation).
+ */
+export interface CategoryGroupInfo {
+  name: string;
+  description: string;
+  /** Brands already sharing this group's taxonomy. */
+  brands: number;
+  /** Total categories defined in the taxonomy. */
+  categories: number;
+  /** The categories available within this group (catch-all candidates). */
+  categoryList: TaxonomyCategory[];
+}
+
+export const CATEGORY_GROUPS: CategoryGroupInfo[] = [
+  {
+    name: 'Default',
+    description: 'Standard out-of-the-box taxonomy for general listening.',
+    brands: 8, categories: 5,
+    categoryList: [
+      { name: 'General', description: 'Anything that doesn\'t fit a specific category.', keywords: 12 },
+      { name: 'Query', description: 'Questions and information requests.', keywords: 34 },
+      { name: 'Complaint', description: 'Negative experiences and grievances.', keywords: 56 },
+      { name: 'Feedback', description: 'Suggestions and general opinions.', keywords: 28 },
+      { name: 'Spam', description: 'Irrelevant or promotional noise.', keywords: 19 },
+    ],
+  },
+  {
+    name: 'Customer Care',
+    description: 'Service-oriented taxonomy for support and resolution tickets.',
+    brands: 14, categories: 7,
+    categoryList: [
+      { name: 'Account Related', description: 'Login, profile and account-access issues.', keywords: 41 },
+      { name: 'Complaint', description: 'Service failures and dissatisfaction.', keywords: 63 },
+      { name: 'Query', description: 'How-to questions and clarifications.', keywords: 38 },
+      { name: 'Escalation', description: 'High-priority issues needing senior attention.', keywords: 22 },
+      { name: 'Refund', description: 'Returns, refunds and billing disputes.', keywords: 30 },
+      { name: 'Delivery', description: 'Shipping, tracking and delivery delays.', keywords: 27 },
+      { name: 'General', description: 'Uncategorised support mentions.', keywords: 10 },
+    ],
+  },
+  {
+    name: 'Marketing',
+    description: 'Campaign, brand and engagement taxonomy.',
+    brands: 9, categories: 5,
+    categoryList: [
+      { name: 'Feedback', description: 'Reactions to campaigns and content.', keywords: 33 },
+      { name: 'Appreciation', description: 'Praise, love and positive shout-outs.', keywords: 25 },
+      { name: 'Campaign', description: 'Mentions tied to active campaigns.', keywords: 44 },
+      { name: 'Brand Promotion', description: 'User-driven promotion and advocacy.', keywords: 18 },
+      { name: 'General', description: 'Everything else.', keywords: 9 },
+    ],
+  },
+  {
+    name: 'Product Feedback',
+    description: 'Captures feature requests, bugs and product sentiment.',
+    brands: 6, categories: 5,
+    categoryList: [
+      { name: 'Bug Report', description: 'Defects and things that don\'t work.', keywords: 47 },
+      { name: 'Feature Request', description: 'Asks for new capabilities.', keywords: 36 },
+      { name: 'Usability', description: 'Ease-of-use and experience friction.', keywords: 21 },
+      { name: 'Pricing', description: 'Cost, plans and value concerns.', keywords: 15 },
+      { name: 'General', description: 'Unsorted product mentions.', keywords: 8 },
+    ],
+  },
+  {
+    name: 'Operations',
+    description: 'Logistics, fulfilment and on-ground operations.',
+    brands: 5, categories: 5,
+    categoryList: [
+      { name: 'Complaint', description: 'Operational failures and grievances.', keywords: 52 },
+      { name: 'Delivery', description: 'Order fulfilment and delivery issues.', keywords: 40 },
+      { name: 'Service Quality', description: 'Quality of on-ground service.', keywords: 29 },
+      { name: 'Logistics', description: 'Routing, dispatch and supply concerns.', keywords: 24 },
+      { name: 'General', description: 'Other operational mentions.', keywords: 11 },
+    ],
+  },
 ];
 
 /** Preset brand-colour palette shown as swatches on the Logo & color step. */

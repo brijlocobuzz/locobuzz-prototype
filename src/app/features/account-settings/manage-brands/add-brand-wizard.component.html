@@ -300,55 +300,69 @@
         <p>Please choose the category group carefully — once it's selected, it can't be changed later.</p>
       </div>
 
-      <div class="ab-grid-2">
-        <!-- category group -->
-        <div class="ab-field">
-          <label class="ab-label">Category Group <i>*</i></label>
-          <div class="ab-with-add">
-            <div class="ab-select-wrap">
-              <button type="button" class="ab-select" [class.is-open]="groupOpen" (click)="groupOpen = !groupOpen">
-                <span [class.placeholder]="!categoryGroup">{{ categoryGroup || 'Select group' }}</span>
-                <span class="msr chev">expand_more</span>
-              </button>
-              <div class="ab-dropdown" *ngIf="groupOpen">
-                <div class="ab-dropdown-search">
-                  <span class="msr">search</span>
-                  <input type="text" placeholder="Search category group" [(ngModel)]="groupSearch" />
-                </div>
-                <div class="ab-dropdown-list">
-                  <button type="button" class="ab-option" *ngFor="let g of filteredGroups"
-                          [class.sel]="g === categoryGroup" (click)="selectGroup(g)">{{ g }}</button>
-                  <p class="ab-option-empty" *ngIf="!filteredGroups.length">No groups found</p>
-                </div>
-              </div>
-            </div>
-            <button type="button" class="ab-add-square" aria-label="Add category group"><span class="msr">add</span></button>
-          </div>
+      <!-- category group -->
+      <div class="ab-cat-block">
+        <p class="ab-cat-label">Category Group <i>*</i></p>
+        <p class="ab-cat-help">Brands in the same group share one taxonomy template. Pick the group whose categories best fit this brand.</p>
+
+        <div class="ab-pick-grid">
+          <button type="button" class="ab-pick" *ngFor="let g of categoryGroups"
+                  [class.sel]="categoryGroup === g.name" (click)="selectGroup(g)">
+            <span class="ab-pick-check"><span class="msr">check</span></span>
+            <span class="ab-pick-name">{{ g.name }}</span>
+            <span class="ab-pick-desc">{{ g.description }}</span>
+            <span class="ab-pick-stats">
+              <span class="ab-pick-stat"><span class="msr">category</span>{{ g.categories }} categories</span>
+            </span>
+
+            <span class="ab-pick-brands" *ngIf="groupBrands(g.name).length; else noBrands">
+              <span class="ab-pick-logos">
+                <span class="ab-pick-logo" *ngFor="let b of groupBrands(g.name).slice(0, 5)" [title]="b.name">
+                  <img [src]="brandLogo(b.domain)" [alt]="b.name" />
+                </span>
+              </span>
+              <span class="ab-pick-brands-lbl">{{ groupBrandsLabel(g.name) }}</span>
+            </span>
+            <ng-template #noBrands><span class="ab-pick-empty">No brands using this group yet</span></ng-template>
+          </button>
+
+          <button type="button" class="ab-pick ab-pick-new" *ngIf="!addingGroup" (click)="startAddGroup()">
+            <span class="msr">add</span> Create new group
+          </button>
         </div>
 
-        <!-- catch-all category -->
-        <div class="ab-field">
-          <label class="ab-label">Catch-all Category <i>*</i></label>
-          <div class="ab-with-add">
-            <div class="ab-select-wrap">
-              <button type="button" class="ab-select" [class.is-open]="catchAllOpen" (click)="catchAllOpen = !catchAllOpen">
-                <span [class.placeholder]="!catchAll">{{ catchAll || 'Select catch-all' }}</span>
-                <span class="msr chev">expand_more</span>
-              </button>
-              <div class="ab-dropdown" *ngIf="catchAllOpen">
-                <div class="ab-dropdown-search">
-                  <span class="msr">search</span>
-                  <input type="text" placeholder="Search catch-all category" [(ngModel)]="catchAllSearch" />
-                </div>
-                <div class="ab-dropdown-list">
-                  <button type="button" class="ab-option" *ngFor="let c of filteredCatchAll"
-                          [class.sel]="c === catchAll" (click)="selectCatchAll(c)">{{ c }}</button>
-                  <p class="ab-option-empty" *ngIf="!filteredCatchAll.length">No categories found</p>
-                </div>
-              </div>
-            </div>
-            <button type="button" class="ab-add-square" aria-label="Add catch-all category"><span class="msr">add</span></button>
-          </div>
+        <div class="ab-inline-edit" *ngIf="addingGroup">
+          <input class="ab-input" type="text" placeholder="New category group name" maxlength="50" [(ngModel)]="groupDraft" />
+          <button type="button" class="ab-confirm" (click)="saveGroup()"><span class="msr">check</span></button>
+          <button type="button" class="ab-cancel-x" (click)="cancelAddGroup()"><span class="msr">close</span></button>
+        </div>
+      </div>
+
+      <!-- catch-all category (depends on the selected group) -->
+      <div class="ab-cat-block" *ngIf="selectedGroup">
+        <p class="ab-cat-label">Catch-all Category <i>*</i></p>
+        <p class="ab-cat-help">The fallback bucket for mentions that don't match any category rule in “{{ selectedGroup.name }}”.</p>
+
+        <div class="ab-pick-grid">
+          <button type="button" class="ab-pick" *ngFor="let c of catchAllOptions"
+                  [class.sel]="catchAll === c.name" (click)="selectCatchAll(c)">
+            <span class="ab-pick-check"><span class="msr">check</span></span>
+            <span class="ab-pick-name">{{ c.name }}</span>
+            <span class="ab-pick-desc">{{ c.description }}</span>
+            <span class="ab-pick-stats">
+              <span class="ab-pick-stat"><span class="msr">sell</span>{{ c.keywords }} keyword{{ c.keywords === 1 ? '' : 's' }}</span>
+            </span>
+          </button>
+
+          <button type="button" class="ab-pick ab-pick-new" *ngIf="!addingCatchAll" (click)="startAddCatchAll()">
+            <span class="msr">add</span> Create new category
+          </button>
+        </div>
+
+        <div class="ab-inline-edit" *ngIf="addingCatchAll">
+          <input class="ab-input" type="text" placeholder="New category name" maxlength="50" [(ngModel)]="catchAllDraft" />
+          <button type="button" class="ab-confirm" (click)="saveCatchAll()"><span class="msr">check</span></button>
+          <button type="button" class="ab-cancel-x" (click)="cancelAddCatchAll()"><span class="msr">close</span></button>
         </div>
       </div>
     </section>
