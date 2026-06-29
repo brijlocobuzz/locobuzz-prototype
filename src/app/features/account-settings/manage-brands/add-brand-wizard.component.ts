@@ -39,7 +39,7 @@ export class AddBrandWizardComponent {
   readonly steps: WizardStep[] = [
     { num: 1, label: 'Brand identity',        subtitle: 'Basics and AI context', icon: 'badge' },
     { num: 2, label: 'Logo & color',          subtitle: 'Visual identity',       icon: 'palette' },
-    { num: 3, label: 'Team & tickets',        subtitle: 'Access and behavior',   icon: 'group' },
+    { num: 3, label: 'Users & Tickets',       subtitle: 'Access & ticketing',    icon: 'group' },
     { num: 4, label: 'Categories',            subtitle: 'Taxonomy mapping',      icon: 'sell' },
     { num: 5, label: 'Products & Competitors', subtitle: 'Market context',       icon: 'deployed_code' },
   ];
@@ -103,6 +103,20 @@ export class AddBrandWizardComponent {
   editingProductId: string | null = null;
 
   private seq = 100;
+
+  /** Dialog title — becomes "Adding <Brand>" once a name is typed. */
+  get headingName(): string {
+    const name = this.brandName.trim();
+    return name ? `Adding ${name}` : 'Add Brand';
+  }
+
+  /** Dialog subtitle — names the brand once it's typed. */
+  get headingSub(): string {
+    const name = this.brandName.trim();
+    return name
+      ? `Setting up ${name} for monitoring and analytics.`
+      : 'Set up a new brand for monitoring and analytics.';
+  }
 
   // =======================================================================
   //  Step navigation
@@ -367,9 +381,17 @@ export class AddBrandWizardComponent {
   // =======================================================================
   onSubmit() {
     if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(3) || !this.isStepValid(4)) return;
-    // Show the celebration, then auto-complete; user can also click Done.
+    // Show the celebration; the user closes it with Finish.
     this.celebrating = true;
-    setTimeout(() => this.complete(), 3600);
+  }
+
+  /** One-line recap of the brand's basics, shown on the success screen. */
+  get brandSummary(): string {
+    const users = this.selectedUserIds.size;
+    const userPart = `${users} user${users === 1 ? '' : 's'}`;
+    const tickets = this.ticketsEnabled ? 'ticket creation on' : 'ticket creation off';
+    return `${this.brandName} (${this.country}) is ready — ${userPart} assigned, `
+      + `categorised under “${this.categoryGroup}”, with ${tickets}.`;
   }
 
   /** Emit the saved brand and close — guarded so it only runs once. */

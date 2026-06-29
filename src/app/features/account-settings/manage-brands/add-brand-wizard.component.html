@@ -23,7 +23,7 @@
     </div>
 
     <h2 class="ab-celebrate-title">Brand created!</h2>
-    <p class="ab-celebrate-sub">{{ brandName }} is now set up for monitoring and analytics.</p>
+    <p class="ab-celebrate-sub">{{ brandSummary }}</p>
 
     <div class="ab-celebrate-pill">
       <span class="ab-mini-ic" [style.background]="color + '1a'" [style.color]="color">
@@ -32,14 +32,18 @@
       </span>
       {{ brandName }} · {{ country }}
     </div>
+
+    <button type="button" class="ab-btn-primary ab-celebrate-done" (click)="complete()">
+      Finish <span class="msr">check</span>
+    </button>
   </div>
 
   <ng-container *ngIf="!celebrating">
   <!-- ===== Header ===== -->
   <header class="ab-head">
     <div class="ab-head-text">
-      <h2>Add Brand</h2>
-      <p>Set up a new brand for monitoring and analytics.</p>
+      <h2>{{ headingName }}</h2>
+      <p>{{ headingSub }}</p>
     </div>
     <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
   </header>
@@ -111,7 +115,7 @@
       </div>
 
       <!-- 3 · Country (revealed last) -->
-      <div class="ab-field" *ngIf="countryRevealed">
+      <div class="ab-field ab-field-country" *ngIf="countryRevealed">
         <label class="ab-label">Country <i>*</i></label>
         <div class="ab-select-wrap">
           <button type="button" class="ab-select" [class.is-open]="countryOpen"
@@ -227,8 +231,8 @@
 
     <!-- ---------- Step 3 · Team & tickets ---------- -->
     <section class="ab-step-pane" *ngIf="currentStep === 3">
-      <h1 class="ab-pane-title">Team &amp; tickets</h1>
-      <p class="ab-pane-sub">Assign users who can access this brand and configure how mentions become tickets.</p>
+      <h1 class="ab-pane-title">Assign Users &amp; Ticket Creation</h1>
+      <p class="ab-pane-sub">Choose who can access this brand and decide whether incoming mentions are turned into tickets.</p>
 
       <div class="ab-field">
         <div class="ab-label-row">
@@ -291,6 +295,11 @@
       <h1 class="ab-pane-title">Categories</h1>
       <p class="ab-pane-sub">Map mentions into categories automatically. Mentions that don't map will fall under the catch-all category.</p>
 
+      <div class="ab-warn">
+        <span class="msr">info</span>
+        <p>Please choose the category group carefully — once it's selected, it can't be changed later.</p>
+      </div>
+
       <div class="ab-grid-2">
         <!-- category group -->
         <div class="ab-field">
@@ -351,9 +360,13 @@
 
       <!-- products -->
       <div class="ab-card">
-        <div class="ab-card-head">
-          <p class="ab-card-title">Products &amp; Services</p>
-          <p class="ab-card-sub">List your key offerings for better AI context and analytics.</p>
+        <div class="ab-card-head with-action">
+          <div>
+            <p class="ab-card-title">Products &amp; Services</p>
+            <p class="ab-card-sub">List your key offerings for better AI context and analytics.</p>
+          </div>
+          <button type="button" class="ab-head-add" *ngIf="!addingProduct"
+                  (click)="startAddProduct()" aria-label="Add product"><span class="msr">add</span></button>
         </div>
 
         <div class="ab-list-row" *ngFor="let p of products">
@@ -372,17 +385,17 @@
           <button type="button" class="ab-confirm" (click)="saveProduct()"><span class="msr">check</span></button>
           <button type="button" class="ab-cancel-x" (click)="cancelProduct()"><span class="msr">close</span></button>
         </div>
-
-        <button type="button" class="ab-add-dashed" *ngIf="!addingProduct" (click)="startAddProduct()">
-          <span class="msr">add</span> Add Product
-        </button>
       </div>
 
       <!-- competitors -->
       <div class="ab-card">
-        <div class="ab-card-head">
-          <p class="ab-card-title">Competitors</p>
-          <p class="ab-card-sub">Add competitors to help AI understand your market context.</p>
+        <div class="ab-card-head with-action">
+          <div>
+            <p class="ab-card-title">Competitors</p>
+            <p class="ab-card-sub">Add competitors to help AI understand your market context.</p>
+          </div>
+          <button type="button" class="ab-head-add" *ngIf="!addingCompetitor"
+                  (click)="startAddCompetitor()" aria-label="Add competitor"><span class="msr">add</span></button>
         </div>
 
         <div class="ab-toggle-card inset">
@@ -404,7 +417,6 @@
           </div>
         </div>
 
-        <p class="ab-subhead">ADD COMPETITORS</p>
         <div class="ab-list-row" *ngFor="let c of competitors">
           <span class="ab-row-avatar">{{ c.name.slice(0, 2) | uppercase }}</span>
           <span class="ab-row-meta"><span class="ab-row-name">{{ c.name }}</span></span>
@@ -418,10 +430,6 @@
           <button type="button" class="ab-cancel-x" (click)="cancelCompetitor()"><span class="msr">close</span></button>
           <span class="ab-mini-counter">{{ competitorDraft.length }}/50</span>
         </div>
-
-        <button type="button" class="ab-add-dashed" *ngIf="!addingCompetitor" (click)="startAddCompetitor()">
-          <span class="msr">add</span> Add Competitor
-        </button>
       </div>
     </section>
   </div>

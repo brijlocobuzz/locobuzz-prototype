@@ -397,9 +397,8 @@ export class AddUserWizardComponent {
   // =======================================================================
   onSubmit() {
     if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(3)) return;
-    // Show the celebration, then auto-complete; user can also click Done.
+    // Show the celebration summary; the user closes it with the Finish button.
     this.celebrating = true;
-    setTimeout(() => this.complete(), 3600);
   }
 
   /** Emit the saved user and close — guarded so it only runs once. */
