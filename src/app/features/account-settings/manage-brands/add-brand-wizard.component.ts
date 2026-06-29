@@ -2,8 +2,8 @@ import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, CATCH_ALL_CATEGORIES, BRAND_COLORS,
-  BrandUser, BrandProduct, BrandCompetitor,
+  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, BRAND_COLORS, MANAGED_BRANDS, brandLogo,
+  BrandUser, BrandProduct, BrandCompetitor, CategoryGroupInfo, TaxonomyCategory, ManagedBrand,
 } from './manage-brands-data';
 
 interface WizardStep {
@@ -47,8 +47,9 @@ export class AddBrandWizardComponent {
   // ---- reference data ----------------------------------------------------
   readonly countries = COUNTRIES;
   readonly allUsers = BRAND_USERS;
-  readonly categoryGroups = CATEGORY_GROUPS;
-  readonly catchAllCategories = CATCH_ALL_CATEGORIES;
+  /** Fresh copy each time the dialog opens (inline-created groups/categories stay local). */
+  readonly categoryGroups: CategoryGroupInfo[] =
+    CATEGORY_GROUPS.map(g => ({ ...g, categoryList: g.categoryList.map(c => ({ ...c })) }));
   readonly brandColors = BRAND_COLORS;
 
   // ---- step 1 · brand identity -------------------------------------------
@@ -80,12 +81,13 @@ export class AddBrandWizardComponent {
   ticketsEnabled = true;
 
   // ---- step 4 · categories -----------------------------------------------
-  categoryGroup = '';
-  catchAll = '';
-  catchAllOpen = false;
-  catchAllSearch = '';
-  groupOpen = false;
-  groupSearch = '';
+  categoryGroup = '';                                 // selected group name (for payload/summary)
+  selectedGroup: CategoryGroupInfo | null = null;     // selected group object
+  catchAll = '';                                      // selected catch-all category name
+  addingGroup = false;
+  groupDraft = '';
+  addingCatchAll = false;
+  catchAllDraft = '';
 
   // ---- step 5 · products & competitors -----------------------------------
   products: BrandProduct[] = [{ id: 'p1', name: 'Air Max', synonyms: ['AM', 'Air-Max'] }];
@@ -276,26 +278,76 @@ export class AddBrandWizardComponent {
   // =======================================================================
   //  Step 4 · categories
   // =======================================================================
-  get filteredGroups(): string[] {
-    const q = this.groupSearch.trim().toLowerCase();
-    return q ? this.categoryGroups.filter(c => c.toLowerCase().includes(q)) : this.categoryGroups;
+  readonly brandLogo = brandLogo;
+
+  /** Existing brands grouped by their category group — shown on each group card. */
+  private readonly brandsByGroup: Record<string, ManagedBrand[]> =
+    MANAGED_BRANDS.reduce((map, b) => {
+      const key = b.categoryGroup ?? '';
+      (map[key] ??= []).push(b);
+      return map;
+    }, {} as Record<string, ManagedBrand[]>);
+
+  groupBrands(name: string): ManagedBrand[] {
+    return this.brandsByGroup[name] ?? [];
   }
 
-  get filteredCatchAll(): string[] {
-    const q = this.catchAllSearch.trim().toLowerCase();
-    return q ? this.catchAllCategories.filter(c => c.toLowerCase().includes(q)) : this.catchAllCategories;
+  /** "Amazon, Nike +2" — a few names plus an overflow count. */
+  groupBrandsLabel(name: string): string {
+    const brands = this.groupBrands(name);
+    const shown = brands.slice(0, 2).map(b => b.name).join(', ');
+    const extra = brands.length - 2;
+    return extra > 0 ? `${shown} +${extra}` : shown;
   }
 
-  selectGroup(g: string) {
-    this.categoryGroup = g;
-    this.groupOpen = false;
-    this.groupSearch = '';
+  /** Catch-all candidates are the selected group's categories (config is per-group). */
+  get catchAllOptions(): TaxonomyCategory[] {
+    return this.selectedGroup?.categoryList ?? [];
   }
 
-  selectCatchAll(c: string) {
-    this.catchAll = c;
-    this.catchAllOpen = false;
-    this.catchAllSearch = '';
+  selectGroup(g: CategoryGroupInfo) {
+    if (this.selectedGroup === g) return;
+    this.selectedGroup = g;
+    this.categoryGroup = g.name;
+    // catch-all belongs to the group, so reset it whenever the group changes
+    this.catchAll = '';
+    this.cancelAddCatchAll();
+  }
+
+  selectCatchAll(c: TaxonomyCategory) {
+    this.catchAll = c.name;
+  }
+
+  // ---- inline create: category group ----
+  startAddGroup() { this.addingGroup = true; this.groupDraft = ''; }
+  cancelAddGroup() { this.addingGroup = false; this.groupDraft = ''; }
+  saveGroup() {
+    const name = this.groupDraft.trim();
+    if (name.length < 3 || name.length > 50) return;
+    if (this.categoryGroups.some(g => g.name.toLowerCase() === name.toLowerCase())) return;
+    const g: CategoryGroupInfo = {
+      name,
+      description: 'New category group — its taxonomy will be configured after the brand is created.',
+      brands: 0, categories: 0, categoryList: [],
+    };
+    this.categoryGroups.push(g);
+    this.selectGroup(g);
+    this.cancelAddGroup();
+  }
+
+  // ---- inline create: catch-all category (within the selected group) ----
+  startAddCatchAll() { this.addingCatchAll = true; this.catchAllDraft = ''; }
+  cancelAddCatchAll() { this.addingCatchAll = false; this.catchAllDraft = ''; }
+  saveCatchAll() {
+    if (!this.selectedGroup) return;
+    const name = this.catchAllDraft.trim();
+    if (name.length < 3 || name.length > 50) return;
+    if (this.selectedGroup.categoryList.some(c => c.name.toLowerCase() === name.toLowerCase())) return;
+    const c: TaxonomyCategory = { name, description: 'New category added during brand setup.', keywords: 0 };
+    this.selectedGroup.categoryList.push(c);
+    this.selectedGroup.categories = this.selectedGroup.categoryList.length;
+    this.selectCatchAll(c);
+    this.cancelAddCatchAll();
   }
 
   // =======================================================================
@@ -439,7 +491,7 @@ export class AddBrandWizardComponent {
   // Close any open inline popovers when clicking elsewhere in the dialog.
   @HostListener('document:keydown.escape')
   onEscape() {
-    this.countryOpen = this.catchAllOpen = this.groupOpen = false;
+    this.countryOpen = false;
     this.customColorOpen = this.usersDropdownOpen = false;
   }
 }
