@@ -23,15 +23,25 @@
     </div>
 
     <h2 class="au-celebrate-title">User created!</h2>
-    <p class="au-celebrate-sub">{{ firstName }} {{ lastName }} can now sign in as {{ role?.label }}.</p>
+    <p class="au-celebrate-sub">The account is ready and good to go.</p>
 
-    <div class="au-celebrate-pill">
-      <span class="au-mini-ic">
+    <!-- summary statement of the new user -->
+    <div class="au-summary">
+      <span class="au-summary-avatar">
         <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
         <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
       </span>
-      {{ '@' + username }} · {{ selectedBrandIds.size }} brands
+      <p class="au-summary-text">
+        <strong>{{ firstName }} {{ lastName }}</strong> ({{ '@' + username }}) has been added as a
+        <strong>{{ role?.label }}</strong> with access to
+        <strong>{{ selectedBrandIds.size }} {{ selectedBrandIds.size === 1 ? 'brand' : 'brands' }}</strong>
+        and <strong>{{ selectedGroupIds.size }} {{ selectedGroupIds.size === 1 ? 'platform' : 'platforms' }}</strong>.
+      </p>
     </div>
+
+    <button type="button" class="au-btn-primary au-celebrate-done" (click)="complete()">
+      <span class="msr">check</span> Finish
+    </button>
   </div>
 
   <ng-container *ngIf="!celebrating">
@@ -220,6 +230,10 @@
                 {{ b.name.slice(0, 2) | uppercase }}
               </span>
               <span class="au-row-name">{{ b.name }}</span>
+              <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
+                <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
+                {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+              </span>
               <span class="au-check" [class.on]="selectedBrandIds.has(b.id)">
                 <span class="msr" *ngIf="selectedBrandIds.has(b.id)">check</span>
               </span>

@@ -1,9 +1,10 @@
 import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { BRAND_ICONS } from '../../channel-data';
 
 interface BrandSeg { name: string; color: string; value: number; pct: number; }
-interface ChannelSeg { name: string; initials: string; color: string; pct: number; count: number; }
+interface ChannelSeg { name: string; initials: string; id?: string; color: string; pct: number; count: number; }
 
 @Component({
   selector: 'app-historic-consumption',
@@ -35,11 +36,11 @@ export class HistoricConsumptionComponent {
 
   /* ---- Channel composition (per selected brand) ---- */
   private readonly channelSrc = [
-    { name: 'X (Twitter)',   initials: 'X',  color: '#111827', pct: 42 },
-    { name: 'Facebook',      initials: 'Fb', color: '#1877F2', pct: 26 },
-    { name: 'Instagram',     initials: 'Ig', color: '#E1306C', pct: 17 },
-    { name: 'Reddit',        initials: 'Rd', color: '#FF4500', pct: 9 },
-    { name: 'Other Channel', initials: 'Oc', color: '#9aa1ad', pct: 6 },
+    { name: 'X (Twitter)',   initials: 'X',  id: 'twitter',   color: '#111827', pct: 42 },
+    { name: 'Facebook',      initials: 'Fb', id: 'facebook',  color: '#1877F2', pct: 26 },
+    { name: 'Instagram',     initials: 'Ig', id: 'instagram', color: '#E1306C', pct: 17 },
+    { name: 'Reddit',        initials: 'Rd', id: 'reddit',    color: '#FF4500', pct: 9 },
+    { name: 'Other Channel', initials: 'Oc',                  color: '#9aa1ad', pct: 6 },
   ];
   channels: ChannelSeg[] = [];
 
@@ -81,6 +82,22 @@ export class HistoricConsumptionComponent {
   get otherPct(): number { const t = this.selectedBrandTotal; return t ? (this.otherTotal / t) * 100 : 0; }
   channelPct(c: ChannelSeg): number { const t = this.selectedBrandTotal; return t ? +((c.count / t) * 100).toFixed(2) : 0; }
 
+  /** Donut geometry for the share charts (radius 48 → circumference ≈ 301.6). */
+  readonly donutR = 48;
+  private donutDash(fracs: number[]): { dash: string; offset: number }[] {
+    const C = 2 * Math.PI * this.donutR;
+    let acc = 0;
+    return fracs.map(f => {
+      const seg = { dash: `${f * C} ${C - f * C}`, offset: -acc * C };
+      acc += f;
+      return seg;
+    });
+  }
+  get donutSegments() {
+    const geo = this.donutDash(this.channels.map(c => this.channelPct(c) / 100));
+    return this.channels.map((c, i) => ({ name: c.name, color: c.color, count: c.count, pct: this.channelPct(c), ...geo[i] }));
+  }
+
   /* ---- brand dropdown ---- */
   toggleBrand() { this.brandFilterOpen = !this.brandFilterOpen; }
   selectBrand(b: string) { this.selectedBrand = b; this.brandFilterOpen = false; this.buildChannels(); }
@@ -99,6 +116,10 @@ export class HistoricConsumptionComponent {
     this.tip = { x: e.clientX, y: e.clientY, title: c.name, sub: `${this.compact(c.count)} · ${this.channelPct(c)}%`, color: c.color };
   }
 
+  /** The brand/channel currently highlighted — drives the inline value readout in the bar captions. */
+  get hoveredBrand(): BrandSeg | undefined { return this.brands.find(b => b.name === this.hoverBrand); }
+  get hoveredChannel(): ChannelSeg | undefined { return this.channels.find(c => c.name === this.hoverChannel); }
+
   back() { this.router.navigate(['/account-settings', 'data-consumption', 'consumption']); }
 
   @HostListener('document:keydown.escape')
@@ -111,4 +132,7 @@ export class HistoricConsumptionComponent {
   }
   private trim(v: number): string { return v.toFixed(2).replace(/\.?0+$/, ''); }
   fmt(n: number): string { return n.toLocaleString('en-IN'); }
+
+  /** Real brand-logo path for a channel, or null to fall back to initials. */
+  brandSvg(id: string | undefined): string | null { return id ? (BRAND_ICONS[id] ?? null) : null; }
 }

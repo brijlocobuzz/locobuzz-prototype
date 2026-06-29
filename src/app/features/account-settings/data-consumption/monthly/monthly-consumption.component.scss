@@ -34,14 +34,14 @@
 
 /* ---- Alert ---- */
 .mc-alert {
-  display: flex; align-items: flex-start; gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 12px 16px;
   border-radius: 12px;
   border: 1px solid #f3ddbb;
   background: #fff8ec;
 }
 .mc-alert.danger { border-color: #f4c9c9; background: #fdf3f3; }
-.mc-alert > .msr { font-size: 20px; color: #d98318; flex: none; margin-top: 1px; }
+.mc-alert > .msr { font-size: 20px; color: #d98318; flex: none; }
 .mc-alert.danger > .msr { color: #d23b3b; }
 .mc-alert p { margin: 0; flex: 1; font-size: var(--font-size-13, 13px); line-height: 1.55; color: var(--text-2, #4b5563); }
 .mc-alert strong { color: var(--text-1, #1c1d22); }
@@ -214,6 +214,19 @@
 .series.active .ln { stroke-width: 3.2; }
 .series.active .pt { r: 4; }
 
+/* value labels shown on the highlighted brand's points */
+.pt-val {
+  font-size: 12px; font-weight: 700; text-anchor: middle;
+  paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round;
+  pointer-events: none;
+}
+/* value label shown on the highlighted channel's bar segment */
+.seg-val {
+  font-size: 12px; font-weight: 700; text-anchor: middle; fill: #fff;
+  paint-order: stroke; stroke: rgba(0, 0, 0, .45); stroke-width: 3px; stroke-linejoin: round;
+  pointer-events: none;
+}
+
 .seg { cursor: pointer; transition: opacity .12s ease; }
 .seg.dim { opacity: .16; }
 
@@ -268,6 +281,7 @@
   width: 26px; height: 26px; flex: none; border-radius: 50%;
   display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 700;
 }
+.mc-avatar svg { width: 15px; height: 15px; display: block; }
 .mc-share { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; font-weight: 600; }
 .mc-share-bar { width: 56px; height: 6px; border-radius: 999px; background: #eef0f4; overflow: hidden; }
 .mc-share-bar span { display: block; height: 100%; border-radius: 999px; }

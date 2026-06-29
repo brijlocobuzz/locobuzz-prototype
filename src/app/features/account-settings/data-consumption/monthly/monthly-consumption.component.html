@@ -72,11 +72,6 @@
             <span class="mc-stat-value" [title]="fmt(billable)">{{ compact(billable) }}</span>
             <span class="mc-stat-pill over">{{ compact(exceededBy) }} over limit</span>
           </div>
-          <div class="mc-stat">
-            <span class="mc-stat-label">Non-billable mentions <span class="mc-muted">(Owned Brand)</span></span>
-            <span class="mc-stat-value">{{ compact(nonBillable) }}</span>
-            <span class="mc-stat-pill">Not charged</span>
-          </div>
         </aside>
 
         <!-- Right: breakdown + chart -->
@@ -127,6 +122,11 @@
                   <polyline [attr.points]="s.points" [attr.stroke]="s.color" class="ln"></polyline>
                   <circle *ngFor="let d of s.dots" [attr.cx]="d.x" [attr.cy]="d.y" r="2.8" [attr.fill]="s.color" class="pt"
                           (mousemove)="showDotTip($event, s, d)"></circle>
+                  <!-- on highlight, show this brand's values right on its line -->
+                  <ng-container *ngIf="hoverBrand === s.name">
+                    <text class="pt-val" *ngFor="let d of s.dots"
+                          [attr.x]="d.x" [attr.y]="d.y - 9" [attr.fill]="s.color">{{ compact(d.v) }}</text>
+                  </ng-container>
                 </g>
               </svg>
             </div>
@@ -138,7 +138,7 @@
                 <span class="mc-tip-sub">{{ tip.sub }}</span>
               </span>
             </div>
-            <p class="mc-hint"><span class="msr">info</span>Hover a line or legend to highlight it · zoom and drag to inspect · open fullscreen for more room.</p>
+            <p class="mc-hint"><span class="msr">info</span>Hover a brand line or legend to highlight it and see its weekly values · zoom and drag to inspect · open fullscreen for more room.</p>
             <div class="mc-legend">
               <span class="mc-leg" *ngFor="let s of lineSeries"
                     [class.dim]="hoverBrand && hoverBrand !== s.name"
@@ -178,7 +178,10 @@
             <tbody>
               <tr *ngFor="let c of channels">
                 <td>
-                  <span class="mc-avatar" [style.background]="c.color">{{ c.initials }}</span>
+                  <span class="mc-avatar" [style.background]="c.color">
+                    <svg *ngIf="brandSvg(c.id) as d; else mcInitials" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path [attr.d]="d"></path></svg>
+                    <ng-template #mcInitials>{{ c.initials }}</ng-template>
+                  </span>
                   {{ c.name }}
                 </td>
                 <td class="num" [title]="fmt(c.total)">{{ compact(c.total) }}</td>
@@ -234,6 +237,11 @@
                         [class.dim]="hoverChannel && hoverChannel !== seg.name"
                         (mouseenter)="onBarEnter(seg.name)" (mousemove)="showSegTip($event, seg, bar.label)"
                         (mouseleave)="onBarLeave()"></rect>
+                  <!-- on highlight, show the channel's value on its segment -->
+                  <ng-container *ngFor="let seg of bar.segments">
+                    <text *ngIf="hoverChannel === seg.name" class="seg-val"
+                          [attr.x]="seg.x + seg.w / 2" [attr.y]="seg.y + seg.h / 2 + 4">{{ compact(seg.value) }}</text>
+                  </ng-container>
                   <text [attr.x]="bar.x + bc.barW / 2" [attr.y]="bc.h - 16" class="ax-x">{{ bar.label }}</text>
                 </g>
               </svg>

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/as - redesign md files/**)",
+      "Read(//d/as - redesign lovable ss/myProfile/**)"
+    ]
+  }
+}
