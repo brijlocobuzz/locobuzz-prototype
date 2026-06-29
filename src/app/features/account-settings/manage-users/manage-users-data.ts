@@ -24,6 +24,8 @@ export interface ManagedUser {
   color: string;
   brands: number;
   active: boolean;
+  /** Whether this user can sign in via the configured SSO org (work email). */
+  ssoEnabled?: boolean;
 
   /* ---- enriched: everything captured by the Add-User wizard ---- */
   gender?: string;                 // step 1

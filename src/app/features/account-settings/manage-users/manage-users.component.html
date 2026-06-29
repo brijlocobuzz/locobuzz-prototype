@@ -33,6 +33,170 @@
   </div>
 </header>
 
+<!-- ===== SSO (single sign-on) ===== -->
+<!-- Not configured: feature promo + setup CTA -->
+<section class="sso-card setup" *ngIf="!sso.configured">
+  <div class="sso-main">
+    <span class="sso-ic"><span class="msr">shield</span></span>
+    <div class="sso-text">
+      <span class="sso-title">Single Sign-On (SSO)<span class="sso-badge">Recommended</span></span>
+      <span class="sso-lead">Give your team <b>secure, one-click access</b> — members sign in with their work email through your identity provider, so there are no extra passwords for you to manage or for them to forget.</span>
+      <div class="sso-benefits">
+        <span class="sso-ben"><span class="msr">verified_user</span>Enterprise-grade security</span>
+        <span class="sso-ben"><span class="msr">bolt</span>Faster, one-click logins</span>
+        <span class="sso-ben"><span class="msr">groups</span>Centralized access control</span>
+        <span class="sso-ben"><span class="msr">password</span>No password fatigue</span>
+      </div>
+    </div>
+    <div class="sso-actions-col">
+      <button class="sso-cta" (click)="openSsoModal()"><span class="msr">add_business</span>Configure SSO</button>
+      <!-- <button class="sso-link" (click)="ssoInfoOpen = !ssoInfoOpen">
+        <span class="msr">{{ ssoInfoOpen ? 'expand_less' : 'menu_book' }}</span>{{ ssoInfoOpen ? 'Hide details' : 'Explore SSO' }}
+      </button> -->
+    </div>
+  </div>
+
+  <!-- Explore SSO — inline how-it-works explainer -->
+  <div class="sso-explore" *ngIf="ssoInfoOpen">
+    <div class="sso-steps">
+      <div class="sso-step">
+        <span class="sso-step-n">1</span>
+        <div><b>Create your organization</b><span>Register your company domain (e.g. {{ sso.domain }}).</span></div>
+      </div>
+      <div class="sso-step">
+        <span class="sso-step-n">2</span>
+        <div><b>Connect your identity provider</b><span>Link Okta, Azure AD or Google Workspace via SAML / OIDC.</span></div>
+      </div>
+      <div class="sso-step">
+        <span class="sso-step-n">3</span>
+        <div><b>Members sign in with email</b><span>Users authenticate through your IdP — access stays centrally managed.</span></div>
+      </div>
+    </div>
+    <div class="sso-note"><span class="msr">lock</span>Comes with enforced MFA, instant deprovisioning when someone leaves, and audit-ready access logs — while manual username &amp; password sign-in keeps working for everyone else.</div>
+  </div>
+</section>
+
+<!-- Configured: clear org detail (no table needed for a single org) -->
+<section class="sso-card done" *ngIf="sso.configured">
+  <div class="sso-main">
+    <span class="sso-ic org"><span class="msr">corporate_fare</span></span>
+    <div class="sso-text">
+      <span class="sso-title">
+        {{ sso.orgName }}
+        <span class="sso-kind">SSO organization</span>
+        <span class="sso-chip" [class.ok]="sso.status === 'Active'" [class.warn]="sso.status === 'Incomplete'">
+          <span class="msr">{{ sso.status === 'Active' ? 'check_circle' : 'pending' }}</span>{{ sso.status }}
+        </span>
+      </span>
+      <span class="sso-lead" *ngIf="sso.status === 'Active'">SSO is live — members can sign in with their <b>{{ sso.domain }}</b> work email, alongside the usual username &amp; password.</span>
+      <span class="sso-lead" *ngIf="sso.status === 'Incomplete'">Organization created, but <b>SSO is not active yet</b> — {{ ssoDoneCount }} of {{ ssoSteps.length }} setup steps done. Finish the remaining steps to switch on work-email sign-in.</span>
+
+      <!-- progress bar for the incomplete state -->
+      <div class="sso-progress" *ngIf="sso.status === 'Incomplete'">
+        <span class="sso-progress-bar"><i [style.width.%]="ssoDoneCount / ssoSteps.length * 100"></i></span>
+        <span class="sso-progress-tx">{{ ssoDoneCount }}/{{ ssoSteps.length }}</span>
+      </div>
+
+      <div class="sso-meta">
+        <div class="sso-mi"><span class="sso-mk">DOMAIN</span><span class="sso-mv"><span class="msr">language</span>{{ sso.domain }}</span></div>
+        <div class="sso-mi"><span class="sso-mk">CREATED ON</span><span class="sso-mv"><span class="msr">schedule</span>{{ sso.createdOn }}</span></div>
+        <div class="sso-mi"><span class="sso-mk">SIGN-IN METHOD</span><span class="sso-mv"><span class="msr">mail</span>Work email (IdP)</span></div>
+      </div>
+    </div>
+    <div class="sso-actions-col">
+      <button class="sso-cta" *ngIf="sso.status === 'Incomplete'" (click)="resumeSetup()"><span class="msr">task_alt</span>Complete configuration</button>
+      <button class="sso-link" *ngIf="sso.status === 'Incomplete'" (click)="recheckSso()"><span class="msr">refresh</span>Refresh status</button>
+      <button class="sso-link" *ngIf="sso.status === 'Active'" (click)="resumeSetup()"><span class="msr">settings</span>Manage SSO</button>
+      <!-- <div class="sso-icons">
+        <button class="sso-icon" title="Refresh current status" (click)="recheckSso()"><span class="msr">refresh</span></button>
+        <button class="sso-icon danger" title="Disconnect SSO" (click)="disconnectSso()"><span class="msr">link_off</span></button>
+      </div> -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== SSO setup modal ===== -->
+<div class="sso-modal-scrim" *ngIf="ssoModalOpen" (click)="closeSsoModal()"></div>
+<div class="sso-modal" *ngIf="ssoModalOpen" role="dialog" aria-modal="true">
+  <!-- header -->
+  <div class="smo-head">
+    <div class="smo-htext">
+      <span class="smo-eyebrow"><span class="msr">shield</span>Single Sign-On setup</span>
+      <h2>
+        {{ ssoModalStep === 'create' ? 'Create your organization'
+           : ssoModalStep === 'done' ? 'SSO is now active'
+           : 'Finish setting up SSO' }}
+      </h2>
+    </div>
+    <button class="smo-x" (click)="closeSsoModal()" aria-label="Close"><span class="msr">close</span></button>
+  </div>
+
+  <!-- ===== STEP: create organization ===== -->
+  <div class="smo-body" *ngIf="ssoModalStep === 'create'">
+    <p class="smo-intro">Your organization links Locobuzz with your identity provider so the right people can sign in with their work email. This is the first step — you can finish the rest now or come back later.</p>
+
+    <label class="smo-field">
+      <span class="smo-lbl">Organization Name <span class="req">*</span></span>
+      <span class="smo-hint">Used to identify the same organization across both platforms.</span>
+      <input type="text" [(ngModel)]="draftOrg.name" placeholder="e.g. Locobuzz" />
+    </label>
+
+    <label class="smo-field">
+      <span class="smo-lbl">Domain Name <span class="req">*</span></span>
+      <span class="smo-hint">The email domain your team signs in with — e.g. locobuzz.net.</span>
+      <input type="text" [(ngModel)]="draftOrg.domain" placeholder="e.g. locobuzz.net" />
+    </label>
+
+    <div class="smo-note"><span class="msr">info</span>Creating the organization won't activate SSO on its own. You'll still need to connect your identity provider and verify your domain before members can sign in with email.</div>
+  </div>
+
+  <!-- ===== STEP: remaining setup (pending) ===== -->
+  <div class="smo-body" *ngIf="ssoModalStep === 'pending'">
+    <div class="smo-banner warn">
+      <span class="msr">pending</span>
+      <div>
+        <b>Organization created — setup not finished</b>
+        <span>SSO is <b>not active yet</b>. Complete the steps below to switch on work-email sign-in. Your progress is saved, so you can close this and resume anytime.</span>
+      </div>
+    </div>
+
+    <ol class="smo-stepper">
+      <li *ngFor="let s of ssoSteps; let i = index"
+          [class.done]="s.done" [class.current]="!s.done && firstPending === i">
+        <span class="smo-step-ic"><span class="msr">{{ s.done ? 'check' : (firstPending === i ? 'radio_button_unchecked' : 'lock') }}</span></span>
+        <div class="smo-step-tx"><b>{{ s.label }}</b><span>{{ s.desc }}</span></div>
+        <span class="smo-step-tag" [class.ok]="s.done" [class.next]="!s.done && firstPending === i">
+          {{ s.done ? 'Done' : (firstPending === i ? 'Next' : 'Pending') }}
+        </span>
+      </li>
+    </ol>
+  </div>
+
+  <!-- ===== STEP: done / active ===== -->
+  <div class="smo-body done-body" *ngIf="ssoModalStep === 'done'">
+    <span class="smo-done-ic"><span class="msr">verified</span></span>
+    <h3>SSO is active</h3>
+    <p>Members of <b>{{ sso.orgName }}</b> can now sign in with their <b>{{ sso.domain }}</b> work email. Username &amp; password sign-in keeps working for everyone else.</p>
+  </div>
+
+  <!-- footer -->
+  <div class="smo-foot">
+    <ng-container *ngIf="ssoModalStep === 'create'">
+      <button class="smo-btn ghost" (click)="closeSsoModal()">Cancel</button>
+      <button class="smo-btn primary" [disabled]="!draftOrg.name.trim() || !draftOrg.domain.trim()" (click)="createOrg()">
+        <span class="msr">add_business</span>Create Organization
+      </button>
+    </ng-container>
+    <ng-container *ngIf="ssoModalStep === 'pending'">
+      <button class="smo-btn ghost" (click)="closeSsoModal()">I'll finish later</button>
+      <button class="smo-btn primary" (click)="completeSetup()"><span class="msr">link</span>Connect &amp; activate</button>
+    </ng-container>
+    <ng-container *ngIf="ssoModalStep === 'done'">
+      <button class="smo-btn primary" (click)="closeSsoModal()"><span class="msr">check</span>Done</button>
+    </ng-container>
+  </div>
+</div>
+
 <!-- ===== Panel ===== -->
 <section class="mb-panel">
   <!-- toolbar -->
@@ -129,6 +293,7 @@
           <th class="sortable" (click)="sortBy('status')">
             <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
           </th>
+          <th class="col-sso" *ngIf="sso.configured">SSO Enabled</th>
           <th class="col-act">Action</th>
         </tr>
       </thead>
@@ -166,6 +331,14 @@
               <button class="seg-btn" [class.on]="u.active" (click)="setActive(u, true, $event)">Active</button>
               <button class="seg-btn" [class.off]="!u.active" (click)="setActive(u, false, $event)">Inactive</button>
             </div>
+          </td>
+
+          <!-- SSO: enabled chip, or an Invite button to grant work-email sign-in -->
+          <td class="col-sso" *ngIf="sso.configured">
+            <span class="sso-on" *ngIf="u.ssoEnabled"><span class="msr">check_circle</span>Enabled</span>
+            <button class="sso-invite" *ngIf="!u.ssoEnabled" (click)="inviteSso(u, $event)">
+              <span class="msr">mail</span>Invite
+            </button>
           </td>
 
           <td class="col-act">
