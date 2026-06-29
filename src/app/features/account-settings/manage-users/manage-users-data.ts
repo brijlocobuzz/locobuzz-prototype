@@ -10,6 +10,9 @@
 /* ===================================================================
    Listing
    =================================================================== */
+/** An assigned brand shown as an avatar (name + colour). */
+export interface UserBrand { name: string; color: string; }
+
 export interface ManagedUser {
   id: string;
   firstName: string;
@@ -21,15 +24,80 @@ export interface ManagedUser {
   color: string;
   brands: number;
   active: boolean;
+
+  /* ---- enriched: everything captured by the Add-User wizard ---- */
+  gender?: string;                 // step 1
+  contact?: string;                // step 1 — dial + number
+  supervisorAdmin?: boolean;       // step 1
+  brandList?: UserBrand[];         // step 2 — assigned brands for avatar stacks
+  team?: string;                   // step 2
+  skills?: string[];               // step 2
+  channelIds?: string[];           // step 3 — channels (BRAND_ICONS keys) for logos
+  permissions?: string[];          // step 4 — platform modules
+  signature?: string;              // step 5
 }
 
 export const MANAGED_USERS: ManagedUser[] = [
-  { id: 'u1', firstName: 'Aarav', lastName: 'Mehta', username: 'aarav_admin', email: 'aarav.mehta@brand.com', role: 'Supervisor Agent', color: '#4f46e5', brands: 12, active: true },
-  { id: 'u2', firstName: 'Bhavna', lastName: 'Rao', username: 'bhavna_agent', email: 'bhavna.rao@brand.com', role: 'Agent', color: '#0ea5e9', brands: 3, active: true },
-  { id: 'u3', firstName: 'Chetan', lastName: 'Iyer', username: 'chetan_sup', email: 'chetan.iyer@brand.com', role: 'Team Lead', color: '#10b981', brands: 6, active: true },
-  { id: 'u4', firstName: 'Deepika', lastName: 'Nair', username: 'deepika_cc', email: 'deepika.nair@brand.com', role: 'Customer Care', color: '#f59e0b', brands: 2, active: false },
-  { id: 'u5', firstName: 'Esha', lastName: 'Khan', username: 'esha_brand', email: 'esha.khan@brand.com', role: 'Brand Account', color: '#ec4899', brands: 4, active: true },
-  { id: 'u6', firstName: 'Farhan', lastName: 'Shaikh', username: 'farhan_tl', email: 'farhan.shaikh@brand.com', role: 'Account Configurator', color: '#ef4444', brands: 9, active: true },
+  {
+    id: 'u1', firstName: 'Aarav', lastName: 'Mehta', username: 'aarav_admin', email: 'aarav.mehta@brand.com',
+    role: 'Supervisor Agent', color: '#4f46e5', brands: 12, active: true,
+    gender: 'Male', contact: '+91 98200 11234', supervisorAdmin: true,
+    brandList: [{ name: 'Amazon', color: '#ff9900' }, { name: 'Nike', color: '#0f172a' }, { name: 'Zomato', color: '#ef4444' }],
+    team: 'War Room', skills: ['English', 'Hindi', 'Escalations'],
+    channelIds: ['twitter', 'facebook', 'instagram', 'email', 'playstore'],
+    permissions: ['Response Dashboard', 'Account Settings', 'Analytics', 'Reports'],
+    signature: 'Best regards,\nAarav Mehta · Supervisor',
+  },
+  {
+    id: 'u2', firstName: 'Bhavna', lastName: 'Rao', username: 'bhavna_agent', email: 'bhavna.rao@brand.com',
+    role: 'Agent', color: '#0ea5e9', brands: 3, active: true,
+    gender: 'Female', contact: '+91 99300 55678', supervisorAdmin: false,
+    brandList: [{ name: 'Myntra', color: '#e91e63' }, { name: 'Zomato', color: '#ef4444' }],
+    team: 'Customer Support — L1', skills: ['English', 'Refunds'],
+    channelIds: ['facebook', 'instagram', 'email'],
+    permissions: ['Response Dashboard'],
+    signature: 'Thanks,\nBhavna',
+  },
+  {
+    id: 'u3', firstName: 'Chetan', lastName: 'Iyer', username: 'chetan_sup', email: 'chetan.iyer@brand.com',
+    role: 'Team Lead', color: '#10b981', brands: 6, active: true,
+    gender: 'Male', contact: '+91 90040 22890', supervisorAdmin: false,
+    brandList: [{ name: 'Air India', color: '#c8102e' }, { name: 'Nike', color: '#0f172a' }, { name: 'Flipkart', color: '#2874f0' }],
+    team: 'Escalations', skills: ['English', 'Technical', 'Billing'],
+    channelIds: ['twitter', 'facebook', 'email', 'gmb'],
+    permissions: ['Response Dashboard', 'Analytics'],
+    signature: 'Regards,\nChetan Iyer · Team Lead',
+  },
+  {
+    id: 'u4', firstName: 'Deepika', lastName: 'Nair', username: 'deepika_cc', email: 'deepika.nair@brand.com',
+    role: 'Customer Care', color: '#f59e0b', brands: 2, active: false,
+    gender: 'Female', contact: '+91 98765 43210', supervisorAdmin: false,
+    brandList: [{ name: 'Amazon', color: '#ff9900' }, { name: 'Swiggy', color: '#fc8019' }],
+    team: 'Customer Support — L2', skills: ['English', 'Onboarding'],
+    channelIds: ['facebook', 'instagram'],
+    permissions: ['Response Dashboard'],
+    signature: 'Warm regards,\nDeepika',
+  },
+  {
+    id: 'u5', firstName: 'Esha', lastName: 'Khan', username: 'esha_brand', email: 'esha.khan@brand.com',
+    role: 'Brand Account', color: '#ec4899', brands: 4, active: true,
+    gender: 'Female', contact: '+91 95550 67788', supervisorAdmin: false,
+    brandList: [{ name: 'Nike', color: '#0f172a' }, { name: 'Myntra', color: '#e91e63' }],
+    team: 'Social Media', skills: ['English', 'Hindi'],
+    channelIds: ['instagram', 'facebook', 'twitter'],
+    permissions: ['Response Dashboard', 'Reports'],
+    signature: 'Cheers,\nEsha Khan',
+  },
+  {
+    id: 'u6', firstName: 'Farhan', lastName: 'Shaikh', username: 'farhan_tl', email: 'farhan.shaikh@brand.com',
+    role: 'Account Configurator', color: '#ef4444', brands: 9, active: true,
+    gender: 'Male', contact: '+91 97000 88990', supervisorAdmin: true,
+    brandList: [{ name: 'Amazon', color: '#ff9900' }, { name: 'Air India', color: '#c8102e' }, { name: 'Flipkart', color: '#2874f0' }],
+    team: 'War Room', skills: ['English', 'Technical', 'Hindi'],
+    channelIds: ['twitter', 'facebook', 'instagram', 'email', 'playstore', 'gmb'],
+    permissions: ['Response Dashboard', 'Account Settings', 'Analytics', 'Reports'],
+    signature: 'Best,\nFarhan Shaikh · Configurator',
+  },
 ];
 
 /* ===================================================================

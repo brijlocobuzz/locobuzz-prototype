@@ -1,47 +1,316 @@
 <!-- ===== Header ===== -->
-<header class="mu-header">
-  <button class="mu-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
-  <div class="mu-header-text">
+<header class="mb-header">
+  <div class="mb-header-text">
     <h1>Manage Users</h1>
-    <p>Create, view and manage all your user accounts — assign brands, teams and platform permissions in one place.</p>
+    <p>Create, view and manage all the users in your account — their role, assigned brands, channels and platform permissions in one place.</p>
+  </div>
+
+  <div class="mb-header-actions">
+    <!-- compact pill -> full detail on hover (same as Channel Configuration) -->
+    <div class="stat green" style="--pct:93">
+      <span class="ring"><i></i></span>
+      <span class="stat-cap">Active Users <b>1,955</b> / 2,112</span>
+
+      <div class="stat-pop">
+        <div class="sp-head">
+          <span class="dot green"></span>
+          <span class="sp-title">Active / Total Users</span>
+          <span class="sp-badge healthy">HEALTHY</span>
+        </div>
+        <div class="sp-row">
+          <span class="sp-lbl">Active</span>
+          <span class="sp-val"><b>1,955</b> <span class="sp-mut">/ 2,112</span></span>
+        </div>
+        <div class="sp-bar"><span style="width:93%"></span></div>
+        <div class="sp-stats">
+          <div class="sp-box"><span class="sp-box-lbl">INACTIVE</span><span class="sp-box-val">157</span></div>
+          <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">93%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add User</button>
   </div>
 </header>
 
-<!-- ===== Toolbar ===== -->
-<div class="mu-toolbar">
-  <div class="mu-search">
-    <span class="msr">search</span>
-    <input type="text" placeholder="Search by name, username, email or role" [(ngModel)]="search" />
-  </div>
-  <button class="mu-add" (click)="wizardOpen = true">
-    <span class="msr">add_circle</span> Add User
-  </button>
-</div>
+<!-- ===== Panel ===== -->
+<section class="mb-panel">
+  <!-- toolbar -->
+  <div class="pf-head">
+      <div class="pf-tabs">
+    <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="activeViewId = 'all'">All users ({{ users.length }})</button>
+    <button class="pf-tab" *ngFor="let v of savedViews"
+            [class.active]="activeViewId === v.id" (click)="activeViewId = v.id" [title]="v.label">
+      <span class="pf-tab-lbl">{{ v.label }}</span>
+      <span class="pf-tab-x" (click)="removeView(v.id, $event)"><span class="msr">close</span></span>
+    </button>
+    <button class="pf-add" [class.active]="viewBuilderOpen"
+            (click)="viewBuilderOpen ? closeViewBuilder() : openViewBuilder()" title="Create custom view">
+      <span class="msr">add</span>
+    </button>
 
-<!-- ===== User grid ===== -->
-<div class="mu-grid">
-  <article class="mu-card" *ngFor="let u of filteredUsers">
-    <div class="mu-card-head">
-      <span class="mu-avatar" [style.background]="u.color + '1a'" [style.color]="u.color">{{ initials(u) }}</span>
-      <div class="mu-card-who">
-        <span class="mu-name">{{ u.firstName }} {{ u.lastName }}</span>
-        <span class="mu-username">{{ '@' + u.username }}</span>
+    <div class="view-builder" *ngIf="viewBuilderOpen">
+      <div class="vb-grid">
+        <div class="vb-col">
+          <label class="vb-lbl">Field</label>
+          <div class="vb-select">
+            <select [ngModel]="draft.field" (ngModelChange)="onFieldChange($event)">
+              <option *ngFor="let f of fieldOptions" [value]="f">{{ f }}</option>
+            </select>
+            <span class="msr">expand_more</span>
+          </div>
+        </div>
+        <div class="vb-col">
+          <label class="vb-lbl">Operator</label>
+          <div class="vb-select">
+            <select [(ngModel)]="draft.operator">
+              <option *ngFor="let o of operatorOptions" [value]="o">{{ o }}</option>
+            </select>
+            <span class="msr">expand_more</span>
+          </div>
+        </div>
+        <div class="vb-col">
+          <label class="vb-lbl">Value</label>
+          <input class="vb-input" *ngIf="isTextField(draft.field)" [(ngModel)]="draft.text" placeholder="Type a name…" />
+          <div class="vb-ms" *ngIf="!isTextField(draft.field)">
+            <button type="button" class="vb-select ms-trigger" (click)="valueDropdownOpen = !valueDropdownOpen">
+              <span class="ms-text" [class.placeholder]="!draft.values.length">
+                {{ draft.values.length ? draft.values.join(', ') : 'Select…' }}
+              </span>
+              <span class="msr">expand_more</span>
+            </button>
+            <div class="vb-options" *ngIf="valueDropdownOpen">
+              <div class="vb-opt" *ngFor="let o of valueOptions(draft.field)" (click)="toggleValue(o)">
+                <span class="vb-check" [class.on]="draft.values.includes(o)"><span class="msr">check</span></span>
+                {{ o }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <span class="mu-status" [class.on]="u.active">
-        <span class="mu-dot"></span>{{ u.active ? 'Active' : 'Inactive' }}
-      </span>
+      <div class="vb-foot">
+        <button class="vb-clear" (click)="clearDraft()">Clear All</button>
+        <button class="vb-save" [disabled]="!canSaveView" (click)="saveView()"><span class="msr">bookmark_add</span>Save view</button>
+      </div>
     </div>
-
-    <div class="mu-role"><span class="msr">badge</span>{{ u.role }}</div>
-    <div class="mu-email"><span class="msr">mail</span>{{ u.email }}</div>
-
-    <div class="mu-card-stats">
-      <span class="mu-stat"><span class="msr">storefront</span><b>{{ u.brands }}</b> Brands</span>
+  </div>
+    <div class="pf-tools">
+      <div class="view-toggle">
+        <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><span class="msr">view_list</span></button>
+        <button [class.active]="viewMode === 'card'" (click)="viewMode = 'card'"><span class="msr">grid_view</span></button>
+      </div>
+      <div class="pf-search">
+        <span class="msr">search</span>
+        <input type="text" placeholder="Search by Name, Username, Email, Role" [(ngModel)]="search" />
+      </div>
     </div>
-  </article>
+  </div>
 
-  <p class="mu-empty" *ngIf="!filteredUsers.length">No users match “{{ search }}”.</p>
-</div>
+  <!-- view tabs + builder -->
+
+
+  <!-- ===== LIST / DATA-GRID VIEW ===== -->
+  <div class="pf-table-wrap" *ngIf="viewMode === 'list'">
+    <table class="pf-table">
+      <thead>
+        <tr>
+          <th class="col-check pin">
+            <span class="cbx" [class.checked]="allSelected" (click)="toggleAll()"><span class="msr">check</span></span>
+          </th>
+          <th class="col-name pin sortable" (click)="sortBy('name')">
+            <span class="th-in">User <span class="msr sort-ic" [class.on]="sortKey==='name'">{{ sortIcon('name') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('role')">
+            <span class="th-in">Role <span class="msr sort-ic" [class.on]="sortKey==='role'">{{ sortIcon('role') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('brands')">
+            <span class="th-in">Brands <span class="msr sort-ic" [class.on]="sortKey==='brands'">{{ sortIcon('brands') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('status')">
+            <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
+          </th>
+          <th class="col-act">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of displayUsers" [class.selected]="selected.has(u.id)">
+          <td class="col-check pin">
+            <span class="cbx" [class.checked]="selected.has(u.id)" (click)="toggleRow(u.id)"><span class="msr">check</span></span>
+          </td>
+
+          <td class="col-name pin">
+            <div class="t-profile">
+              <span class="t-avatar" [style.background]="u.color">{{ initials(u) }}</span>
+              <span class="t-who">
+                <span class="t-name">{{ fullName(u) }} <small class="t-admin" *ngIf="u.supervisorAdmin">ADMIN</small></span>
+                <span class="t-owner"><span class="msr">mail</span>{{ u.email }}</span>
+              </span>
+              <button class="t-open" title="Open details" (click)="openDetail(u)"><span class="msr">chevron_right</span></button>
+            </div>
+          </td>
+
+          <td><span class="t-role">{{ u.role }}</span></td>
+
+          <!-- brands: first 2 colour-tile avatars + count -->
+          <td>
+            <div class="stack">
+              <span class="stack-av" *ngFor="let b of (u.brandList || []).slice(0, 2)"
+                    [style.background]="b.color" [title]="b.name">{{ brandInitials(b.name) }}</span>
+              <span class="stack-more" *ngIf="u.brands > 2">+{{ u.brands - 2 }}</span>
+            </div>
+          </td>
+
+          <!-- status: segmented control -->
+          <td>
+            <div class="seg" (click)="$event.stopPropagation()">
+              <button class="seg-btn" [class.on]="u.active" (click)="setActive(u, true, $event)">Active</button>
+              <button class="seg-btn" [class.off]="!u.active" (click)="setActive(u, false, $event)">Inactive</button>
+            </div>
+          </td>
+
+          <td class="col-act">
+            <div class="t-acts">
+              <button class="t-act" title="Edit"><span class="msr">edit</span></button>
+              <!-- <button class="t-act" title="{{ u.active ? 'Deactivate' : 'Activate' }}"><span class="msr">{{ u.active ? 'block' : 'check_circle' }}</span></button> -->
+              <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- bulk bar -->
+  <div class="bulkbar" *ngIf="selected.size > 0" [class.show]="selected.size > 0">
+    <span class="bb-cnt"><span class="bb-pill">{{ selected.size }}</span> selected</span>
+    <span class="bb-sep"></span>
+    <button class="bb-btn"><span class="msr">block</span>Deactivate</button>
+    <button class="bb-btn"><span class="msr">storefront</span>Assign brands</button>
+    <button class="bb-btn danger"><span class="msr">delete</span>Delete</button>
+    <span class="bb-sep"></span>
+    <button class="bb-btn close" (click)="clearSelection()"><span class="msr">close</span></button>
+  </div>
+
+  <!-- ===== CARD GRID VIEW ===== -->
+  <div class="pf-grid" *ngIf="viewMode === 'card'">
+    <article class="card" *ngFor="let u of displayUsers" (click)="openDetail(u)">
+      <div class="card-head">
+        <span class="card-avatar" [style.background]="u.color">{{ initials(u) }}</span>
+        <div class="card-who">
+          <span class="card-name">{{ fullName(u) }}</span>
+          <span class="card-owner"><span class="msr">alternate_email</span>{{ u.username }}</span>
+        </div>
+        <span class="t-badge active" *ngIf="u.active"><span class="led"></span>Active</span>
+        <span class="t-badge off" *ngIf="!u.active"><span class="led"></span>Inactive</span>
+      </div>
+
+      <div class="card-meta">
+        <div class="cm-row"><span class="cm-k"><span class="msr">badge</span>Role</span><span class="cm-v">{{ u.role }}</span></div>
+        <div class="cm-row"><span class="cm-k"><span class="msr">mail</span>Email</span><span class="cm-v ellip">{{ u.email }}</span></div>
+        <div class="cm-row"><span class="cm-k"><span class="msr">storefront</span>Brands</span>
+          <span class="stack">
+            <span class="stack-av" *ngFor="let b of (u.brandList || []).slice(0, 3)" [style.background]="b.color" [title]="b.name">{{ brandInitials(b.name) }}</span>
+            <span class="stack-more" *ngIf="u.brands > 3">+{{ u.brands - 3 }}</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="card-actions" (click)="$event.stopPropagation()">
+        <button class="ca-btn"><span class="msr">edit</span>Edit</button>
+        <button class="ca-btn"><span class="msr">{{ u.active ? 'block' : 'check_circle' }}</span>{{ u.active ? 'Deactivate' : 'Activate' }}</button>
+        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+      </div>
+    </article>
+
+    <p class="mb-empty" *ngIf="!displayUsers.length">No users match your filters.</p>
+  </div>
+
+  <!-- ===== DETAIL DRAWER ===== -->
+  <div class="dw-scrim" [class.show]="detail" (click)="closeDetail()"></div>
+  <aside class="drawer" [class.show]="detail">
+    <ng-container *ngIf="detail as d">
+      <button class="dw-close-out" (click)="closeDetail()"><span class="msr">close</span></button>
+
+      <div class="dw-head">
+        <div class="dw-title">
+          <span class="t-avatar lg" [style.background]="d.color">{{ initials(d) }}</span>
+          <div class="dw-who">
+            <h2>{{ fullName(d) }} <small class="dw-admin" *ngIf="d.supervisorAdmin">ADMIN</small></h2>
+            <span class="dw-owner"><span class="msr">alternate_email</span>{{ d.username }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dw-body">
+        <!-- User profile (step 1) -->
+        <div class="dw-section">User profile</div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">badge</span>Role</span>
+          <span class="dw-val">{{ d.role }}</span>
+        </div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">mail</span>Email</span>
+          <span class="dw-val">{{ d.email }}</span>
+        </div>
+        <div class="dw-field" *ngIf="d.contact">
+          <span class="dw-lbl"><span class="msr">call</span>Contact</span>
+          <span class="dw-val">{{ d.contact }}</span>
+        </div>
+        <div class="dw-field" *ngIf="d.gender">
+          <span class="dw-lbl"><span class="msr">wc</span>Gender</span>
+          <span class="dw-val">{{ d.gender }}</span>
+        </div>
+        <div class="dw-field" *ngIf="d.team">
+          <span class="dw-lbl"><span class="msr">groups</span>Team</span>
+          <span class="dw-val">{{ d.team }}</span>
+        </div>
+        <div class="dw-field">
+          <span class="dw-lbl"><span class="msr">toggle_on</span>Status</span>
+          <div class="seg" (click)="$event.stopPropagation()">
+            <button class="seg-btn" [class.on]="d.active" (click)="setActive(d, true, $event)">Active</button>
+            <button class="seg-btn" [class.off]="!d.active" (click)="setActive(d, false, $event)">Inactive</button>
+          </div>
+        </div>
+
+        <!-- Brands & team (step 2) -->
+        <div class="dw-section">Assigned brands ({{ d.brands }})</div>
+        <div class="dw-chan" *ngIf="d.brandList?.length">
+          <span class="dw-bav" *ngFor="let b of d.brandList" [style.background]="b.color" [title]="b.name">{{ brandInitials(b.name) }}</span>
+          <span class="dw-cmore" *ngIf="d.brands > (d.brandList?.length || 0)">+{{ d.brands - (d.brandList?.length || 0) }}</span>
+        </div>
+    
+        <div class="dw-section" *ngIf="d.skills?.length">Agent skills</div>
+        <div class="dw-pills" *ngIf="d.skills?.length">
+          <span class="dw-pill" *ngFor="let s of d.skills">{{ s }}</span>
+        </div>
+
+        <!-- Channels (step 3) -->
+        <div class="dw-section" *ngIf="d.channelIds?.length">Channels ({{ d.channelIds?.length }})</div>
+        <div class="dw-chan" *ngIf="d.channelIds?.length">
+          <span class="dw-clogo" *ngFor="let c of d.channelIds" [style.background]="channelColor(c)" [title]="c">
+            <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c)"><path [attr.d]="brandSvg(c)"></path></svg>
+          </span>
+        </div>
+
+        <!-- Permissions (step 4) -->
+        <div class="dw-section" *ngIf="d.permissions?.length">Platform permissions</div>
+        <div class="dw-pills" *ngIf="d.permissions?.length">
+          <span class="dw-pill alt" *ngFor="let p of d.permissions">{{ p }}</span>
+        </div>
+
+        <!-- Signature (step 5) -->
+        <div class="dw-section" *ngIf="d.signature">Signature</div>
+        <p class="dw-sign" *ngIf="d.signature">{{ d.signature }}</p>
+      </div>
+
+      <div class="dw-foot">
+        <button class="ca-btn"><span class="msr">edit</span>Edit</button>
+        <button class="ca-btn"><span class="msr">{{ d.active ? 'block' : 'check_circle' }}</span>{{ d.active ? 'Deactivate' : 'Activate' }}</button>
+        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+      </div>
+    </ng-container>
+  </aside>
+</section>
 
 <!-- ===== Add-user wizard ===== -->
 <app-add-user-wizard *ngIf="wizardOpen"
