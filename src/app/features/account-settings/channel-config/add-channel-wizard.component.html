@@ -63,7 +63,7 @@
       <div class="wz-step" [class.done]="i < stepIndex" [class.active]="i === stepIndex">
         <span class="wz-dot">
           <span class="msr" *ngIf="i < stepIndex">check</span>
-          <ng-container *ngIf="i >= stepIndex">{{ i + 1 }}</ng-container>
+          <span class="msr" *ngIf="i >= stepIndex">{{ stepIcons[s.key] }}</span>
         </span>
         <span class="wz-step-label">{{ s.label }}</span>
       </div>

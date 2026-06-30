@@ -31,6 +31,19 @@ export class YourProfileComponent {
   editProfile = false;
   mfaOn = true;
 
+  /** Editable profile fields (bound to the form). */
+  firstName = 'Alam';
+  lastName = 'Shaikh';
+  email = 'alam.shaikh@locobuzz.com';
+  gender: 'male' | 'female' | 'other' = 'male';
+  dob = '';
+  countryCode = 'IND +91';
+  phone = '';
+
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`.trim();
+  }
+
   /** Assigned brands. */
   assignedBrandIds: string[] = ['amazon', 'ajio', 'airindia', 'myntra'];
   brandsModalOpen = false;

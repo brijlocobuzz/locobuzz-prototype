@@ -52,6 +52,17 @@ export class AddChannelWizardComponent {
   tint(color: string | undefined): string { return (color ?? '#888888') + '1a'; }
 
   // ---- dynamic step model ------------------------------------------------
+  /** Material Symbols glyph shown in the stepper node for each step. */
+  readonly stepIcons: Record<StepKey, string> = {
+    choose: 'grid_view',
+    connection: 'hub',
+    authenticate: 'lock',
+    public: 'public',
+    pages: 'list_alt',
+    url: 'link',
+    review: 'task_alt',
+  };
+
   /** The steps shown in the top progress bar — depends on channel + path. */
   get steps(): Step[] {
     const choose: Step = { key: 'choose', label: 'Choose channel' };

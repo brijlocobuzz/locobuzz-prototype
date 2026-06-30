@@ -19,8 +19,8 @@
         <button type="button" class="avatar-cam" aria-label="Change photo"><span class="msr">photo_camera</span></button>
       </div>
       <div class="profile-who">
-        <h2>Alam Shaikh</h2>
-        <p>{{ role === 'admin' ? 'Admin' : 'Agent' }} · alam.shaikh&#64;locobuzz.com</p>
+        <h2>{{ fullName }}</h2>
+        <p>{{ role === 'admin' ? 'Admin' : 'Agent' }} · {{ email }}</p>
       </div>
       <button type="button" class="edit-btn" (click)="editProfile = !editProfile">
         <span class="msr">edit</span>{{ editProfile ? 'Done' : 'Edit' }}
@@ -30,39 +30,39 @@
     <div class="profile-form">
       <label class="field">
         <span>First Name</span>
-        <input type="text" value="Alam" [readonly]="!editProfile" />
+        <input type="text" [(ngModel)]="firstName" [readonly]="!editProfile" />
       </label>
       <label class="field">
         <span>Last Name</span>
-        <input type="text" value="Shaikh" [readonly]="!editProfile" />
+        <input type="text" [(ngModel)]="lastName" [readonly]="!editProfile" />
       </label>
       <label class="field">
         <span>Email</span>
-        <input type="email" value="alam.shaikh@locobuzz.com" readonly />
+        <input type="email" [(ngModel)]="email" [readonly]="!editProfile" />
       </label>
 
       <fieldset class="field gender">
         <span>Gender</span>
         <div class="radios">
-          <label><input type="radio" name="gender" checked [disabled]="!editProfile" /> Male</label>
-          <label><input type="radio" name="gender" [disabled]="!editProfile" /> Female</label>
-          <label><input type="radio" name="gender" [disabled]="!editProfile" /> Other</label>
+          <label><input type="radio" name="gender" value="male" [(ngModel)]="gender" [disabled]="!editProfile" /> Male</label>
+          <label><input type="radio" name="gender" value="female" [(ngModel)]="gender" [disabled]="!editProfile" /> Female</label>
+          <label><input type="radio" name="gender" value="other" [(ngModel)]="gender" [disabled]="!editProfile" /> Other</label>
         </div>
       </fieldset>
 
       <label class="field">
         <span>Date of Birth</span>
-        <input type="text" placeholder="DD/MM/YYYY" [readonly]="!editProfile" />
+        <input type="text" [(ngModel)]="dob" placeholder="DD/MM/YYYY" [readonly]="!editProfile" />
       </label>
 
       <label class="field">
         <span>Phone Number</span>
         <div class="phone">
-          <select [disabled]="!editProfile" aria-label="Country code">
+          <select [(ngModel)]="countryCode" [disabled]="!editProfile" aria-label="Country code">
             <option>IND +91</option>
             <option>UAE +971</option>
           </select>
-          <input type="tel" placeholder="Enter phone number" [readonly]="!editProfile" />
+          <input type="tel" [(ngModel)]="phone" placeholder="Enter phone number" [readonly]="!editProfile" />
         </div>
       </label>
     </div>
