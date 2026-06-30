@@ -29,7 +29,7 @@ export class AddBrandWizardComponent {
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
-  readonly totalSteps = 5;
+  readonly totalSteps = 6;
 
   /** Celebration screen shown after Save. */
   celebrating = false;
@@ -37,11 +37,12 @@ export class AddBrandWizardComponent {
   /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
   readonly confetti = this.makeConfetti();
   readonly steps: WizardStep[] = [
-    { num: 1, label: 'Brand identity',        subtitle: 'Basics and AI context', icon: 'badge' },
-    { num: 2, label: 'Logo & color',          subtitle: 'Visual identity',       icon: 'palette' },
-    { num: 3, label: 'Users & Tickets',       subtitle: 'Access & ticketing',    icon: 'group' },
-    { num: 4, label: 'Categories',            subtitle: 'Taxonomy mapping',      icon: 'sell' },
-    { num: 5, label: 'Products & Competitors', subtitle: 'Market context',       icon: 'deployed_code' },
+    { num: 1, label: 'Brand identity', subtitle: 'Basics & AI context', icon: 'badge' },
+    { num: 2, label: 'Logo & color',   subtitle: 'Visual identity',     icon: 'palette' },
+    { num: 3, label: 'Products',       subtitle: 'Market context',      icon: 'deployed_code' },
+    { num: 4, label: 'Categories',     subtitle: 'Taxonomy mapping',    icon: 'sell' },
+    { num: 5, label: 'Tickets',        subtitle: 'Ticket creation',     icon: 'confirmation_number' },
+    { num: 6, label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
   ];
 
   // ---- reference data ----------------------------------------------------
@@ -57,17 +58,17 @@ export class AddBrandWizardComponent {
   country = '';
   aiFriendlyName = '';
   brandDescription = '';
-  descriptionDisabled = true;
-  generating = false;
   countryOpen = false;
   countrySearch = '';
-  /** Progressive reveal on step 1: AI name appears after the first generate, country last. */
-  aiNameRevealed = false;
-  countryRevealed = false;
 
-  /** Lightweight toast/snackbar shown over the dialog. */
-  snackbarMsg = '';
-  private snackbarTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Description authoring mode: write it manually, or generate it with AI. */
+  descMode: 'manual' | 'ai' = 'manual';
+  /** AI tab state. */
+  aiNameLoading = false;      // fetching the AI friendly name
+  aiNameAttempted = false;    // auto-generation already tried once
+  aiNameError = '';           // set when AI-name generation fails
+  generating = false;         // description generation in progress
+  descGenerated = false;      // AI has produced a description
 
   // ---- step 2 · logo & color ---------------------------------------------
   logoDataUrl: string | null = null;
@@ -125,15 +126,16 @@ export class AddBrandWizardComponent {
   // =======================================================================
   isStepValid(step: number): boolean {
     switch (step) {
-      case 1: {
+      case 1: {                                       // brand identity
         const n = this.brandName.trim().length;
-        return n >= 3 && n <= 50 && !!this.country && !!this.aiFriendlyName.trim()
+        return n >= 3 && n <= 50 && !!this.country
           && !!this.brandDescription.trim() && this.brandDescription.length <= 200;
       }
-      case 2: return !!this.logoDataUrl;
-      case 3: return this.selectedUserIds.size > 0;
-      case 4: return !!this.categoryGroup && !!this.catchAll;
-      case 5: return true;
+      case 2: return !!this.logoDataUrl;              // logo & color
+      case 3: return true;                            // products & competitors (optional)
+      case 4: return !!this.categoryGroup && !!this.catchAll;  // categories
+      case 5: return true;                            // ticket creation (toggle always valid)
+      case 6: return this.selectedUserIds.size > 0;   // assign users
       default: return false;
     }
   }
@@ -170,44 +172,48 @@ export class AddBrandWizardComponent {
     this.countrySearch = '';
   }
 
-  /**
-   * First "Generate Description" click — the AI needs an AI-friendly name before it
-   * can write anything, so this reveals that field instead of generating yet.
-   */
-  revealAiName() {
-    if (this.brandName.trim().length < 3 || this.generating) return;
-    this.aiNameRevealed = true;
-    if (!this.aiFriendlyName) this.aiFriendlyName = this.brandName.trim();
-    this.showSnackbar(
-      'The brand name and AI Friendly Name are same. Please change the AI Friendly Name if you want to.',
-    );
+  /** AI friendly name is available (generated or typed) and not mid-fetch. */
+  get aiNameReady(): boolean {
+    return !!this.aiFriendlyName.trim() && !this.aiNameLoading;
   }
 
-  /** Show a transient snackbar message over the dialog. */
-  showSnackbar(msg: string) {
-    this.snackbarMsg = msg;
-    if (this.snackbarTimer) clearTimeout(this.snackbarTimer);
-    this.snackbarTimer = setTimeout(() => (this.snackbarMsg = ''), 5000);
+  /** Switch the description-authoring tab; entering the AI tab kicks off name generation. */
+  setDescMode(mode: 'manual' | 'ai') {
+    this.descMode = mode;
+    if (mode === 'ai' && !this.aiNameAttempted && !this.aiFriendlyName.trim()
+        && !this.aiNameLoading && this.brandName.trim().length >= 3) {
+      this.generateAiName();
+    }
   }
 
-  dismissSnackbar() {
-    if (this.snackbarTimer) clearTimeout(this.snackbarTimer);
-    this.snackbarMsg = '';
+  /** Try to fetch/generate the AI friendly name from the brand name. */
+  generateAiName() {
+    if (this.brandName.trim().length < 3 || this.aiNameLoading) return;
+    this.aiNameAttempted = true;
+    this.aiNameLoading = true;
+    this.aiNameError = '';
+    setTimeout(() => {
+      this.aiNameLoading = false;
+      // Simulated round-trip — occasionally fails so the manual fallback is reachable.
+      if (Math.random() < 0.3) {
+        this.aiFriendlyName = '';
+        this.aiNameError = 'Couldn’t generate AI friendly name. Please enter the AI friendly name.';
+      } else {
+        this.aiFriendlyName = this.brandName.trim();
+      }
+    }, 1200);
   }
 
-  /** Second "Generate Description" click — produce the description, then reveal Country. */
+  /** Generate the brand description from the AI friendly name. */
   generateDescription() {
     if (!this.aiFriendlyName.trim() || this.generating) return;
     this.generating = true;
-    // Simulate the AI round-trip.
     setTimeout(() => {
-      const name = this.aiFriendlyName.trim();
       this.brandDescription =
-        `${name} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
+        `${this.aiFriendlyName.trim()} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
           .slice(0, 200);
-      this.descriptionDisabled = false;
+      this.descGenerated = true;
       this.generating = false;
-      this.countryRevealed = true;
     }, 1400);
   }
 
@@ -424,6 +430,12 @@ export class AddBrandWizardComponent {
     this.competitorDraft = '';
   }
 
+  /** Chip-style quick add: validate + de-dupe + push, then clear the input. */
+  quickAddCompetitor() {
+    this.editingCompetitorId = null;
+    this.saveCompetitor();   // reuses the existing validation/de-dupe/clear path
+  }
+
   removeCompetitor(c: BrandCompetitor) {
     this.competitors = this.competitors.filter(x => x.id !== c.id);
   }
@@ -431,9 +443,14 @@ export class AddBrandWizardComponent {
   // =======================================================================
   //  Save / cancel
   // =======================================================================
+  /** Every required step must pass before the brand can be saved. */
+  get canSubmit(): boolean {
+    return this.isStepValid(1) && this.isStepValid(2) && this.isStepValid(4) && this.isStepValid(6);
+  }
+
   onSubmit() {
-    if (!this.isStepValid(1) || !this.isStepValid(2) || !this.isStepValid(3) || !this.isStepValid(4)) return;
-    // Show the celebration; the user closes it with Finish.
+    if (!this.canSubmit) return;
+    // Show the celebration; the user closes it with the Close button.
     this.celebrating = true;
   }
 
