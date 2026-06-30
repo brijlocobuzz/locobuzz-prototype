@@ -694,7 +694,7 @@
   font-size: var(--font-size-14); font-weight: 700;
   background: var(--brand-soft); color: var(--brand); border-radius: 7px;
 }
-.t-chips { display: inline-flex; align-items: center; gap: 6px; }
+.t-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .t-chip {
   display: inline-flex; align-items: center; gap: 5px;
   height: 22px; padding: 0 8px; border-radius: 6px;
@@ -703,23 +703,75 @@
 }
 .t-chip .msr { font-size: var(--font-size-13); color: #1877f2; }
 /* "+N more" — reads as an action, not a type: dashed neutral outline */
-.t-chip.more { background: transparent; color: var(--text-3); border: 1px dashed #b8c0cc; font-weight: 600; }
+.t-chip.more { background: transparent; color: var(--text-3); border: 1px dashed #b8c0cc; font-weight: 600; cursor: default; }
 .t-chip.more:hover { color: var(--brand); border-color: var(--brand); }
+
+/* ===================================================================
+   Mention-collection state — same rich block for active + token-expired
+   =================================================================== */
+.mt-state { display: inline-flex; align-items: center; gap: 11px; max-width: 420px; }
+.mt-ic {
+  position: relative; flex: 0 0 auto;
+  width: 34px; height: 34px; border-radius: 10px;
+  display: grid; place-items: center;
+}
+.mt-ic .msr { font-size: var(--font-size-18); position: relative; z-index: 1; }
+.mt-state.active .mt-ic { background: #e7f6ee; color: #16a34a; }
+.mt-state.stopped .mt-ic { background: #f9dada; color: #d83a45; }
+.mt-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mt-line { font-size: var(--font-size-13); line-height: 1.4; }
+.mt-line b { font-weight: 700; }
+.mt-state.active .mt-line b { color: var(--text-1); }
+.mt-state.stopped .mt-line b { color: #b3303a; }
+/* inline detail — same size as the label, only lighter weight & colour */
+.mt-types, .mt-since { font-weight: 400; color: var(--text-3); }
+.mt-state.stopped .mt-since { color: #9a6a6d; }
+/* focused "stopped since …" time — stands out as an important red chip */
+.mt-since-chip {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;
+  font-size: var(--font-size-12); font-weight: 700; color: #c0392b;
+  background: #fbe4e4; border: 1px solid #f3cccc;
+  padding: 1px 8px; border-radius: 20px; vertical-align: middle;
+}
+.mt-since-chip .msr { font-size: var(--font-size-14); }
+/* active: types listed on the line below the label */
+.mt-sub { font-size: var(--font-size-13); font-weight: 400; color: var(--text-3); line-height: 1.4; }
+.mt-tx small { font-size: var(--font-size-12); color: var(--text-3); line-height: 1.4; }
+.mt-state.stopped .mt-tx small { color: #9a6a6d; }
+/* attention pulse on the stopped icon */
+.mt-pulse {
+  position: absolute; inset: 0; border-radius: 10px;
+  box-shadow: 0 0 0 0 rgba(216, 58, 69, .45);
+  animation: cs-pulse 1.8s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .mt-pulse { animation: none; } }
 
 /* dates */
 .t-date { font-size: var(--font-size-13); color: var(--text-2); }
 
 /* row actions */
-.col-act { width: 120px; }
-.t-acts { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.col-act { width: 172px; }
+.t-acts { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .t-act {
-  width: 30px; height: 30px; border-radius: 7px;
-  border: none; background: transparent; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 9px;
+  border: 1px solid var(--border-soft); background: #fff; cursor: pointer;
   color: var(--text-3); display: grid; place-items: center;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.t-act:hover { background: #eef1f6; color: var(--text-1); }
-.t-act.danger:hover { background: var(--urgent-bg); color: var(--urgent-fg); }
+.t-act:hover { background: #f5f7fb; color: var(--text-1); border-color: var(--border); box-shadow: 0 1px 3px rgba(16, 24, 40, .06); }
+.t-act.danger:hover { background: var(--urgent-bg); color: var(--urgent-fg); border-color: #f3c9c4; }
 .t-act .msr { font-size: var(--font-size-18); }
+
+/* Reauthorize — shown in the Action column only for token-expired rows */
+.t-reauth {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 32px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid #ecbcbc; background: #fff; color: #c0392b;
+  font: inherit; font-size: var(--font-size-12); font-weight: 700;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.t-reauth:hover { background: #d83a45; border-color: #d83a45; color: #fff; }
+.t-reauth .msr { font-size: var(--font-size-16); }
 
 /* bulk bar */
 .bulkbar {

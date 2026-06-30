@@ -239,6 +239,12 @@ export class ChannelConfigComponent {
     this.detail = null;
   }
 
+  /** Relative "stopped since" label for a token-expired profile (deterministic mock). */
+  private readonly sinceBuckets = ['5 hours ago', '2 days ago', '1 day ago', '3 days ago', '8 hours ago', '6 days ago'];
+  stoppedSince(p: ChannelProfile): string {
+    return this.sinceBuckets[p.name.length % this.sinceBuckets.length];
+  }
+
   /** "Jun 11, 2026 11:57 AM" -> "11 Jun, 2026" */
   shortDate(s: string): string {
     const m = s.match(/^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})/);

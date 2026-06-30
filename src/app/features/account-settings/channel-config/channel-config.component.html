@@ -248,22 +248,24 @@
               </div>
             </td>
 
-            <!-- mentions: pills + more (no count) — or a "collection stopped" alert when the token expired -->
+            <!-- mentions: same rich block for both states, with the full type list -->
             <td>
-              <div class="t-chips" *ngIf="!p.alert">
-                <span class="t-chip" *ngFor="let t of p.mentionTypes.slice(0, 2)">
-                  <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
+              <!-- active: collecting — label on top, 2–3 types + more on the line below -->
+              <div class="mt-state active" *ngIf="!p.alert">
+                <span class="mt-ic"><span class="msr">sensors</span></span>
+                <span class="mt-tx">
+                  <span class="mt-line"><b>Actively collecting</b></span>
+                  <span class="mt-sub" [title]="p.mentionTypes.join(', ')">{{ p.mentionTypes.slice(0, 3).join('  ·  ') }}<ng-container *ngIf="p.mentionTypes.length > 3">  ·  +{{ p.mentionTypes.length - 3 }} more</ng-container></span>
                 </span>
-                <span class="t-chip more" *ngIf="p.mentionTypes.length > 2">+{{ p.mentionTypes.length - 2 }} more</span>
               </div>
 
-              <div class="collect-stopped" *ngIf="p.alert">
-                <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
-                <span class="cs-tx">
-                  <b>Data collection stopped</b>
-                  <small>Token expired — reauthorize to resume</small>
+              <!-- token expired: stopped since … + how to resume -->
+              <div class="mt-state stopped" *ngIf="p.alert">
+                <span class="mt-ic"><span class="mt-pulse"></span><span class="msr">sync_problem</span></span>
+                <span class="mt-tx">
+                  <span class="mt-line"><b>Data collection stopped</b><span class="mt-since-chip"><span class="msr">schedule</span>{{ stoppedSince(p) }}</span></span>
+                  <small>Reauthorize this profile to start collecting mentions again.</small>
                 </span>
-                <button class="cs-act" title="Reauthorize"><span class="msr">autorenew</span>Reauthorize</button>
               </div>
             </td>
 
@@ -273,11 +275,11 @@
               <span class="t-badge active" *ngIf="!p.alert"><span class="led"></span>Active</span>
             </td>
 
-            <!-- actions -->
+            <!-- actions: expired → Reauthorize + Delete; active → Pause + Delete (reveal on hover) -->
             <td class="col-act">
               <div class="t-acts">
-                <button class="t-act" title="Reauthorize"><span class="msr">autorenew</span></button>
-                <button class="t-act" title="Pause"><span class="msr">pause</span></button>
+                <button class="t-reauth" *ngIf="p.alert"><span class="msr">autorenew</span>Reauthorize</button>
+                <button class="t-act" title="Pause" *ngIf="!p.alert"><span class="msr">pause</span></button>
                 <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
               </div>
             </td>
@@ -403,14 +405,13 @@
             </span>
           </div>
 
-          <!-- token expired → collection paused notice (needs action) -->
+          <!-- token expired → collection paused notice (action lives in the footer) -->
           <div class="collect-stopped block" *ngIf="p.alert">
             <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
             <span class="cs-tx">
-              <b>Data collection stopped</b>
-              <small>Token expired — reauthorize to resume collecting mentions.</small>
+              <span class="mt-line"><b>Data collection stopped</b><span class="mt-since-chip"><span class="msr">schedule</span>{{ stoppedSince(p) }}</span></span>
+              <small>Reauthorize this profile to start collecting mentions again.</small>
             </span>
-            <button class="cs-act"><span class="msr">autorenew</span>Reauthorize</button>
           </div>
         </div>
 

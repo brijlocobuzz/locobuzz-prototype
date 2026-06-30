@@ -115,34 +115,28 @@
           <p class="wz-sub">Choose owned to engage from your account, or public to listen only.</p>
 
           <div class="wz-choice-grid">
-            <button class="wz-choice" [class.sel]="connectionType === 'owned'" (click)="connectionType = 'owned'">
-              <span class="wz-choice-top">
-                <span class="wz-choice-ic"><span class="msr">lock</span></span>
-              </span>
-              <span class="wz-choice-body">
-                <span class="wz-choice-name">Owned account</span>
-                <span class="wz-choice-desc">Authenticate with your own account to listen and reply.</span>
-                <ul class="wz-bullets">
-                  <li><span class="msr">check</span>Full engagement</li>
-                  <li><span class="msr">check</span>Post &amp; reply</li>
-                  <li><span class="msr">check</span>Private metrics</li>
-                </ul>
-              </span>
+            <button class="wz-choice owned" [class.sel]="connectionType === 'owned'" (click)="connectionType = 'owned'">
+              <span class="wz-choice-ic"><span class="msr">lock</span></span>
+              <span class="wz-choice-check"><span class="msr">check</span></span>
+              <span class="wz-choice-name">Owned account</span>
+              <span class="wz-choice-desc">Authenticate with your own account to listen and reply.</span>
+              <ul class="wz-bullets">
+                <li><span class="msr">check</span>Full engagement</li>
+                <li><span class="msr">check</span>Post &amp; reply</li>
+                <li><span class="msr">check</span>Private metrics</li>
+              </ul>
             </button>
 
-            <button class="wz-choice" [class.sel]="connectionType === 'public'" (click)="connectionType = 'public'">
-              <span class="wz-choice-top">
-                <span class="wz-choice-ic pub"><span class="msr">public</span></span>
-              </span>
-              <span class="wz-choice-body">
-                <span class="wz-choice-name">Public source</span>
-                <span class="wz-choice-desc">Track a public profile or URL. Listening only, no replies.</span>
-                <ul class="wz-bullets">
-                  <li><span class="msr">check</span>No login required</li>
-                  <li><span class="msr">check</span>Listening only</li>
-                  <li><span class="msr">check</span>Anonymous mentions</li>
-                </ul>
-              </span>
+            <button class="wz-choice pub" [class.sel]="connectionType === 'public'" (click)="connectionType = 'public'">
+              <span class="wz-choice-ic"><span class="msr">public</span></span>
+              <span class="wz-choice-check"><span class="msr">check</span></span>
+              <span class="wz-choice-name">Public source</span>
+              <span class="wz-choice-desc">Track a public profile or URL. Listening only, no replies.</span>
+              <ul class="wz-bullets">
+                <li><span class="msr">check</span>No login required</li>
+                <li><span class="msr">check</span>Listening only</li>
+                <li><span class="msr">check</span>Anonymous mentions</li>
+              </ul>
             </button>
           </div>
 
