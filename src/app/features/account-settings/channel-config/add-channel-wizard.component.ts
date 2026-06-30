@@ -9,6 +9,15 @@ import {
 type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'url' | 'review';
 interface Step { key: StepKey; label: string; }
 
+/** Channel-specific guidance for the "Add public source" step. */
+interface PublicHelp {
+  label: string;        // input label
+  placeholder: string;  // input placeholder
+  example: string;      // "Ex. …" hint under the input
+  title: string;        // guide heading
+  steps: string[];      // how-to-find-it steps
+}
+
 @Component({
   selector: 'app-add-channel-wizard',
   standalone: true,
@@ -51,6 +60,134 @@ export class AddChannelWizardComponent {
   /** Light tint of a brand colour for the tile background. */
   tint(color: string | undefined): string { return (color ?? '#888888') + '1a'; }
 
+  /* ---- "Add public source" guidance, per channel ---- */
+  readonly publicHelpDefault: PublicHelp = {
+    label: 'Public profile or page URL',
+    placeholder: 'https://www.example.com/yourpage',
+    example: 'https://www.example.com/yourpage',
+    title: 'Which link should I add?',
+    steps: [
+      'Open the public profile or page you want to track.',
+      'Copy the full web address from your browser’s address bar.',
+      'Paste it above — make sure the page opens without a login.',
+    ],
+  };
+  readonly publicHelp: Record<string, PublicHelp> = {
+    twitter: {
+      label: 'Public X (Twitter) handle',
+      placeholder: '@john_doe',
+      example: '@john_doe',
+      title: 'Where do I find the handle?',
+      steps: [
+        'Open the profile on X (Twitter).',
+        'Copy the @username shown right under the display name.',
+        'Paste it above — e.g. @john_doe.',
+      ],
+    },
+    facebook: {
+      label: 'Public Facebook page URL',
+      placeholder: 'https://www.facebook.com/locobuzz/',
+      example: 'https://www.facebook.com/locobuzz/',
+      title: 'Where do I find the page URL?',
+      steps: [
+        'Open the Facebook page in your browser.',
+        'Copy the link from the address bar — it looks like facebook.com/yourpage.',
+        'Paste the full URL above.',
+      ],
+    },
+    fbgroups: {
+      label: 'Public Facebook group URL',
+      placeholder: 'https://www.facebook.com/groups/locobuzz',
+      example: 'https://www.facebook.com/groups/locobuzz',
+      title: 'Where do I find the group URL?',
+      steps: [
+        'Open the Facebook group in your browser.',
+        'Copy the link from the address bar — it looks like facebook.com/groups/…',
+        'Paste the full URL above (the group must be public).',
+      ],
+    },
+    instagram: {
+      label: 'Public Instagram profile URL',
+      placeholder: 'https://www.instagram.com/locobuzz',
+      example: 'https://www.instagram.com/locobuzz',
+      title: 'Where do I find the profile URL?',
+      steps: [
+        'Open the Instagram profile.',
+        'Copy the profile link (instagram.com/username) or the @username.',
+        'Paste it above.',
+      ],
+    },
+    linkedin: {
+      label: 'Public LinkedIn page URL',
+      placeholder: 'https://www.linkedin.com/company/locobuzz',
+      example: 'https://www.linkedin.com/company/locobuzz',
+      title: 'Where do I find the page URL?',
+      steps: [
+        'Open the LinkedIn company or profile page.',
+        'Copy the link from the address bar (linkedin.com/company/… or /in/…).',
+        'Paste the full URL above.',
+      ],
+    },
+    gmb: {
+      label: 'Google Business profile URL',
+      placeholder: 'https://maps.google.com/?cid=1234567890',
+      example: 'https://maps.google.com/?cid=…  ·  share link from Google Maps',
+      title: 'Where do I find the profile link?',
+      steps: [
+        'Find the business on Google Maps.',
+        'Tap Share and copy the link, or copy the URL from the address bar.',
+        'Paste the full link above.',
+      ],
+    },
+    reddit: {
+      label: 'Public subreddit or user URL',
+      placeholder: 'https://www.reddit.com/r/locobuzz',
+      example: 'https://www.reddit.com/r/locobuzz  ·  /u/username',
+      title: 'Where do I find the link?',
+      steps: [
+        'Open the subreddit (r/…) or user (u/…) on Reddit.',
+        'Copy the link from the address bar.',
+        'Paste the full URL above.',
+      ],
+    },
+    playstore: {
+      label: 'Google Play app URL',
+      placeholder: 'https://play.google.com/store/apps/details?id=com.yourapp',
+      example: 'https://play.google.com/store/apps/details?id=com.yourapp',
+      title: 'Where do I find the app URL?',
+      steps: [
+        'Open your app’s page on the Google Play store (web).',
+        'Copy the full link from the address bar — it ends with ?id=your.package.name.',
+        'Paste the full URL above.',
+      ],
+    },
+    appstore: {
+      label: 'Apple App Store URL',
+      placeholder: 'https://apps.apple.com/app/id123456789',
+      example: 'https://apps.apple.com/app/id123456789',
+      title: 'Where do I find the app URL?',
+      steps: [
+        'Open your app’s page on the App Store (web).',
+        'Copy the full link from the address bar — it contains /id followed by numbers.',
+        'Paste the full URL above.',
+      ],
+    },
+  };
+  /** Guidance entry for the currently-selected channel. */
+  get pubHelp(): PublicHelp {
+    return this.publicHelp[this.selected?.id ?? ''] ?? this.publicHelpDefault;
+  }
+
+  /** Channels we surface as "Popular" with a badge in the chooser. */
+  readonly popularIds = new Set(['twitter', 'facebook', 'instagram', 'tiktok']);
+  isPopular(c: CatalogChannel): boolean { return this.popularIds.has(c.id); }
+  /** Sub-label under a non-popular channel tile (mirrors the reference design). */
+  channelSub(c: CatalogChannel): string {
+    if (c.tag) return c.tag;
+    if (c.flow === 'url') return 'URL · instant';
+    return 'OAuth · ~30s';
+  }
+
   // ---- dynamic step model ------------------------------------------------
   /** Material Symbols glyph shown in the stepper node for each step. */
   readonly stepIcons: Record<StepKey, string> = {
@@ -66,7 +203,7 @@ export class AddChannelWizardComponent {
   /** The steps shown in the top progress bar — depends on channel + path. */
   get steps(): Step[] {
     const choose: Step = { key: 'choose', label: 'Choose channel' };
-    const review: Step = { key: 'review', label: 'Review & finish' };
+    const review: Step = { key: 'review', label: 'Review & complete' };
     // Default preview (no channel chosen yet): a typical 3-step path.
     if (!this.selected) return [choose, { key: 'authenticate', label: 'Authenticate' }, review];
 
@@ -212,5 +349,24 @@ export class AddChannelWizardComponent {
     if (this.selected?.flow === 'handle') return 'Public';
     if (this.selected?.flow === 'url') return 'URL source';
     return 'Owned';
+  }
+
+  /** Whether the chosen path is listen-only (no engagement / reply). */
+  get isListenOnly(): boolean {
+    return this.connectionType === 'public'
+      || this.selected?.flow === 'handle'
+      || this.selected?.flow === 'url';
+  }
+
+  /** Account value shown on the Review card. */
+  get reviewAccount(): string {
+    if (this.publicHandle.trim()) return this.publicHandle.trim();
+    if (this.storeUrl.trim()) return this.storeUrl.trim();
+    if (this.selectedPageList.length) return this.selectedPageList.length + ' account(s)';
+    return '@your_brand';
+  }
+  /** Permission summary shown on the Review card. */
+  get reviewPermissions(): string {
+    return this.isListenOnly ? 'Read only' : 'Read · Reply';
   }
 }
