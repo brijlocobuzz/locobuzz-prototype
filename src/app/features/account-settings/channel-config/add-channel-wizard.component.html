@@ -47,11 +47,25 @@
     <div class="wz-main">
       <!-- header -->
       <header class="wz-head">
-        <span class="wz-spark"><span class="msr">hub</span></span>
-        <div class="wz-titles">
-          <h2>Add a channel</h2>
-          <p>Plug in a platform to listen, analyze and respond — all from one place.</p>
-        </div>
+        <ng-container *ngIf="current === 'choose'; else configuringHead">
+          <span class="wz-spark"><span class="msr">hub</span></span>
+          <div class="wz-titles">
+            <h2>Add a channel</h2>
+            <p>Plug in a platform to listen, analyze and respond — all from one place.</p>
+          </div>
+        </ng-container>
+
+        <ng-template #configuringHead>
+          <span class="wz-spark brand" [style.background]="selected?.color">
+            <svg *ngIf="brandSvg(selected?.id) as d; else headGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
+            <ng-template #headGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+          </span>
+          <div class="wz-titles">
+            <h2>Adding {{ selected?.label }} Channel</h2>
+            <p>Follow the steps to finish setting up this channel.</p>
+          </div>
+        </ng-template>
+
         <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
@@ -74,14 +88,6 @@
 
         <!-- 1 · choose channel -->
         <section *ngSwitchCase="'choose'" class="wz-choose">
-          <div class="wz-search">
-            <span class="msr">search</span>
-            <input type="text" placeholder="Search channels — try Instagram, TikTok…" [(ngModel)]="search" />
-          </div>
-
-          <div class="wz-empty" *ngIf="!filteredGroups().length">
-            <span class="msr">search_off</span> No channels match “{{ search }}”.
-          </div>
 
           <div class="wz-group" *ngFor="let g of filteredGroups()">
             <div class="wz-group-head">
@@ -100,8 +106,6 @@
                 </span>
                 <span class="wz-tile-text">
                   <span class="wz-tile-label">{{ c.label }}</span>
-                  <span class="wz-tile-badge" *ngIf="isPopular(c)">Popular</span>
-                  <span class="wz-tile-sub" *ngIf="!isPopular(c)">{{ channelSub(c) }}</span>
                 </span>
                 <span class="wz-tile-check"><span class="msr">check_circle</span></span>
               </button>
@@ -352,43 +356,66 @@
       </footer>
     </div>
 
-    <!-- ---- right: marketing aside ---- -->
+    <!-- ---- right: aside — "why connect" on step 1, step-specific help after ---- -->
     <aside class="wz-aside">
-      <span class="wz-aside-eyebrow">Why connect?</span>
-      <h3 class="wz-aside-title">One workspace for every conversation.</h3>
-      <p class="wz-aside-lead">Channels you connect feed directly into your unified inbox, analytics and AI assistants.</p>
+      <!-- step 1: why connect (marketing) -->
+      <ng-container *ngIf="current === 'choose'">
+        <span class="wz-aside-eyebrow">Why connect?</span>
+        <h3 class="wz-aside-title">One workspace for every conversation.</h3>
+        <p class="wz-aside-lead">Channels you connect feed directly into your unified inbox, analytics and AI assistants.</p>
 
-      <div class="wz-feat">
-        <span class="wz-feat-ic"><span class="msr">trending_up</span></span>
-        <div class="wz-feat-text">
-          <b>Unified insights</b>
-          <span>See mentions, reach and sentiment from every channel in one feed.</span>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">trending_up</span></span>
+          <div class="wz-feat-text">
+            <b>Unified insights</b>
+            <span>See mentions, reach and sentiment from every channel in one feed.</span>
+          </div>
         </div>
-      </div>
-      <div class="wz-feat">
-        <span class="wz-feat-ic"><span class="msr">auto_awesome</span></span>
-        <div class="wz-feat-text">
-          <b>AI-powered replies</b>
-          <span>Draft on-brand responses in seconds, tuned to each platform.</span>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">auto_awesome</span></span>
+          <div class="wz-feat-text">
+            <b>AI-powered replies</b>
+            <span>Draft on-brand responses in seconds, tuned to each platform.</span>
+          </div>
         </div>
-      </div>
-      <div class="wz-feat">
-        <span class="wz-feat-ic"><span class="msr">timer</span></span>
-        <div class="wz-feat-text">
-          <b>Save 6+ hours weekly</b>
-          <span>Cut switching between tabs — engage from a single inbox.</span>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">timer</span></span>
+          <div class="wz-feat-text">
+            <b>Save 6+ hours weekly</b>
+            <span>Cut switching between tabs — engage from a single inbox.</span>
+          </div>
         </div>
-      </div>
 
-      <div class="wz-safe">
-        <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; validated</span>
-        <ul>
-          <li><span class="msr">check</span>OAuth 2.0 — we never see your password</li>
-          <li><span class="msr">check</span>Read-only by default, granular scopes</li>
-          <li><span class="msr">check</span>Revoke access anytime in settings</li>
-          <li><span class="msr">check</span>SOC 2 Type II · GDPR compliant</li>
-        </ul>
-      </div>
+        <div class="wz-safe">
+          <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; validated</span>
+          <ul>
+            <li><span class="msr">check</span>OAuth 2.0 — we never see your password</li>
+            <li><span class="msr">check</span>Read-only by default, granular scopes</li>
+            <li><span class="msr">check</span>Revoke access anytime in settings</li>
+            <li><span class="msr">check</span>SOC 2 Type II · GDPR compliant</li>
+          </ul>
+        </div>
+      </ng-container>
+
+      <!-- later steps: contextual help for the current step -->
+      <ng-container *ngIf="current !== 'choose'">
+        <span class="wz-aside-eyebrow">{{ asideHelp.eyebrow }}</span>
+        <h3 class="wz-aside-title">{{ asideHelp.title }}</h3>
+        <p class="wz-aside-lead" *ngIf="asideHelp.lead">{{ asideHelp.lead }}</p>
+
+        <div class="wz-feat" *ngFor="let f of asideHelp.points">
+          <span class="wz-feat-ic"><span class="msr">{{ f.icon }}</span></span>
+          <div class="wz-feat-text">
+            <b>{{ f.title }}</b>
+            <span>{{ f.text }}</span>
+          </div>
+        </div>
+
+        <div class="wz-safe tip" *ngIf="asideHelp.tip">
+          <span class="wz-safe-head"><span class="msr">lightbulb</span>Good to know</span>
+          <p>{{ asideHelp.tip }}</p>
+        </div>
+      </ng-container>
     </aside>
 
   </div>
