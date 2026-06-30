@@ -178,6 +178,77 @@ export class AddChannelWizardComponent {
     return this.publicHelp[this.selected?.id ?? ''] ?? this.publicHelpDefault;
   }
 
+  /** Right-side aside help — step-specific clarification once a channel is chosen. */
+  get asideHelp(): { eyebrow: string; title: string; lead: string; points: { icon: string; title: string; text: string }[]; tip?: string } {
+    const label = this.selected?.label ?? 'this channel';
+    switch (this.current) {
+      case 'connection':
+        return {
+          eyebrow: 'About this step', title: 'Owned or public?',
+          lead: `Choose how Locobuzz connects to ${label}.`,
+          points: [
+            { icon: 'lock', title: 'Owned account', text: 'Authenticate to listen and reply from your own account.' },
+            { icon: 'public', title: 'Public source', text: 'Track any public profile or URL — listening only, no replies.' },
+            { icon: 'swap_horiz', title: 'Switch anytime', text: 'You can change the mode later from Channel Configuration.' },
+          ],
+          tip: 'Not sure? Pick Owned for your brand’s own account, Public for anyone else.',
+        };
+      case 'authenticate':
+        return {
+          eyebrow: 'About this step', title: `Authorize ${label}`,
+          lead: `You’ll be redirected to ${label} to grant access via OAuth.`,
+          points: [
+            { icon: 'verified_user', title: 'OAuth 2.0', text: 'We never see or store your password.' },
+            { icon: 'shield', title: 'Granular scopes', text: 'Read-only by default; replies only when you click send.' },
+            { icon: 'link_off', title: 'Revoke anytime', text: 'Disconnect access from settings whenever you want.' },
+          ],
+          tip: 'A secure popup opens — finish sign-in there and you’ll return here automatically.',
+        };
+      case 'public':
+        return {
+          eyebrow: 'About this step', title: `Track a public ${label} source`,
+          lead: 'Listen to a public profile without logging in.',
+          points: [
+            { icon: 'hearing', title: 'Listen-only', text: 'You’ll receive mentions but can’t reply.' },
+            { icon: 'person_off', title: 'Anonymous', text: 'Mentions arrive without author identity.' },
+            { icon: 'link', title: 'Profile link or handle', text: 'Paste the public URL or @handle of the profile.' },
+          ],
+        };
+      case 'url':
+        return {
+          eyebrow: 'About this step', title: `Monitor a ${label} page`,
+          lead: 'Collect reviews, ratings and Q&A from a public page.',
+          points: [
+            { icon: 'link', title: 'Public page link', text: 'Use the full https:// product or store URL.' },
+            { icon: 'reviews', title: 'Reviews & ratings', text: 'We gather public feedback automatically.' },
+            { icon: 'lock_open', title: 'No login needed', text: 'The page must open without signing in.' },
+          ],
+        };
+      case 'pages':
+        return {
+          eyebrow: 'About this step', title: 'Pick your pages',
+          lead: `Choose which ${label} pages to connect.`,
+          points: [
+            { icon: 'checklist', title: 'One or many', text: 'Connect a single page or several at once.' },
+            { icon: 'inbox', title: 'Unified inbox', text: 'All selected pages feed one shared inbox.' },
+            { icon: 'tune', title: 'Adjust later', text: 'Add or remove pages anytime.' },
+          ],
+        };
+      case 'review':
+        return {
+          eyebrow: 'About this step', title: 'Almost there',
+          lead: 'Review the setup and finish to start syncing.',
+          points: [
+            { icon: 'bolt', title: 'Starts in a minute', text: 'Collection begins right after you finish.' },
+            { icon: 'trending_up', title: 'Unified insights', text: 'Mentions flow into analytics and your inbox.' },
+            { icon: 'add_circle', title: 'Add more', text: 'Connect more channels anytime.' },
+          ],
+        };
+      default:
+        return { eyebrow: 'About this step', title: 'Setting up', lead: '', points: [] };
+    }
+  }
+
   /** Channels we surface as "Popular" with a badge in the chooser. */
   readonly popularIds = new Set(['twitter', 'facebook', 'instagram', 'tiktok']);
   isPopular(c: CatalogChannel): boolean { return this.popularIds.has(c.id); }

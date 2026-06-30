@@ -196,7 +196,6 @@ export const CHANNEL_CATALOG: CatalogGroup[] = [
       { id: 'playstore', label: 'Google Play Store',icon: 'shop',           color: '#00c4b3', flow: 'handle' },
       { id: 'appstore',  label: 'App Store',        icon: 'shopping_bag',   color: '#0d96f6', flow: 'handle' },
       { id: 'gmb',       label: 'Google My Business',icon: 'storefront',    color: '#4285f4', flow: 'choice', pages: true },
-      { id: 'line',      label: 'LINE',             icon: 'chat_bubble',    color: '#00c300', flow: 'oauth'  },
     ],
   },
   {
