@@ -306,7 +306,7 @@
 
 /* ===== card grid ===== */
 .pf-grid { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
-.card { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 10px; display: flex; flex-direction: column; cursor: pointer; box-shadow: 0 1px 2px rgba(16, 24, 40, .03); transition: box-shadow .15s ease; }
+.card { position: relative; background: #fff; border: 1px solid #d1d1d1; border-radius: 16px; padding: 10px; display: flex; flex-direction: column; cursor: pointer; box-shadow: 0 1px 2px rgba(16, 24, 40, .03); transition: box-shadow .15s ease; }
 .card:hover { box-shadow: 0 6px 18px rgba(16, 24, 40, .09); }
 .card-head { display: flex; align-items: center; gap: 10px; margin: -10px -10px 10px; padding: 10px; border-bottom: 1px solid var(--border-soft); border-radius: 15px 15px 0 0; }
 .card-avatar { width: 42px; height: 42px; border-radius: 12px; flex: 0 0 auto; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: var(--font-size-16); }

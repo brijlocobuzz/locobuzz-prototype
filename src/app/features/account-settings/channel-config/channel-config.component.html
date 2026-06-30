@@ -220,7 +220,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of displayProfiles" [class.selected]="selected.has(p.name)">
+          <tr *ngFor="let p of displayProfiles" [class.selected]="selected.has(p.name)" [class.expired]="p.alert">
             <!-- select -->
             <td class="col-check pin">
               <span class="cbx" [class.checked]="selected.has(p.name)" (click)="toggleRow(p.name)">
@@ -248,13 +248,22 @@
               </div>
             </td>
 
-            <!-- mentions: pills + more (no count) -->
+            <!-- mentions: pills + more (no count) — or a "collection stopped" alert when the token expired -->
             <td>
-              <div class="t-chips">
+              <div class="t-chips" *ngIf="!p.alert">
                 <span class="t-chip" *ngFor="let t of p.mentionTypes.slice(0, 2)">
                   <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
                 </span>
                 <span class="t-chip more" *ngIf="p.mentionTypes.length > 2">+{{ p.mentionTypes.length - 2 }} more</span>
+              </div>
+
+              <div class="collect-stopped" *ngIf="p.alert">
+                <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
+                <span class="cs-tx">
+                  <b>Data collection stopped</b>
+                  <small>Token expired — reauthorize to resume</small>
+                </span>
+                <button class="cs-act" title="Reauthorize"><span class="msr">autorenew</span>Reauthorize</button>
               </div>
             </td>
 
@@ -358,7 +367,7 @@
 
     <!-- ================= CARD GRID VIEW ================= -->
     <div class="pf-grid" *ngIf="viewMode === 'card'">
-      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" *ngFor="let p of displayProfiles">
+      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" [class.expired]="p.alert" *ngFor="let p of displayProfiles">
         <!-- <span class="card-accent"
               [style.background]="'linear-gradient(90deg,' + activeChannel.color + ',' + activeChannel.color + '99)'"></span> -->
 
@@ -373,7 +382,8 @@
             <span class="card-name">{{ p.name }}</span>
             <span class="card-owner"><span class="msr">person</span>{{ p.owner }}</span>
           </div>
-          <span class="card-status"><span class="msr">verified</span>{{ p.status }}</span>
+          <span class="card-status expired" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
+          <span class="card-status" *ngIf="!p.alert"><span class="msr">verified</span>{{ p.status }}</span>
         </div>
 
         <!-- mentions -->
@@ -383,20 +393,25 @@
               Mentions types being collected
               <!-- <span class="cm-count">{{ p.mentionTypes.length }}</span> -->
             </span>
-            <button class="cm-edit"><span class="msr">edit</span>Edit</button>
+            <button class="cm-edit" *ngIf="!p.alert"><span class="msr">edit</span>Edit</button>
           </div>
-          <div class="cm-chips">
+
+          <div class="cm-chips" *ngIf="!p.alert">
             <span class="cm-chip" *ngFor="let t of p.mentionTypes; let ci = index"
                   [ngClass]="'tone-' + (ci % 4)">
               <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
             </span>
           </div>
-        </div>
 
-        <!-- alert -->
-        <div class="card-alert" *ngIf="p.alert">
-          <span class="ca-msg"><span class="msr">warning</span>{{ p.alert.text }}</span>
-          <span class="ca-badge">{{ p.alert.badge }}</span>
+          <!-- token expired → collection paused notice (needs action) -->
+          <div class="collect-stopped block" *ngIf="p.alert">
+            <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
+            <span class="cs-tx">
+              <b>Data collection stopped</b>
+              <small>Token expired — reauthorize to resume collecting mentions.</small>
+            </span>
+            <button class="cs-act"><span class="msr">autorenew</span>Reauthorize</button>
+          </div>
         </div>
 
         <!-- compact dates -->

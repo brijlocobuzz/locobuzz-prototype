@@ -92,7 +92,6 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Careers', owner: 'Lena Frost', initials: 'A', avatarColor: '#0caa41',
     status: 'Public', addedOn: 'Dec 21, 2025 4:18 PM', updatedOn: 'Jun 15, 2026 10:22 AM',
     mentionTypes: ['User Posts', 'Mentions', 'Reviews'],
-    alert: { text: 'Access token expired', badge: 'ACTION NEEDED' },
   },
   {
     name: 'Acme Global', owner: 'Marcus Webb', initials: 'A', avatarColor: '#5c6bc0',
