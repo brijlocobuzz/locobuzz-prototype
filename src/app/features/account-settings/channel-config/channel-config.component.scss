@@ -221,6 +221,23 @@
 .pf-tab:hover { background: #f5f7fb; }
 .pf-tab.active { background: var(--brand-soft); border-color: #cfe0ff; color: var(--brand); }
 .pf-tab-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* count pill inside a view tab */
+.pf-tab-count {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px;
+  padding: 0 5px; border-radius: 9px;
+  background: #eef1f6; color: var(--text-3);
+  font-size: var(--font-size-11); font-weight: 700;
+}
+.pf-tab.active .pf-tab-count { background: #fff; color: var(--brand); }
+
+/* built-in "Token Expired" view — light-red theme */
+.pf-tab.expired { color: #c0392b; border-color: #f3c9c4; background: #fdf0ee; }
+.pf-tab.expired .msr { font-size: var(--font-size-16); }
+.pf-tab.expired .pf-tab-count { background: #f7d7d2; color: #c0392b; }
+.pf-tab.expired:hover { background: #fbe6e2; }
+.pf-tab.expired.active { background: #fbe0db; border-color: #e9a89f; color: #b03224; }
+.pf-tab.expired.active .pf-tab-count { background: #fff; color: #c0392b; }
 .pf-tab-x { display: grid; place-items: center; border-radius: 50%; color: var(--text-3); }
 .pf-tab-x:hover { background: rgba(0, 0, 0, .08); color: var(--text-1); }
 .pf-tab-x .msr { font-size: var(--font-size-14); }

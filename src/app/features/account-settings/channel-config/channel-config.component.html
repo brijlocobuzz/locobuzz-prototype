@@ -121,7 +121,13 @@
 
     <!-- ================= VIEW TABS + CUSTOM-VIEW BUILDER ================= -->
     <div class="pf-tabs">
-      <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">All profiles</button>
+      <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">
+        All profiles <span class="pf-tab-count">{{ profiles.length }}</span>
+      </button>
+
+      <button class="pf-tab expired" [class.active]="activeViewId === 'expired'" (click)="setView('expired')">
+        <span class="msr">error</span>Token Expired <span class="pf-tab-count">{{ expiredCount }}</span>
+      </button>
 
       <button class="pf-tab" *ngFor="let v of savedViews"
               [class.active]="activeViewId === v.id" (click)="setView(v.id)" [title]="v.label">

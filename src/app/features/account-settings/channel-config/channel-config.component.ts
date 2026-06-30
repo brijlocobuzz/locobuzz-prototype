@@ -174,10 +174,16 @@ export class ChannelConfigComponent {
   pageSize = 10;
   setView(id: string) { this.activeViewId = id; this.page = 1; }
 
+  /** Count of token-expired profiles — drives the built-in "Token Expired" view. */
+  get expiredCount(): number { return this.profiles.filter(p => !!p.alert).length; }
+
   /** Profiles after the active view's filter + column sort are applied (all pages). */
   get filteredProfiles(): ChannelProfile[] {
     const v = this.savedViews.find(s => s.id === this.activeViewId);
-    let rows = v ? this.profiles.filter(p => this.matchesCondition(p, v.filter)) : [...this.profiles];
+    let rows: ChannelProfile[];
+    if (this.activeViewId === 'expired') rows = this.profiles.filter(p => !!p.alert);
+    else if (v) rows = this.profiles.filter(p => this.matchesCondition(p, v.filter));
+    else rows = [...this.profiles];
     if (this.sortKey) {
       const k = this.sortKey, dir = this.sortDir;
       rows = rows.sort((a, b) => {
