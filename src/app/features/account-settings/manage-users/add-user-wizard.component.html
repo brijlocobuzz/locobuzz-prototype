@@ -32,7 +32,7 @@
         <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
       </span>
       <p class="au-summary-text">
-        <strong>{{ firstName }} {{ lastName }}</strong> ({{ '@' + username }}) has been added as a
+        <strong>{{ firstName }} {{ lastName }}</strong> ({{ '@' + username }}) has been added as {{ roleArticle }}
         <strong>{{ role?.label }}</strong> with access to
         <strong>{{ selectedBrandIds.size }} {{ selectedBrandIds.size === 1 ? 'brand' : 'brands' }}</strong>
         and <strong>{{ selectedGroupIds.size }} {{ selectedGroupIds.size === 1 ? 'platform' : 'platforms' }}</strong>.
@@ -40,7 +40,7 @@
     </div>
 
     <button type="button" class="au-btn-primary au-celebrate-done" (click)="complete()">
-      <span class="msr">check</span> Finish
+      <span class="msr">close</span> Close
     </button>
   </div>
 

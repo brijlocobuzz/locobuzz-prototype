@@ -170,6 +170,11 @@ export class AddUserWizardComponent {
     this.applyRoleDefaults(r);
   }
 
+  /** "a" / "an" article for the selected role label (vowel-sound aware). */
+  get roleArticle(): string {
+    return /^[aeiou]/i.test(this.role?.label ?? '') ? 'an' : 'a';
+  }
+
   /** True for roles that may be promoted to admin. */
   get showSupervisorAdmin(): boolean {
     return !!this.role && (this.role.id === 3 || this.role.id === 7);
