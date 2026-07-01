@@ -27,10 +27,23 @@
     <span class="dc-billing">Billing cycle <strong>01 Jun 2026 - 30 Jun 2026</strong></span>
   </header>
 
+  <!-- Global at-risk banner: some services are at / over their limit -->
+  <div class="dc-banner" *ngIf="atRiskCards.length && !bannerDismissed"
+       [attr.data-tone]="hasExceeded ? 'exceeded' : 'critical'" role="alert">
+    <span class="msr">{{ hasExceeded ? 'error' : 'warning' }}</span>
+    <p class="dc-banner-text">
+      <strong>{{ atRiskCards.length }} service{{ atRiskCards.length > 1 ? 's' : '' }} need attention.</strong>
+      {{ atRiskNames }} {{ atRiskCards.length > 1 ? 'are' : 'is' }} at or over the limit —
+      the affected {{ atRiskCards.length > 1 ? 'services will' : 'service will' }} stop working until the limit is increased.
+    </p>
+    <button type="button" class="dc-banner-view" (click)="reviewCritical()">Review services</button>
+    <button type="button" class="dc-banner-x" (click)="bannerDismissed = true" aria-label="Dismiss">
+      <span class="msr">close</span>
+    </button>
+  </div>
+
   <!-- Summary / filter strip -->
   <div class="dc-summary">
-    <span class="dc-summary-label">{{ filteredCards.length }} of {{ cards.length }} services</span>
-
     <div class="dc-chips" role="group" aria-label="Filter services by status">
       <button class="chip" [attr.data-status]="'all'"
               [class.active]="filter === 'all'"
@@ -48,7 +61,7 @@
               [class.active]="filter === 'low'"
               [attr.aria-pressed]="filter === 'low'"
               (click)="setFilter('low')">
-        <span class="dot"></span>{{ count('low') }} Low
+        <span class="dot"></span>{{ count('low') }} Warning
       </button>
       <button class="chip" [attr.data-status]="'good'"
               [class.active]="filter === 'good'"
@@ -57,15 +70,31 @@
         <span class="dot"></span>{{ count('good') }} Good
       </button>
     </div>
+
+    <span class="dc-summary-label">{{ cards.length }} of {{ cards.length }} services active</span>
   </div>
 
-  <!-- Cards -->
-  <div class="dc-grid">
-    <article class="dc-card" *ngFor="let c of filteredCards"
-             [attr.data-status]="c.status" [class.is-empty]="c.isEmpty">
+  <!-- ===== Critical / at-risk services: always 2-up big cards (auto-wrap) ===== -->
+  <div class="dc-grid-lg" *ngIf="bigCards.length">
+    <ng-container *ngFor="let c of bigCards">
+      <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: c }"></ng-container>
+    </ng-container>
+  </div>
+
+  <!-- ===== Other services: compact grid ===== -->
+  <div class="dc-grid-sm" *ngIf="smallCards.length">
+    <ng-container *ngFor="let c of smallCards">
+      <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: c }"></ng-container>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Shared card template — identical content for both grids (nothing inside changes) -->
+<ng-template #cardTpl let-c>
+    <article class="dc-card" [attr.data-status]="c.status" [class.is-empty]="c.isEmpty">
       <div class="card-head">
         <span class="card-title">{{ c.title }}</span>
-        <span class="badge" *ngIf="c.status === 'critical'" [attr.data-status]="c.status"
+        <span class="badge" *ngIf="isAtRisk(c)" [attr.data-status]="c.status"
               [attr.aria-label]="c.statusLabel + ' status'">{{ c.statusLabel }}</span>
       </div>
 
@@ -74,27 +103,54 @@
         <span class="total">/ {{ compact(c.total) }}</span>
       </div>
 
-      <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
-        <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
-      </div>
+      <!-- Healthy cards show the bar + remaining; at-risk cards swap it for an
+           inline alert in the SAME space so the card never grows. -->
+      <ng-container *ngIf="!isAtRisk(c); else riskAlert">
+        <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
+          <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
+        </div>
 
-      <div class="card-meta">
-        <span class="rem" [attr.data-status]="c.status"
-              [title]="exact(c.remaining) + ' remaining'">
-          <ng-container *ngIf="!c.isEmpty; else notStarted">{{ compact(c.remaining) }} Remaining</ng-container>
-          <ng-template #notStarted>Not started · {{ compact(c.total) }} available</ng-template>
-        </span>
-      </div>
+        <div class="card-meta">
+          <span class="rem" [attr.data-status]="c.status"
+                [title]="exact(c.remaining) + ' remaining'">
+            <ng-container *ngIf="!c.isEmpty; else notStarted">{{ compact(c.remaining) }} Remaining</ng-container>
+            <ng-template #notStarted>Not started · {{ compact(c.total) }} available</ng-template>
+          </span>
+        </div>
+      </ng-container>
 
+      <ng-template #riskAlert>
+        <!-- Usage + error shown together (no slider) — both matter, so both stay visible. -->
+        <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
+          <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
+        </div>
+        <div class="card-meta">
+          <span class="rem" [attr.data-status]="c.status" [title]="exact(c.remaining) + ' remaining'">
+            {{ c.status === 'exceeded' ? compact(c.used - c.total) + ' over limit' : compact(c.remaining) + ' Remaining' }}
+          </span>
+        </div>
+
+        <div class="card-alert" [attr.data-status]="c.status" role="alert">
+          <div class="card-alert-top">
+            <span class="msr">{{ c.status === 'exceeded' ? 'error' : 'warning' }}</span>
+            <span class="card-alert-head">{{ c.impact }}</span>
+          </div>
+          <p class="card-alert-detail">{{ c.impactDetail }}</p>
+        </div>
+      </ng-template>
+
+      <!-- Footer: Show Details + Request More Limit on one row;
+           when there's no Show Details, the Request button is centered. -->
       <div class="card-actions" [class.single]="!c.hasDetails">
-        <button type="button" class="show" *ngIf="c.hasDetails" (click)="showDetails(c)">Show Details <span class="msr">chevron_right</span></button>
+        <button type="button" class="link-details" *ngIf="c.hasDetails" (click)="showDetails(c)">
+          Show Details <span class="msr">chevron_right</span>
+        </button>
         <button type="button" class="quota" [attr.data-status]="c.status" (click)="openQuota(c)">
-          Increase Limit <span class="msr">open_in_new</span>
+          Request More Limit <span class="msr">open_in_new</span>
         </button>
       </div>
     </article>
-  </div>
-</div>
+</ng-template>
 
 <!-- ===== Increase-limit dialog (shared) ===== -->
 <app-increase-limit-dialog *ngIf="quotaCard as q"

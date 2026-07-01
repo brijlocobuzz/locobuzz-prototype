@@ -242,30 +242,48 @@ export interface AssignableBrand {
   color: string;
   /** Whether mentions create tickets for this brand. */
   ticketsEnabled: boolean;
+  /** Short description shown under the brand name in the picker. */
+  description: string;
+  /** Users already assigned to this brand. */
+  users: number;
+  /** Listening channels connected to this brand. */
+  channels: number;
 }
 
 export const ASSIGNABLE_BRANDS: AssignableBrand[] = [
-  { id: 'b1', name: 'Amazon', color: '#ff9900', ticketsEnabled: true },
-  { id: 'b2', name: 'Nike', color: '#0f172a', ticketsEnabled: true },
-  { id: 'b3', name: 'Air India', color: '#c8102e', ticketsEnabled: true },
-  { id: 'b4', name: 'Myntra', color: '#e91e63', ticketsEnabled: false },
-  { id: 'b5', name: 'Zomato', color: '#ef4444', ticketsEnabled: true },
-  { id: 'b6', name: 'Tata Cliq', color: '#2563eb', ticketsEnabled: false },
-  { id: 'b7', name: 'Swiggy', color: '#fc8019', ticketsEnabled: true },
-  { id: 'b8', name: 'Flipkart', color: '#2874f0', ticketsEnabled: false },
+  { id: 'b1', name: 'Amazon', color: '#ff9900', ticketsEnabled: true, description: 'E-commerce · Retail & Marketplace', users: 42, channels: 9 },
+  { id: 'b2', name: 'Nike', color: '#0f172a', ticketsEnabled: true, description: 'Apparel · Sportswear & Footwear', users: 18, channels: 6 },
+  { id: 'b3', name: 'Air India', color: '#c8102e', ticketsEnabled: true, description: 'Aviation · Airlines & Travel', users: 27, channels: 7 },
+  { id: 'b4', name: 'Myntra', color: '#e91e63', ticketsEnabled: false, description: 'E-commerce · Fashion & Lifestyle', users: 15, channels: 5 },
+  { id: 'b5', name: 'Zomato', color: '#ef4444', ticketsEnabled: true, description: 'Food Tech · Delivery & Dining', users: 33, channels: 8 },
+  { id: 'b6', name: 'Tata Cliq', color: '#2563eb', ticketsEnabled: false, description: 'E-commerce · Electronics & Luxury', users: 11, channels: 4 },
+  { id: 'b7', name: 'Swiggy', color: '#fc8019', ticketsEnabled: true, description: 'Food Tech · Delivery & Instamart', users: 29, channels: 8 },
+  { id: 'b8', name: 'Flipkart', color: '#2874f0', ticketsEnabled: false, description: 'E-commerce · Retail & Marketplace', users: 24, channels: 7 },
 ];
 
 export interface Team {
   id: string;
   name: string;
+  /** What the team handles. */
+  description: string;
+  /** Team lead / owner. */
+  lead: string;
+  /** Members currently on the team. */
+  members: number;
+  /** Brands the team covers. */
+  brands: number;
+  /** Shift / working hours covered. */
+  shift: string;
+  /** Sample member names for the avatar stack. */
+  sampleMembers: string[];
 }
 
 export const TEAMS: Team[] = [
-  { id: 't1', name: 'Customer Support — L1' },
-  { id: 't2', name: 'Customer Support — L2' },
-  { id: 't3', name: 'Escalations' },
-  { id: 't4', name: 'Social Media' },
-  { id: 't5', name: 'War Room' },
+  { id: 't1', name: 'Customer Support — L1', description: 'First-line response & triage', lead: 'Bhavna Rao', members: 14, brands: 5, shift: '24×7 · rotational', sampleMembers: ['Bhavna Rao', 'Gauri Deshmukh', 'Jatin Malhotra', 'Deepika Nair', 'Kavya Reddy', 'Harsh Patel'] },
+  { id: 't2', name: 'Customer Support — L2', description: 'Specialist & follow-up handling', lead: 'Jatin Malhotra', members: 9, brands: 4, shift: 'Business hours', sampleMembers: ['Jatin Malhotra', 'Esha Khan', 'Farhan Shaikh', 'Ishita Verma', 'Aarav Mehta'] },
+  { id: 't3', name: 'Escalations', description: 'High-priority & sensitive cases', lead: 'Chetan Iyer', members: 6, brands: 7, shift: 'Business hours', sampleMembers: ['Chetan Iyer', 'Harsh Patel', 'Aarav Mehta', 'Ishita Verma'] },
+  { id: 't4', name: 'Social Media', description: 'Engagement & community management', lead: 'Esha Khan', members: 11, brands: 6, shift: 'Extended hours', sampleMembers: ['Esha Khan', 'Gauri Deshmukh', 'Kavya Reddy', 'Bhavna Rao', 'Deepika Nair'] },
+  { id: 't5', name: 'War Room', description: 'Crisis monitoring & rapid response', lead: 'Aarav Mehta', members: 8, brands: 12, shift: '24×7 · on-call', sampleMembers: ['Aarav Mehta', 'Farhan Shaikh', 'Chetan Iyer', 'Ishita Verma', 'Harsh Patel'] },
 ];
 
 export interface Skill {

@@ -53,15 +53,32 @@ export class MonthlyConsumptionComponent {
 
   readonly weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
 
-  /* ---- Brand breakdown + weekly trend ---- */
+  /** Most brands shown as summary tiles above the trend chart. */
+  readonly topBrandCount = 5;
+  /** Hard cap on how many brand lines the trend chart renders. */
+  readonly maxChartBrands = 15;
+
+  /* ---- Brand breakdown + weekly trend ----
+     Recognisable consumer brands so the numbers read like a real account. */
   readonly brands: BrandRow[] = [
-    { name: 'Data Fetching', total: 31000,  pct: 15.10, color: '#4a90e2', weekly: [16000, 12000, 6000, 4000] },
-    { name: 'Action',        total: 29000,  pct: 13.80, color: '#23314f', weekly: [12000, 18000, 14000, 8000] },
-    { name: 'neww brand',    total: 15000,  pct: 7.49,  color: '#34b27a', weekly: [3000, 4500, 5000, 4500] },
-    { name: 'ReTest',        total: 9900,   pct: 4.79,  color: '#e0485a', weekly: [1500, 2500, 3200, 2900] },
-    { name: 'Golf',          total: 7600,   pct: 3.69,  color: '#8b6cf6', weekly: [800, 1500, 2400, 3000] },
-    { name: 'Other Brands',  total: 113840, pct: 55.13, color: '#f3933a', weekly: [20000, 30000, 18000, 9000] },
+    { name: 'IndiGo',       total: 31000,  pct: 15.01, color: '#4a90e2', weekly: [16000, 12000, 6000, 4000] },
+    { name: 'Zomato',       total: 29000,  pct: 14.05, color: '#e0485a', weekly: [12000, 18000, 14000, 8000] },
+    { name: 'HDFC Bank',    total: 15000,  pct: 7.27,  color: '#23314f', weekly: [3000, 4500, 5000, 4500] },
+    { name: 'Myntra',       total: 9900,   pct: 4.79,  color: '#8b6cf6', weekly: [1500, 2500, 3200, 2900] },
+    { name: 'boAt',         total: 7600,   pct: 3.68,  color: '#34b27a', weekly: [800, 1500, 2400, 3000] },
+    { name: 'Other Brands', total: 113840, pct: 55.13, color: '#f3933a', weekly: [20000, 30000, 18000, 9000] },
   ];
+
+  /** Additional real brands used to fill out the trend chart (up to maxChartBrands). */
+  private readonly extraBrandNames = [
+    'Swiggy', 'Nykaa', 'Flipkart', 'Amul', 'Tata Motors',
+    'Paytm', 'Ola', 'CRED', 'Dream11', 'Licious',
+  ];
+
+  /** The top brands shown as summary tiles (excludes the "Other Brands" bucket). */
+  get topBrands(): BrandRow[] {
+    return this.brands.filter(b => b.name !== 'Other Brands').slice(0, this.topBrandCount);
+  }
 
   /* ---- Channel breakdown + weekly trend ---- */
   readonly channels: ChannelRow[] = [
@@ -115,7 +132,8 @@ export class MonthlyConsumptionComponent {
     this.buildStackedChart();
   }
 
-  /** Expand to a realistic, large brand set (accounts can have 100+ brands). */
+  /** Build the trend-chart brand set: the named brands plus a few more,
+      capped at maxChartBrands so the chart stays readable. */
   private buildBrandSeries() {
     const palette = [
       '#4a90e2', '#23314f', '#34b27a', '#e0485a', '#8b6cf6', '#f3933a', '#0aa2c0', '#d6336c',
@@ -123,19 +141,19 @@ export class MonthlyConsumptionComponent {
       '#f76707', '#c2255c', '#5f3dc4', '#0ca678',
     ];
     const named = this.brands.filter(b => b.name !== 'Other Brands');
-    const more: BrandRow[] = Array.from({ length: 36 }, (_, k) => {
+    const more: BrandRow[] = this.extraBrandNames.map((name, k) => {
       const a = 300 + ((k * 53) % 37) * 70;
       const weekly = [a, Math.round(a * 1.15), Math.round(a * 0.85), Math.round(a * 1.25)];
       const total = weekly.reduce((s, v) => s + v, 0);
       return {
-        name: `Brand ${k + 7}`,
+        name,
         total,
         pct: +((total / this.totalMentions) * 100).toFixed(2),
         color: palette[(k + 5) % palette.length],
         weekly,
       };
     });
-    this.chartBrands = [...named, ...more];
+    this.chartBrands = [...named, ...more].slice(0, this.maxChartBrands);
   }
 
   /* ---------- chart builders ---------- */

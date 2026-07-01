@@ -48,8 +48,8 @@
   <!-- ===== Header ===== -->
   <header class="au-head">
     <div class="au-head-text">
-      <h2>Add User</h2>
-      <p>Create a new user account, assign brands, and define platform permissions.</p>
+      <h2>{{ headingName }}</h2>
+      <p>{{ headingSub }}</p>
     </div>
     <span class="au-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
   </header>
@@ -78,10 +78,10 @@
   <!-- ===== Body ===== -->
   <div class="au-body">
 
-    <!-- ---------- Step 1 · User profile ---------- -->
+    <!-- ---------- Step 1 · Profile ---------- -->
     <section class="au-step-pane" *ngIf="currentStep === 1">
-      <h1 class="au-pane-title">User profile</h1>
-      <p class="au-pane-sub">Fill in the user details to create a new account and pick the role that drives their access.</p>
+      <h1 class="au-pane-title">Profile</h1>
+      <p class="au-pane-sub">Start with the basics — who this person is and how to reach them.</p>
 
       <!-- photo banner: avatar + label across the top, fields full-width below -->
       <div class="au-photo-banner">
@@ -111,38 +111,6 @@
       </div>
 
       <div class="au-grid-2">
-        <!-- gender -->
-        <div class="au-field">
-          <label class="au-label">Gender <i>*</i></label>
-          <div class="au-radio-row">
-            <label class="au-radio"><input type="radio" name="gender" value="0" [(ngModel)]="gender" /><span>Male</span></label>
-            <label class="au-radio"><input type="radio" name="gender" value="1" [(ngModel)]="gender" /><span>Female</span></label>
-            <label class="au-radio"><input type="radio" name="gender" value="2" [(ngModel)]="gender" /><span>Other</span></label>
-          </div>
-        </div>
-
-        <!-- role -->
-        <div class="au-field">
-          <label class="au-label">Role <i>*</i></label>
-          <div class="au-select-wrap">
-            <button type="button" class="au-select" [class.is-open]="roleOpen" (click)="roleOpen = !roleOpen">
-              <span [class.placeholder]="!role">{{ role?.label || 'Select role' }}</span>
-              <span class="msr chev">expand_more</span>
-            </button>
-            <div class="au-dropdown" *ngIf="roleOpen">
-              <div class="au-dropdown-list">
-                <button type="button" class="au-option role" *ngFor="let r of roles"
-                        [class.sel]="r.id === role?.id" (click)="selectRole(r)">
-                  <span class="au-option-name">{{ r.label }}</span>
-                  <span class="au-option-hint">{{ r.hint }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="au-grid-2">
         <div class="au-field">
           <label class="au-label">Username <i>*</i></label>
           <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username" />
@@ -154,6 +122,16 @@
       </div>
 
       <div class="au-grid-2">
+        <!-- gender -->
+        <div class="au-field">
+          <label class="au-label">Gender <i>*</i></label>
+          <div class="au-radio-row">
+            <label class="au-radio"><input type="radio" name="gender" value="0" [(ngModel)]="gender" /><span>Male</span></label>
+            <label class="au-radio"><input type="radio" name="gender" value="1" [(ngModel)]="gender" /><span>Female</span></label>
+            <label class="au-radio"><input type="radio" name="gender" value="2" [(ngModel)]="gender" /><span>Other</span></label>
+          </div>
+        </div>
+
         <!-- contact: compact country code + number -->
         <div class="au-field">
           <label class="au-label">Contact Number</label>
@@ -180,8 +158,36 @@
                    [value]="contactNumber" (input)="onContactInput($event)" />
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- admin toggle sits in the second cell so the grid stays aligned -->
+    <!-- ---------- Step 2 · Role & permissions ---------- -->
+    <section class="au-step-pane" *ngIf="currentStep === 2">
+      <h1 class="au-pane-title">Role &amp; permissions</h1>
+      <p class="au-pane-sub">Pick the role that drives access, then fine-tune the platform permissions it unlocks.</p>
+
+      <div class="au-grid-2">
+        <!-- role -->
+        <div class="au-field">
+          <label class="au-label">Role <i>*</i></label>
+          <div class="au-select-wrap">
+            <button type="button" class="au-select" [class.is-open]="roleOpen" (click)="roleOpen = !roleOpen">
+              <span [class.placeholder]="!role">{{ role?.label || 'Select role' }}</span>
+              <span class="msr chev">expand_more</span>
+            </button>
+            <div class="au-dropdown" *ngIf="roleOpen">
+              <div class="au-dropdown-list">
+                <button type="button" class="au-option role" *ngFor="let r of roles"
+                        [class.sel]="r.id === role?.id" (click)="selectRole(r)">
+                  <span class="au-option-name">{{ r.label }}</span>
+                  <span class="au-option-hint">{{ r.hint }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- set as admin (role-gated) -->
         <div class="au-field" *ngIf="showSupervisorAdmin">
           <label class="au-label">&nbsp;</label>
           <label class="au-checkbox admin">
@@ -191,86 +197,6 @@
           </label>
         </div>
       </div>
-    </section>
-
-    <!-- ---------- Step 2 · Brands & team ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 2">
-      <h1 class="au-pane-title">Brands &amp; team</h1>
-      <p class="au-pane-sub">Assign the brands this user can access and place them on a team.</p>
-
-      <!-- assign brands -->
-      <div class="au-field">
-        <label class="au-label">Assign Brands <i>*</i></label>
-        <p class="au-hint top">Only brands assigned here will be visible to the user.</p>
-
-        <div class="au-multi">
-          <div class="au-pill-input" (click)="brandsDropdownOpen = true">
-            <span class="au-pill" *ngFor="let b of selectedBrands">
-              <span class="au-pill-dot" [style.background]="b.color"></span>
-              {{ b.name }}
-              <button type="button" class="au-pill-x" (click)="removeBrand(b.id); $event.stopPropagation()">
-                <span class="msr">close</span>
-              </button>
-            </span>
-            <span class="au-search-inline">
-              <span class="msr">search</span>
-              <input type="text" placeholder="Search brands…" [(ngModel)]="brandSearch" (focus)="brandsDropdownOpen = true" />
-            </span>
-          </div>
-
-          <div class="au-list" *ngIf="brandsDropdownOpen">
-            <div class="au-list-head">
-              <span class="au-list-count">{{ filteredBrands.length }} BRANDS</span>
-              <button type="button" class="au-link" (click)="toggleAllBrands()">
-                {{ allBrandsSelected ? 'Clear all' : 'Select all' }}
-              </button>
-            </div>
-            <button type="button" class="au-row" *ngFor="let b of filteredBrands" (click)="toggleBrand(b.id)">
-              <span class="au-row-logo" [style.background]="b.color + '1a'" [style.color]="b.color">
-                {{ b.name.slice(0, 2) | uppercase }}
-              </span>
-              <span class="au-row-name">{{ b.name }}</span>
-              <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
-                <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
-                {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
-              </span>
-              <span class="au-check" [class.on]="selectedBrandIds.has(b.id)">
-                <span class="msr" *ngIf="selectedBrandIds.has(b.id)">check</span>
-              </span>
-            </button>
-            <p class="au-option-empty" *ngIf="!filteredBrands.length">No brands found</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- team -->
-      <div class="au-field">
-        <label class="au-label">Select Team</label>
-        <div class="au-select-wrap">
-          <button type="button" class="au-select" [class.is-open]="teamOpen" (click)="teamOpen = !teamOpen">
-            <span [class.placeholder]="!selectedTeam">{{ selectedTeam?.name || 'Select a team' }}</span>
-            <span class="msr chev">expand_more</span>
-          </button>
-          <div class="au-dropdown" *ngIf="teamOpen">
-            <div class="au-dropdown-search">
-              <span class="msr">search</span>
-              <input type="text" placeholder="Search team" [(ngModel)]="teamSearch" />
-            </div>
-            <div class="au-dropdown-list">
-              <button type="button" class="au-option" *ngFor="let t of filteredTeams"
-                      [class.sel]="t.id === selectedTeam?.id" (click)="selectTeam(t)">{{ t.name }}</button>
-              <p class="au-option-empty" *ngIf="!filteredTeams.length">No teams found</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ---------- Step 3 · Permissions ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 3">
-      <h1 class="au-pane-title">Permissions</h1>
-      <p class="au-pane-sub">Restrict the menus and properties available to this user by role and responsibility.</p>
 
       <!-- platform access -->
       <div class="au-field">
@@ -363,10 +289,101 @@
       </div>
     </section>
 
-    <!-- ---------- Step 4 · Signature & notify ---------- -->
+    <!-- ---------- Step 3 · Brands ---------- -->
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 3">
+      <h1 class="au-pane-title">Brands</h1>
+      <p class="au-pane-sub">Assign the brands this user can access. Only these brands will be visible to them.</p>
+
+      <!-- assign brands -->
+      <div class="au-field" [class.au-field-fill]="!selectedBrands.length">
+        <label class="au-label">Assign Brands <i>*</i></label>
+        <p class="au-hint top">Only brands assigned here will be visible to the user.</p>
+
+        <div class="au-multi">
+          <div class="au-pill-input" (click)="brandsDropdownOpen = true">
+            <span class="au-pill" *ngFor="let b of selectedBrands">
+              <span class="au-pill-dot" [style.background]="b.color"></span>
+              {{ b.name }}
+              <button type="button" class="au-pill-x" (click)="removeBrand(b.id); $event.stopPropagation()">
+                <span class="msr">close</span>
+              </button>
+            </span>
+            <span class="au-search-inline">
+              <span class="msr">search</span>
+              <input type="text" placeholder="Search brands…" [(ngModel)]="brandSearch" (focus)="brandsDropdownOpen = true" />
+            </span>
+          </div>
+
+          <div class="au-list" *ngIf="brandsDropdownOpen">
+            <div class="au-list-head">
+              <span class="au-list-count">{{ filteredBrands.length }} BRANDS</span>
+              <button type="button" class="au-link" (click)="toggleAllBrands()">
+                {{ allBrandsSelected ? 'Clear all' : 'Select all' }}
+              </button>
+            </div>
+            <button type="button" class="au-row" *ngFor="let b of filteredBrands" (click)="toggleBrand(b.id)">
+              <span class="au-row-logo" [style.background]="b.color + '1a'" [style.color]="b.color">
+                {{ b.name.slice(0, 2) | uppercase }}
+              </span>
+              <span class="au-row-meta">
+                <span class="au-row-name">{{ b.name }}</span>
+                <span class="au-row-sub">{{ b.description }}</span>
+              </span>
+              <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
+                <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
+                {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+              </span>
+              <span class="au-check" [class.on]="selectedBrandIds.has(b.id)">
+                <span class="msr" *ngIf="selectedBrandIds.has(b.id)">check</span>
+              </span>
+            </button>
+            <p class="au-option-empty" *ngIf="!filteredBrands.length">No brands found</p>
+          </div>
+        </div>
+
+        <!-- empty state when nothing selected -->
+        <div class="au-empty-state soft fill" *ngIf="!selectedBrands.length">
+          <span class="msr">storefront</span>
+          <p class="au-empty-title">No brands selected</p>
+          <p class="au-empty-sub">Search and pick brands above to give this user access.</p>
+        </div>
+
+        <!-- assigned brands — informative list -->
+        <div class="au-assigned" *ngIf="selectedBrands.length">
+          <div class="au-assigned-head">
+            <span class="au-assigned-title">Assigned brands</span>
+            <span class="au-assigned-count">{{ selectedBrands.length }}</span>
+          </div>
+          <div class="au-assigned-item" *ngFor="let b of selectedBrands">
+            <span class="au-assigned-logo" [style.background]="b.color + '1a'" [style.color]="b.color">
+              {{ b.name.slice(0, 2) | uppercase }}
+            </span>
+            <span class="au-assigned-info">
+              <span class="au-assigned-name">
+                {{ b.name }}
+                <span class="au-ticket-pill sm" [class.off]="!b.ticketsEnabled">
+                  <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
+                  {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+                </span>
+              </span>
+              <span class="au-assigned-desc">{{ b.description }}</span>
+            </span>
+            <span class="au-assigned-stats">
+              <span class="au-assigned-stat"><span class="msr">group</span><b>{{ b.users }}</b> users</span>
+              <span class="au-assigned-stat"><span class="msr">hub</span><b>{{ b.channels }}</b> channels</span>
+            </span>
+            <button type="button" class="au-assigned-x" (click)="removeBrand(b.id)" aria-label="Remove brand">
+              <span class="msr">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Step 4 · Signature ---------- -->
     <section class="au-step-pane" *ngIf="currentStep === 4">
-      <h1 class="au-pane-title">Signature &amp; notify</h1>
-      <p class="au-pane-sub">Add a reply signature for social channels and choose who gets notified about this new account.</p>
+      <h1 class="au-pane-title">Signature</h1>
+      <p class="au-pane-sub">Add a reply signature that's appended to the user's responses on social channels.</p>
 
       <!-- signature -->
       <div class="au-card au-sig-card">
@@ -381,7 +398,7 @@
         <!-- per-brand toggle -->
         <div class="au-seg-toggle">
           <button type="button" [class.on]="!perBrandSignatures" (click)="perBrandSignatures && onTogglePerBrand()">
-            <span class="msr">badge</span> One common signature
+            <span class="msr">badge</span> One common signature across all brands
           </button>
           <button type="button" [class.on]="perBrandSignatures" (click)="!perBrandSignatures && onTogglePerBrand()">
             <span class="msr">store</span> Per-brand signature
@@ -410,7 +427,7 @@
 
             <!-- per-brand -->
             <ng-container *ngIf="perBrandSignatures">
-              <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in step 2 to add per-brand signatures.</p>
+              <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in the Brands &amp; team step to add per-brand signatures.</p>
               <div class="au-sig-brand-list">
                 <div class="au-sig-row" *ngFor="let b of selectedBrands">
                   <span class="au-sig-brand">
@@ -445,25 +462,107 @@
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- welcome email -->
-      <label class="au-welcome-card">
-        <input type="checkbox" [(ngModel)]="sendWelcomeEmail" />
-        <span class="au-check-box"><span class="msr">check</span></span>
-        <span class="au-welcome-text">
-          <span class="au-welcome-title">Send a Welcome Email to this user</span>
-          <span class="au-welcome-sub">Emails {{ email || 'the user' }} their login details and a getting-started guide.</span>
-        </span>
-        <span class="au-welcome-ic"><span class="msr">mark_email_read</span></span>
-      </label>
+    <!-- ---------- Step 5 · Team ---------- -->
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 5">
+      <h1 class="au-pane-title">Team &amp; notifications</h1>
+      <p class="au-pane-sub">Place this user on a response team and choose who gets notified about the new account.</p>
 
-      <!-- notify users -->
-      <div class="au-card">
-        <div class="au-card-head">
-          <p class="au-card-title">Send Notification to Users</p>
-          <p class="au-card-sub">Selected users get an email about this newly created account.</p>
+      <div class="au-field" [class.au-field-fill]="!selectedTeam">
+        <label class="au-label">Select Team</label>
+        <div class="au-select-wrap">
+          <button type="button" class="au-select" [class.is-open]="teamOpen" (click)="teamOpen = !teamOpen">
+            <span [class.placeholder]="!selectedTeam">{{ selectedTeam?.name || 'Select a team' }}</span>
+            <span class="msr chev">expand_more</span>
+          </button>
+          <div class="au-dropdown" *ngIf="teamOpen">
+            <div class="au-dropdown-search">
+              <span class="msr">search</span>
+              <input type="text" placeholder="Search team" [(ngModel)]="teamSearch" />
+            </div>
+            <div class="au-dropdown-list">
+              <button type="button" class="au-option" *ngFor="let t of filteredTeams"
+                      [class.sel]="t.id === selectedTeam?.id" (click)="selectTeam(t)">{{ t.name }}</button>
+              <p class="au-option-empty" *ngIf="!filteredTeams.length">No teams found</p>
+            </div>
+          </div>
         </div>
 
+        <!-- empty state when no team chosen -->
+        <div class="au-empty-state soft fill" *ngIf="!selectedTeam">
+          <span class="msr">groups</span>
+          <p class="au-empty-title">Not added to any team</p>
+          <p class="au-empty-sub">Pick a team above, or continue — you can assign one later.</p>
+        </div>
+
+        <!-- selected team — detailed panel -->
+        <div class="au-team-detail" *ngIf="selectedTeam">
+          <div class="au-team-detail-head">
+            <span class="au-team-detail-icon"><span class="msr">groups</span></span>
+            <span class="au-team-detail-titles">
+              <span class="au-team-detail-name">{{ selectedTeam.name }}</span>
+              <span class="au-team-detail-desc">{{ selectedTeam.description }}</span>
+            </span>
+            <button type="button" class="au-assigned-x" (click)="selectedTeam = null" aria-label="Clear team">
+              <span class="msr">close</span>
+            </button>
+          </div>
+
+          <div class="au-team-stats-grid">
+            <div class="au-team-stat-tile">
+              <span class="au-team-stat-ic"><span class="msr">shield_person</span></span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Team Lead</span>
+                <span class="au-team-stat-v">{{ selectedTeam.lead }}</span>
+              </span>
+            </div>
+            <div class="au-team-stat-tile">
+              <span class="au-team-stat-ic"><span class="msr">group</span></span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Members</span>
+                <span class="au-team-stat-v">{{ selectedTeam.members }}</span>
+              </span>
+            </div>
+            <div class="au-team-stat-tile">
+              <span class="au-team-stat-ic"><span class="msr">storefront</span></span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Brands covered</span>
+                <span class="au-team-stat-v">{{ selectedTeam.brands }}</span>
+              </span>
+            </div>
+            <div class="au-team-stat-tile">
+              <span class="au-team-stat-ic"><span class="msr">schedule</span></span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Coverage</span>
+                <span class="au-team-stat-v">{{ selectedTeam.shift }}</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="au-team-people">
+            <span class="au-team-people-label">People on this team</span>
+            <div class="au-team-stack">
+              <span class="au-team-av" *ngFor="let m of selectedTeam.sampleMembers; let i = index"
+                    [style.background]="memberColors[i % memberColors.length]" [title]="m">{{ initialsOf(m) }}</span>
+              <span class="au-team-av more" *ngIf="selectedTeam.members > selectedTeam.sampleMembers.length">
+                +{{ selectedTeam.members - selectedTeam.sampleMembers.length }}
+              </span>
+            </div>
+          </div>
+
+          <p class="au-team-note">
+            <span class="msr">info</span>
+            {{ firstName || 'This user' }} will be added to <strong>{{ selectedTeam.name }}</strong>
+            and can collaborate with its {{ selectedTeam.members }} members across {{ selectedTeam.brands }} brands.
+          </p>
+        </div>
+      </div>
+
+      <!-- notify other users -->
+      <div class="au-field">
+        <label class="au-label">Notify other users</label>
+        <p class="au-hint top">Selected users get an email letting them know this account was created.</p>
         <div class="au-multi">
           <div class="au-pill-input" (click)="notifyDropdownOpen = true">
             <span class="au-pill" *ngFor="let e of selectedNotifyEmails">
@@ -491,6 +590,100 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- ---------- Step 6 · Review & notify ---------- -->
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 6">
+      <h1 class="au-pane-title">Review</h1>
+      <p class="au-pane-sub">Confirm everything looks right, then create the account.</p>
+
+      <!-- read-only profile summary -->
+      <div class="au-pr">
+        <!-- hero -->
+        <div class="au-pr-hero">
+          <span class="au-pr-avatar">
+            <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
+            <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
+          </span>
+          <span class="au-pr-id">
+            <span class="au-pr-name">
+              {{ firstName }} {{ lastName }}
+              <span class="au-pr-admin" *ngIf="isSupervisorAdmin && showSupervisorAdmin">ADMIN</span>
+            </span>
+            <span class="au-pr-handle">{{ '@' + username }} · {{ role?.label }}</span>
+          </span>
+          <button type="button" class="au-pr-edit" (click)="goToStep(1)"><span class="msr">edit</span> Edit</button>
+        </div>
+
+        <!-- personal details -->
+        <div class="au-pr-section">
+          <div class="au-pr-sec-head">
+            <span class="au-pr-sec-title">Personal details</span>
+            <button type="button" class="au-link" (click)="goToStep(1)">Edit</button>
+          </div>
+          <div class="au-pr-grid">
+            <div class="au-pr-item"><span class="au-pr-k">Email</span><span class="au-pr-v">{{ email }}</span></div>
+            <div class="au-pr-item"><span class="au-pr-k">Contact</span><span class="au-pr-v">{{ contactDisplay }}</span></div>
+            <div class="au-pr-item"><span class="au-pr-k">Gender</span><span class="au-pr-v">{{ genderLabel }}</span></div>
+          </div>
+        </div>
+
+        <!-- role & access -->
+        <div class="au-pr-section">
+          <div class="au-pr-sec-head">
+            <span class="au-pr-sec-title">Role &amp; access</span>
+            <button type="button" class="au-link" (click)="goToStep(2)">Edit</button>
+          </div>
+          <div class="au-pr-grid">
+            <div class="au-pr-item"><span class="au-pr-k">Role</span><span class="au-pr-v">{{ role?.label }}</span></div>
+            <div class="au-pr-item"><span class="au-pr-k">Permissions</span><span class="au-pr-v">{{ totalEnabledPermissions }} across {{ selectedGroupIds.size }} platforms</span></div>
+          </div>
+        </div>
+
+        <!-- brands -->
+        <div class="au-pr-section">
+          <div class="au-pr-sec-head">
+            <span class="au-pr-sec-title">Brands <span class="au-pr-sec-count">{{ selectedBrandIds.size }}</span></span>
+            <button type="button" class="au-link" (click)="goToStep(3)">Edit</button>
+          </div>
+          <div class="au-pr-chips">
+            <span class="au-pr-chip" *ngFor="let b of selectedBrands">
+              <span class="au-pill-dot" [style.background]="b.color"></span> {{ b.name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- team & notifications -->
+        <div class="au-pr-section">
+          <div class="au-pr-sec-head">
+            <span class="au-pr-sec-title">Team &amp; notifications</span>
+            <button type="button" class="au-link" (click)="goToStep(5)">Edit</button>
+          </div>
+          <div class="au-pr-grid">
+            <div class="au-pr-item"><span class="au-pr-k">Team</span><span class="au-pr-v">{{ selectedTeam?.name || 'Not assigned' }}</span></div>
+            <div class="au-pr-item" *ngIf="selectedTeam"><span class="au-pr-k">Team lead</span><span class="au-pr-v">{{ selectedTeam.lead }}</span></div>
+            <div class="au-pr-item"><span class="au-pr-k">Notifies</span><span class="au-pr-v">{{ selectedNotifyEmails.size }} {{ selectedNotifyEmails.size === 1 ? 'user' : 'users' }}</span></div>
+          </div>
+        </div>
+
+        <!-- signature -->
+        <div class="au-pr-section">
+          <div class="au-pr-sec-head">
+            <span class="au-pr-sec-title">Signature</span>
+            <button type="button" class="au-link" (click)="goToStep(4)">Edit</button>
+          </div>
+          <div class="au-pr-sig">{{ previewSignature || 'Not set' }}</div>
+        </div>
+      </div>
+
+      <!-- mandatory welcome email note -->
+      <!-- <div class="au-welcome-note">
+        <span class="au-welcome-note-ic"><span class="msr">mark_email_read</span></span>
+        <span class="au-welcome-note-text">
+          <strong>A welcome email will be sent to {{ email || 'this user' }}</strong>
+          with their login details and a getting-started guide.
+        </span>
+      </div> -->
     </section>
   </div>
 

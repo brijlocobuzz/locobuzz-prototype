@@ -32,7 +32,7 @@ export class AddUserWizardComponent {
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
-  readonly totalSteps = 4;
+  readonly totalSteps = 6;
 
   /** Celebration screen shown after Save. */
   celebrating = false;
@@ -41,10 +41,12 @@ export class AddUserWizardComponent {
   readonly confetti = this.makeConfetti();
 
   readonly steps: WizardStep[] = [
-    { num: 1, label: 'User profile',       subtitle: 'Identity & role',    icon: 'badge' },
-    { num: 2, label: 'Brands & team',      subtitle: 'Access & teams',     icon: 'group' },
-    { num: 3, label: 'Permissions',        subtitle: 'Platform access',    icon: 'shield' },
-    { num: 4, label: 'Signature & notify', subtitle: 'Finishing touches',  icon: 'draw' },
+    { num: 1, label: 'Profile',            subtitle: 'Personal details',   icon: 'person' },
+    { num: 2, label: 'Role & permissions', subtitle: 'Access & rights',    icon: 'shield' },
+    { num: 3, label: 'Brands',             subtitle: 'Brand access',       icon: 'storefront' },
+    { num: 4, label: 'Signature',          subtitle: 'Reply sign-off',     icon: 'draw' },
+    { num: 5, label: 'Team & notify',      subtitle: 'Placement & alerts', icon: 'group' },
+    { num: 6, label: 'Review',             subtitle: 'Final check',        icon: 'fact_check' },
   ];
 
   // ---- reference data ----------------------------------------------------
@@ -98,8 +100,6 @@ export class AddUserWizardComponent {
   perBrandSignatures = false;
   signature = '';
   brandSignatures: Record<string, string> = {};
-  /** Send the new user an onboarding/welcome email. */
-  sendWelcomeEmail = true;
   selectedNotifyEmails = new Set<string>();
   notifyDropdownOpen = false;
   notifySearch = '';
@@ -112,16 +112,19 @@ export class AddUserWizardComponent {
   isStepValid(step: number): boolean {
     switch (step) {
       case 1: {
+        // Profile — pure identity (role moved to step 2).
         const fn = this.firstName.trim().length;
         const ln = this.lastName.trim().length;
         const un = this.username.trim().length;
-        return fn >= 3 && fn <= 20 && ln >= 3 && ln <= 20 && !!this.role
+        return fn >= 3 && fn <= 20 && ln >= 3 && ln <= 20
           && un >= 3 && un <= 20 && this.emailRe.test(this.email.trim())
           && (!this.contactNumber || this.contactNumber.length >= 4);
       }
-      case 2: return this.selectedBrandIds.size > 0;
-      case 3: return this.checkedPermissions.size > 0;
-      case 4: return true;
+      case 2: return !!this.role && this.checkedPermissions.size > 0;   // role & permissions
+      case 3: return this.selectedBrandIds.size > 0;                    // brands
+      case 4: return true;                                             // signature (optional)
+      case 5: return true;                                             // team (optional)
+      case 6: return true;                                             // review & notify
       default: return false;
     }
   }
@@ -132,11 +135,13 @@ export class AddUserWizardComponent {
       if (!this.isStepValid(s)) return;
     }
     this.currentStep = num;
+    this.committedName = this.displayName;
   }
 
   nextStep() {
     if (!this.isStepValid(this.currentStep)) return;
     if (this.currentStep < this.totalSteps) this.currentStep++;
+    this.committedName = this.displayName;
   }
 
   prevStep() {
@@ -150,6 +155,26 @@ export class AddUserWizardComponent {
     const f = this.firstName.trim()[0] ?? '';
     const l = this.lastName.trim()[0] ?? '';
     return (f + l).toUpperCase() || 'U';
+  }
+
+  /** Display name typed so far (first + last). */
+  get displayName(): string {
+    return [this.firstName.trim(), this.lastName.trim()].filter(Boolean).join(' ');
+  }
+
+  /** Name committed into the heading — only refreshed on step navigation (Next/jump). */
+  committedName = '';
+
+  /** Dialog title — personalises once a name is committed by advancing a step. */
+  get headingName(): string {
+    return this.committedName ? `Adding User - ${this.committedName}` : 'Add User';
+  }
+
+  /** Dialog subtitle — mirrors the title. */
+  get headingSub(): string {
+    return this.committedName
+      ? `Set up ${this.committedName}'s account — role, brands and permissions.`
+      : 'Create a new user account, assign brands, and define platform permissions.';
   }
 
   onPhotoSelected(event: Event) {
@@ -396,7 +421,29 @@ export class AddUserWizardComponent {
   }
 
   initialsOf(name: string): string {
-    return name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+    return (first + last).toUpperCase() || name.slice(0, 2).toUpperCase();
+  }
+
+  /** Rotating avatar colours for the team member stack. */
+  readonly memberColors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+
+  // =======================================================================
+  //  Step 5 helpers (read-only review)
+  // =======================================================================
+  get genderLabel(): string {
+    return this.gender === '1' ? 'Female' : this.gender === '2' ? 'Other' : 'Male';
+  }
+
+  get contactDisplay(): string {
+    return this.contactNumber ? `${this.country.dial} ${this.contactNumber}` : '—';
+  }
+
+  /** Total enabled child permissions across every selected platform. */
+  get totalEnabledPermissions(): number {
+    return this.selectedGroups.reduce((n, g) => n + this.groupEnabled(g), 0);
   }
 
   // =======================================================================

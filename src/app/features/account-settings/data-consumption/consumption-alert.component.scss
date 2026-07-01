@@ -45,11 +45,13 @@
   overflow: hidden;
 }
 .ca-history-head {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: flex-start; gap: 8px;
   padding: 14px 16px; border-bottom: 1px solid var(--border-soft, #eef0f4);
 }
-.ca-history-head .msr { font-size: 20px; color: var(--brand, #6d4af3); }
-.ca-history-head h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: 600; color: var(--text-1, #1c1d22); }
+.ca-history-head .msr { font-size: 20px; color: var(--brand, #6d4af3); line-height: 1.2; }
+.ca-history-title { display: flex; flex-direction: column; gap: 2px; }
+.ca-history-title h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: 600; color: var(--text-1, #1c1d22); }
+.ca-history-title p { margin: 0; font-size: var(--font-size-12, 12px); color: var(--text-3, #9aa1ad); }
 .ca-timeline { list-style: none; margin: 0; padding: 14px 16px; max-height: 60vh; overflow-y: auto; }
 .ca-tl-item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
 /* connecting line */
@@ -176,16 +178,21 @@
 
 /* thresholds */
 .ca-fieldset { border: none; margin: 0; padding: 0; }
-.ca-thresholds { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Keep the hint tucked directly under the legend as a subtitle. */
+.ca-fieldset legend { margin-bottom: 0; }
+.ca-fieldset legend + .ca-hint { margin-top: 2px; }
+.ca-thresholds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ca-th-chip {
   height: 34px; padding: 0 14px;
   border: 1px solid var(--border, #e4e7ec); border-radius: 999px; background: #fff;
   font: inherit; font-size: var(--font-size-13, 13px); font-weight: 600; color: var(--text-2, #4b5563); cursor: pointer;
   transition: background .12s ease, border-color .12s ease, color .12s ease;
 }
-.ca-th-chip:hover { background: #f5f7fb; }
+.ca-th-chip:not(.on):hover:not(.disabled) { background: #f5f7fb; border-color: #d5d9e0; }
 .ca-th-chip.on { background: var(--brand, #6d4af3); border-color: var(--brand, #6d4af3); color: #fff; }
+.ca-th-chip.on:hover:not(.disabled) { background: var(--brand-600, #5b39d6); border-color: var(--brand-600, #5b39d6); }
 .ca-th-chip:focus-visible { outline: 2px solid var(--brand, #6d4af3); outline-offset: 2px; }
+.ca-th-chip.disabled { opacity: .45; cursor: not-allowed; }
 
 /* usage scale */
 .ca-scale {
