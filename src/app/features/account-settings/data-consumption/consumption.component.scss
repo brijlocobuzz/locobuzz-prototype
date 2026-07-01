@@ -86,6 +86,62 @@
 .dc-billing { font-size: var(--font-size-13, 13px); color: var(--text-3, #6b7280); }
 .dc-billing strong { color: var(--text-1, #1c1d22); font-weight: 600; }
 
+/* ---- Global at-risk banner ---- */
+.dc-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 16px 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #f6cfcf;
+  background: #fff5f5;
+}
+.dc-banner[data-tone="exceeded"] { border-color: #e7a9a4; background: #fdecec; }
+.dc-banner > .msr { flex: none; font-size: var(--font-size-20, 20px); color: #e04545; }
+.dc-banner[data-tone="exceeded"] > .msr { color: #b3261e; }
+.dc-banner-text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-13, 13px);
+  line-height: 1.45;
+  color: #8a4a4a;
+}
+.dc-banner-text strong { color: #b3261e; font-weight: 700; }
+.dc-banner-view {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid #e7b4b4;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 600;
+  color: #c0392f;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.dc-banner-view:hover { background: #fde3e3; border-color: #dd9a9a; }
+.dc-banner-view:focus-visible { outline: 2px solid #e04545; outline-offset: 1px; }
+.dc-banner-x {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #b07f7f;
+  cursor: pointer;
+}
+.dc-banner-x .msr { font-size: var(--font-size-18, 18px); }
+.dc-banner-x:hover { background: rgba(176, 53, 53, .1); color: #b53535; }
+.dc-banner-x:focus-visible { outline: 2px solid #e04545; outline-offset: 1px; }
+
 /* ---- Summary / filter strip ---- */
 .dc-summary {
   display: flex;
@@ -147,6 +203,7 @@
 }
 .dc-card:hover { box-shadow: 0 4px 14px rgba(20, 23, 40, .07); }
 .dc-card[data-status="critical"] { border-color: #f6cfcf; }
+.dc-card[data-status="exceeded"] { border-color: #e7a9a4; }
 
 .card-head {
   display: flex;
@@ -173,8 +230,142 @@
   white-space: nowrap;
 }
 .badge[data-status="critical"] { background: #fdecec; color: #d23b3b; }
+.badge[data-status="exceeded"] { background: #b3261e; color: #fff; }
 .badge[data-status="low"]      { background: #fff3e3; color: #d98318; }
 .badge[data-status="good"]     { background: #e8f6ed; color: #1f9d57; }
+
+/* ---- Card slider: rotates usage ⟷ error on at-risk cards ----
+   Fixed height so the card never jumps. It auto-cycles; hovering stops the
+   rotation and holds the error slide so it can be read. Pure CSS. */
+.card-slider {
+  position: relative;
+  height: 40px;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;                 /* only the visible slide is hoverable (set in keyframes) */
+  will-change: opacity, transform;
+  animation: cardCycle 9s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+/* Error shows first, then the usage view. */
+.slide-error { animation-delay: 0s; }
+.slide-usage { animation-delay: 4.5s; }
+
+/* Longer eased fades that overlap → a true crossfade, no dead gap.
+   pointer-events flips to auto only while the slide is on screen, so hover
+   targets whichever slide is actually visible. */
+@keyframes cardCycle {
+  0%    { opacity: 0; transform: translateY(9px);  pointer-events: none; }
+  8%    { opacity: 1; transform: translateY(0);    pointer-events: auto; }
+  42%   { opacity: 1; transform: translateY(0);    pointer-events: auto; }
+  50%   { opacity: 0; transform: translateY(-9px); pointer-events: none; }
+  100%  { opacity: 0; transform: translateY(-9px); pointer-events: none; }
+}
+
+/* Hover: freeze the current slide in place (no jump to the other slide). */
+.card-slider:hover .slide { animation-play-state: paused; }
+
+/* Styled tooltip with the full consequence — floats above the card on hover. */
+.card-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 9px);
+  z-index: 40;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #2a2230;
+  color: #fff;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 500;
+  line-height: 1.5;
+  box-shadow: 0 10px 28px rgba(20, 23, 40, .26);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  /* small delay + longer ease so it drifts in, never pops */
+  transition: opacity .24s ease .18s, transform .24s ease .18s, visibility 0s .18s;
+  pointer-events: none;
+}
+.card-tip .msr { flex: none; margin-top: 1px; font-size: var(--font-size-15, 15px); color: #ff9a8f; }
+.card-tip::after {              /* arrow pointing down to the card */
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 6px solid transparent;
+  border-top-color: #2a2230;
+}
+/* Show only when the error slide (not the bar slide) is visible + hovered. */
+.slide-error:hover ~ .card-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Respect reduced-motion: no rotation, show the error (higher priority). */
+@media (prefers-reduced-motion: reduce) {
+  .slide { animation: none; }
+  .slide-usage { opacity: 0; pointer-events: none; }
+  .slide-error { opacity: 1; transform: none; pointer-events: auto; }
+}
+
+/* ---- Error alert (shown on the error slide) — single compact row ---- */
+.card-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: #fff5f5;
+  border: 1px solid #f6d5d5;
+  color: #b53535;
+}
+.card-alert > .msr { font-size: var(--font-size-16, 16px); flex: none; color: #e04545; }
+.card-alert-head {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 700;
+  color: #b3261e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Show Details" link — relocated out of the footer */
+.link-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  margin: 2px -4px 0;
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 600;
+  color: var(--brand, #6d4af3);
+  cursor: pointer;
+}
+.link-details .msr { font-size: var(--font-size-15, 15px); }
+.link-details:hover { background: #f1f0fd; }
+.link-details:focus-visible { outline: 2px solid var(--brand, #6d4af3); outline-offset: 1px; }
+
+/* Exceeded = stronger emphasis than critical */
+.card-alert[data-status="exceeded"] { background: #fdecec; border-color: #e7a9a4; }
+.card-alert[data-status="exceeded"] > .msr { color: #b3261e; }
+.card-alert[data-status="exceeded"] .card-alert-head { color: #9f1f17; }
 
 .card-value {
   display: flex;
@@ -224,7 +415,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: auto;                 /* pin footer to bottom so buttons line up across cards */
   padding-top: 10px;
   border-top: 1px solid var(--border-soft, #eef0f4);
 }
@@ -250,6 +441,7 @@
 .card-actions .show { color: var(--text-2, #4b5563); }
 .card-actions .quota { color: var(--brand, #6d4af3); margin-left: auto; }
 .card-actions .quota[data-status="critical"] { color: #d23b3b; }
+.card-actions .quota[data-status="exceeded"] { color: #b3261e; }
 
 /* ---- Empty / not-started state ---- */
 .dc-card.is-empty .card-value .big { color: var(--text-3, #9aa1ad); }

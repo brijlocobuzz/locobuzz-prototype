@@ -27,6 +27,21 @@
     <span class="dc-billing">Billing cycle <strong>01 Jun 2026 - 30 Jun 2026</strong></span>
   </header>
 
+  <!-- Global at-risk banner: some services are at / over their limit -->
+  <div class="dc-banner" *ngIf="atRiskCards.length && !bannerDismissed"
+       [attr.data-tone]="hasExceeded ? 'exceeded' : 'critical'" role="alert">
+    <span class="msr">{{ hasExceeded ? 'error' : 'warning' }}</span>
+    <p class="dc-banner-text">
+      <strong>{{ atRiskCards.length }} service{{ atRiskCards.length > 1 ? 's' : '' }} need attention.</strong>
+      {{ atRiskNames }} {{ atRiskCards.length > 1 ? 'are' : 'is' }} at or over the limit —
+      the affected {{ atRiskCards.length > 1 ? 'services will' : 'service will' }} stop working until you increase the limit.
+    </p>
+    <button type="button" class="dc-banner-view" (click)="setFilter('critical')">Review services</button>
+    <button type="button" class="dc-banner-x" (click)="bannerDismissed = true" aria-label="Dismiss">
+      <span class="msr">close</span>
+    </button>
+  </div>
+
   <!-- Summary / filter strip -->
   <div class="dc-summary">
     <span class="dc-summary-label">{{ filteredCards.length }} of {{ cards.length }} services</span>
@@ -65,7 +80,7 @@
              [attr.data-status]="c.status" [class.is-empty]="c.isEmpty">
       <div class="card-head">
         <span class="card-title">{{ c.title }}</span>
-        <span class="badge" *ngIf="c.status === 'critical'" [attr.data-status]="c.status"
+        <span class="badge" *ngIf="isAtRisk(c)" [attr.data-status]="c.status"
               [attr.aria-label]="c.statusLabel + ' status'">{{ c.statusLabel }}</span>
       </div>
 
@@ -74,22 +89,66 @@
         <span class="total">/ {{ compact(c.total) }}</span>
       </div>
 
-      <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
-        <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
-      </div>
+      <!-- Healthy cards show the bar + remaining; at-risk cards swap it for an
+           inline alert in the SAME space so the card never grows. -->
+      <ng-container *ngIf="!isAtRisk(c); else riskAlert">
+        <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
+          <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
+        </div>
 
-      <div class="card-meta">
-        <span class="rem" [attr.data-status]="c.status"
-              [title]="exact(c.remaining) + ' remaining'">
-          <ng-container *ngIf="!c.isEmpty; else notStarted">{{ compact(c.remaining) }} Remaining</ng-container>
-          <ng-template #notStarted>Not started · {{ compact(c.total) }} available</ng-template>
-        </span>
-      </div>
+        <div class="card-meta">
+          <span class="rem" [attr.data-status]="c.status"
+                [title]="exact(c.remaining) + ' remaining'">
+            <ng-container *ngIf="!c.isEmpty; else notStarted">{{ compact(c.remaining) }} Remaining</ng-container>
+            <ng-template #notStarted>Not started · {{ compact(c.total) }} available</ng-template>
+          </span>
+          <button type="button" class="link-details" *ngIf="c.hasDetails" (click)="showDetails(c)">
+            Show Details <span class="msr">chevron_right</span>
+          </button>
+        </div>
+      </ng-container>
 
-      <div class="card-actions" [class.single]="!c.hasDetails">
-        <button type="button" class="show" *ngIf="c.hasDetails" (click)="showDetails(c)">Show Details <span class="msr">chevron_right</span></button>
+      <ng-template #riskAlert>
+        <!-- Auto-slider: fixed height, rotates between the usage view and the
+             error. Hovering pauses and snaps to the error so it can be read.
+             Pure CSS — no per-card timers. -->
+        <div class="card-slider">
+          <!-- Slide 1: usage bar + remaining -->
+          <div class="slide slide-usage">
+            <div class="bar" [attr.aria-label]="(c.usedPct | number:'1.0-0') + '% used'">
+              <div class="bar-fill" [attr.data-status]="c.status" [style.width]="barWidth(c)"></div>
+            </div>
+            <div class="card-meta">
+              <span class="rem" [attr.data-status]="c.status" [title]="exact(c.remaining) + ' remaining'">
+                {{ c.status === 'exceeded' ? compact(c.used - c.total) + ' over limit' : compact(c.remaining) + ' Remaining' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Slide 2: error message -->
+          <div class="slide slide-error">
+            <div class="card-alert" [attr.data-status]="c.status" role="alert">
+              <span class="msr">{{ c.status === 'exceeded' ? 'error' : 'warning' }}</span>
+              <span class="card-alert-head">{{ c.impact }}</span>
+            </div>
+          </div>
+
+          <!-- Full consequence tooltip — only shown when the error slide is
+               the one visible + hovered (sibling of .slide-error). -->
+          <div class="card-tip" role="tooltip">
+            <span class="msr">info</span>
+            <span>{{ c.impactDetail }}</span>
+          </div>
+        </div>
+
+        <button type="button" class="link-details" *ngIf="c.hasDetails" (click)="showDetails(c)">
+          Show Details <span class="msr">chevron_right</span>
+        </button>
+      </ng-template>
+
+      <div class="card-actions single">
         <button type="button" class="quota" [attr.data-status]="c.status" (click)="openQuota(c)">
-          Increase Limit <span class="msr">open_in_new</span>
+          Request More Limit <span class="msr">open_in_new</span>
         </button>
       </div>
     </article>

@@ -7,7 +7,7 @@
     <!-- Form state -->
     <ng-container *ngIf="!sent; else sentTpl">
       <header class="rq-head">
-        <div class="rq-head-text"><h2 id="rq-title">Increase Limit</h2></div>
+        <div class="rq-head-text"><h2 id="rq-title">Request More Limit</h2></div>
         <button class="rq-close" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
@@ -15,7 +15,7 @@
         <p class="rq-lead">
           You've used <strong>{{ fmt(usedAmount) }}</strong> of your <strong>{{ fmt(currentLimit) }}</strong>
           limit for <strong>{{ serviceName }}</strong>. Enter how much more you need and a short reason —
-          your admin team will review and approve before the new limit takes effect.
+          we'll review your request and get back to you shortly.
         </p>
 
         <div class="rq-compare">
@@ -39,7 +39,6 @@
             <input #addInput id="rq-add" type="number" min="0" step="1000"
                    [(ngModel)]="additional" (ngModelChange)="clampAdditional()"
                    (keydown.enter)="send()" placeholder="0" />
-            <span class="rq-unit">units</span>
           </div>
         </div>
 
@@ -63,7 +62,7 @@
         <button class="rq-btn ghost" (click)="close()" [disabled]="sending">Cancel</button>
         <button class="rq-btn primary" [class.is-sending]="sending"
                 [disabled]="!canSend || sending" (click)="send()">
-          <ng-container *ngIf="!sending"><span class="msr">send</span>Send Request</ng-container>
+          <ng-container *ngIf="!sending"><span class="msr">send</span>Raise Request</ng-container>
           <ng-container *ngIf="sending"><span class="rq-spinner"></span>Sending…</ng-container>
         </button>
       </footer>

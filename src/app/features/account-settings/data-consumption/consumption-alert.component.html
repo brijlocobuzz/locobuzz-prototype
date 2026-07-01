@@ -56,9 +56,11 @@
         <!-- Thresholds -->
         <fieldset class="ca-field ca-fieldset">
           <legend>Alert me at these usage levels <span class="req">*</span></legend>
+          <span class="ca-hint">Choose up to {{ maxThresholds }} usage levels — {{ threshold.thresholds.length }} of {{ maxThresholds }} selected.</span>
           <div class="ca-thresholds">
             <button type="button" class="ca-th-chip" *ngFor="let p of presetThresholds"
                     [class.on]="isThresholdSelected(p)" [attr.aria-pressed]="isThresholdSelected(p)"
+                    [class.disabled]="isThresholdDisabled(p)" [disabled]="isThresholdDisabled(p)"
                     (click)="toggleThreshold(p)">
               {{ p }}%
             </button>
@@ -148,10 +150,13 @@
     <aside class="ca-history" aria-label="Change history">
       <header class="ca-history-head">
         <span class="msr">history</span>
-        <h2>Change history</h2>
+        <div class="ca-history-title">
+          <h2>Change history</h2>
+          <p>Showing the last {{ historyLimit }} changes to these alert settings.</p>
+        </div>
       </header>
       <ol class="ca-timeline">
-        <li class="ca-tl-item" *ngFor="let h of history">
+        <li class="ca-tl-item" *ngFor="let h of recentHistory">
           <span class="ca-tl-dot"><span class="msr">{{ h.icon }}</span></span>
           <div class="ca-tl-body">
             <p class="ca-tl-text">{{ h.text }}</p>

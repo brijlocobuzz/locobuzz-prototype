@@ -39,6 +39,12 @@ export class ConsumptionAlertComponent {
   readonly senderEmail = 'alerts@locobuzz.com';
   readonly presetThresholds = [10, 20, 25, 30, 50, 75, 80, 90, 95];
 
+  /** Most usage levels a user can watch at once. */
+  readonly maxThresholds = 5;
+
+  /** How many recent history entries the timeline shows. */
+  readonly historyLimit = 10;
+
   /** The signed-in user — recorded as the actor on every history entry. */
   readonly currentUser = 'amit.nayak@locobuzz.com';
 
@@ -57,7 +63,7 @@ export class ConsumptionAlertComponent {
     recipients: ['amit.nayak@locobuzz.com'],
     draftEmail: '',
     emailError: '',
-    thresholds: [10, 20, 25, 30, 90, 95],
+    thresholds: [10, 25, 50, 90, 95],
   };
 
   digest: AlertSection & { time1: string; time2Enabled: boolean; time2: string } = {
@@ -97,6 +103,9 @@ export class ConsumptionAlertComponent {
   get dirty(): boolean { return this.snapshot() !== this.savedSnapshot; }
 
   /* ---- history ---- */
+  /** The most recent entries shown in the timeline (newest first, capped). */
+  get recentHistory(): HistoryEntry[] { return this.history.slice(0, this.historyLimit); }
+
   /** A Date `minutes` in the past — used to seed the audit trail. */
   private ago(minutes: number): Date { return new Date(Date.now() - minutes * 60_000); }
 
@@ -165,10 +174,19 @@ export class ConsumptionAlertComponent {
   /* ---- thresholds ---- */
   toggleThreshold(v: number) {
     const i = this.threshold.thresholds.indexOf(v);
-    if (i >= 0) this.threshold.thresholds.splice(i, 1);
-    else { this.threshold.thresholds.push(v); this.threshold.thresholds.sort((a, b) => a - b); }
+    if (i >= 0) { this.threshold.thresholds.splice(i, 1); return; }
+    // Cap at maxThresholds — ignore clicks on new levels once the limit is hit.
+    if (this.threshold.thresholds.length >= this.maxThresholds) return;
+    this.threshold.thresholds.push(v);
+    this.threshold.thresholds.sort((a, b) => a - b);
   }
   isThresholdSelected(v: number): boolean { return this.threshold.thresholds.includes(v); }
+
+  /** True once the maximum number of usage levels is selected. */
+  get thresholdsFull(): boolean { return this.threshold.thresholds.length >= this.maxThresholds; }
+
+  /** A preset chip is disabled when the cap is reached and it isn't already on. */
+  isThresholdDisabled(v: number): boolean { return this.thresholdsFull && !this.isThresholdSelected(v); }
 
   /* ---- email chips ---- */
   addEmail(cfg: AlertSection) {

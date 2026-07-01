@@ -24,13 +24,14 @@ export class HistoricConsumptionComponent {
   get remainingPct(): number { return 100 - this.usedPct; }
   get healthy(): boolean { return this.remainingPct >= 30; }
 
-  /* ---- Brand composition ---- */
+  /* ---- Brand composition ----
+     Recognisable consumer brands so the shares read like a real account. */
   private readonly brandSrc = [
-    { name: 'Colors TV - Krishna Mohini', color: '#d99a16', pct: 22.7 },
-    { name: 'Cards UAT',                  color: '#2bb3e0', pct: 21.8 },
-    { name: 'Jetstar Japan',              color: '#3bbf4d', pct: 13.7 },
-    { name: 'AJIO',                       color: '#6c3fd1', pct: 11.0 },
-    { name: '1 97 QA TEst brand',         color: '#e0392b', pct: 6.6 },
+    { name: 'Colors TV',     color: '#d99a16', pct: 22.7 },
+    { name: 'HDFC Bank',     color: '#2bb3e0', pct: 21.8 },
+    { name: 'Jetstar Japan', color: '#3bbf4d', pct: 13.7 },
+    { name: 'AJIO',          color: '#6c3fd1', pct: 11.0 },
+    { name: 'Nykaa',         color: '#e0392b', pct: 6.6 },
   ];
   brands: BrandSeg[] = [];
 
