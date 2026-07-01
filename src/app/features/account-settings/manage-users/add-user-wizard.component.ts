@@ -167,7 +167,7 @@ export class AddUserWizardComponent {
 
   /** Dialog title — personalises once a name is committed by advancing a step. */
   get headingName(): string {
-    return this.committedName ? `Adding ${this.committedName}` : 'Add User';
+    return this.committedName ? `Adding User - ${this.committedName}` : 'Add User';
   }
 
   /** Dialog subtitle — mirrors the title. */

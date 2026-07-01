@@ -107,16 +107,16 @@ export class AddBrandWizardComponent {
 
   private seq = 100;
 
-  /** Dialog title — becomes "Adding <Brand>" once a name is typed. */
+  /** Dialog title — names the brand only after step 1 is completed (past step 1). */
   get headingName(): string {
     const name = this.brandName.trim();
-    return name ? `Adding ${name}` : 'Add Brand';
+    return this.currentStep > 1 && name ? `Adding brand - ${name}` : 'Add Brand';
   }
 
-  /** Dialog subtitle — names the brand once it's typed. */
+  /** Dialog subtitle — names the brand once step 1 is done. */
   get headingSub(): string {
     const name = this.brandName.trim();
-    return name
+    return this.currentStep > 1 && name
       ? `Setting up ${name} for monitoring and analytics.`
       : 'Set up a new brand for monitoring and analytics.';
   }

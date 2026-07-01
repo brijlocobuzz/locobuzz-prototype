@@ -290,12 +290,12 @@
     </section>
 
     <!-- ---------- Step 3 · Brands ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 3">
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 3">
       <h1 class="au-pane-title">Brands</h1>
       <p class="au-pane-sub">Assign the brands this user can access. Only these brands will be visible to them.</p>
 
       <!-- assign brands -->
-      <div class="au-field">
+      <div class="au-field" [class.au-field-fill]="!selectedBrands.length">
         <label class="au-label">Assign Brands <i>*</i></label>
         <p class="au-hint top">Only brands assigned here will be visible to the user.</p>
 
@@ -339,6 +339,13 @@
             </button>
             <p class="au-option-empty" *ngIf="!filteredBrands.length">No brands found</p>
           </div>
+        </div>
+
+        <!-- empty state when nothing selected -->
+        <div class="au-empty-state soft fill" *ngIf="!selectedBrands.length">
+          <span class="msr">storefront</span>
+          <p class="au-empty-title">No brands selected</p>
+          <p class="au-empty-sub">Search and pick brands above to give this user access.</p>
         </div>
 
         <!-- assigned brands — informative list -->
@@ -458,11 +465,11 @@
     </section>
 
     <!-- ---------- Step 5 · Team ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 5">
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 5">
       <h1 class="au-pane-title">Team &amp; notifications</h1>
       <p class="au-pane-sub">Place this user on a response team and choose who gets notified about the new account.</p>
 
-      <div class="au-field">
+      <div class="au-field" [class.au-field-fill]="!selectedTeam">
         <label class="au-label">Select Team</label>
         <div class="au-select-wrap">
           <button type="button" class="au-select" [class.is-open]="teamOpen" (click)="teamOpen = !teamOpen">
@@ -482,6 +489,13 @@
           </div>
         </div>
 
+        <!-- empty state when no team chosen -->
+        <div class="au-empty-state soft fill" *ngIf="!selectedTeam">
+          <span class="msr">groups</span>
+          <p class="au-empty-title">Not added to any team</p>
+          <p class="au-empty-sub">Pick a team above, or continue — you can assign one later.</p>
+        </div>
+
         <!-- selected team — detailed panel -->
         <div class="au-team-detail" *ngIf="selectedTeam">
           <div class="au-team-detail-head">
@@ -498,23 +512,31 @@
           <div class="au-team-stats-grid">
             <div class="au-team-stat-tile">
               <span class="au-team-stat-ic"><span class="msr">shield_person</span></span>
-              <span class="au-team-stat-k">Team Lead</span>
-              <span class="au-team-stat-v">{{ selectedTeam.lead }}</span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Team Lead</span>
+                <span class="au-team-stat-v">{{ selectedTeam.lead }}</span>
+              </span>
             </div>
             <div class="au-team-stat-tile">
               <span class="au-team-stat-ic"><span class="msr">group</span></span>
-              <span class="au-team-stat-k">Members</span>
-              <span class="au-team-stat-v">{{ selectedTeam.members }}</span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Members</span>
+                <span class="au-team-stat-v">{{ selectedTeam.members }}</span>
+              </span>
             </div>
             <div class="au-team-stat-tile">
               <span class="au-team-stat-ic"><span class="msr">storefront</span></span>
-              <span class="au-team-stat-k">Brands covered</span>
-              <span class="au-team-stat-v">{{ selectedTeam.brands }}</span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Brands covered</span>
+                <span class="au-team-stat-v">{{ selectedTeam.brands }}</span>
+              </span>
             </div>
             <div class="au-team-stat-tile">
               <span class="au-team-stat-ic"><span class="msr">schedule</span></span>
-              <span class="au-team-stat-k">Coverage</span>
-              <span class="au-team-stat-v">{{ selectedTeam.shift }}</span>
+              <span class="au-team-stat-body">
+                <span class="au-team-stat-k">Coverage</span>
+                <span class="au-team-stat-v">{{ selectedTeam.shift }}</span>
+              </span>
             </div>
           </div>
 
@@ -571,7 +593,7 @@
     </section>
 
     <!-- ---------- Step 6 · Review & notify ---------- -->
-    <section class="au-step-pane" *ngIf="currentStep === 6">
+    <section class="au-step-pane au-pane-fill" *ngIf="currentStep === 6">
       <h1 class="au-pane-title">Review</h1>
       <p class="au-pane-sub">Confirm everything looks right, then create the account.</p>
 
@@ -616,9 +638,6 @@
             <div class="au-pr-item"><span class="au-pr-k">Role</span><span class="au-pr-v">{{ role?.label }}</span></div>
             <div class="au-pr-item"><span class="au-pr-k">Permissions</span><span class="au-pr-v">{{ totalEnabledPermissions }} across {{ selectedGroupIds.size }} platforms</span></div>
           </div>
-          <div class="au-pr-chips">
-            <span class="au-pr-chip" *ngFor="let g of selectedGroups">{{ g.name }}</span>
-          </div>
         </div>
 
         <!-- brands -->
@@ -658,13 +677,13 @@
       </div>
 
       <!-- mandatory welcome email note -->
-      <div class="au-welcome-note">
+      <!-- <div class="au-welcome-note">
         <span class="au-welcome-note-ic"><span class="msr">mark_email_read</span></span>
         <span class="au-welcome-note-text">
           <strong>A welcome email will be sent to {{ email || 'this user' }}</strong>
           with their login details and a getting-started guide.
         </span>
-      </div>
+      </div> -->
     </section>
   </div>
 
