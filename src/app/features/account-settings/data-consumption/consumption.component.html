@@ -34,7 +34,7 @@
     <p class="dc-banner-text">
       <strong>{{ atRiskCards.length }} service{{ atRiskCards.length > 1 ? 's' : '' }} need attention.</strong>
       {{ atRiskNames }} {{ atRiskCards.length > 1 ? 'are' : 'is' }} at or over the limit —
-      the affected {{ atRiskCards.length > 1 ? 'services will' : 'service will' }} stop working until you increase the limit.
+      the affected {{ atRiskCards.length > 1 ? 'services will' : 'service will' }} stop working until increase the limit.
     </p>
     <button type="button" class="dc-banner-view" (click)="setFilter('critical')">Review services</button>
     <button type="button" class="dc-banner-x" (click)="bannerDismissed = true" aria-label="Dismiss">
