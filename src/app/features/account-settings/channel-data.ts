@@ -182,41 +182,64 @@ export interface CatalogGroup {
 
 export const CHANNEL_CATALOG: CatalogGroup[] = [
   {
-    label: 'Social Media Channels',
+    label: 'Social Media',
     channels: [
       { id: 'twitter',   label: 'X (Twitter)',      icon: 'close',          color: '#000000', flow: 'choice' },
       { id: 'facebook',  label: 'Facebook',         icon: 'thumb_up',       color: '#1877f2', flow: 'choice', pages: true },
       { id: 'instagram', label: 'Instagram',        icon: 'photo_camera',   color: '#e1306c', flow: 'choice', pages: true },
-      { id: 'youtube',   label: 'Youtube',          icon: 'smart_display',  color: '#ff0000', flow: 'oauth'  },
+      { id: 'youtube',   label: 'Youtube',          icon: 'smart_display',  color: '#ff0000', flow: 'choice' },
       { id: 'linkedin',  label: 'LinkedIn',         icon: 'work',           color: '#0a66c2', flow: 'choice', pages: true },
-      { id: 'tiktok',    label: 'TikTok',           icon: 'music_note',     color: '#010101', flow: 'oauth'  },
-      { id: 'telegram',  label: 'Telegram',         icon: 'send',           color: '#229ed9', flow: 'oauth'  },
-      { id: 'whatsapp',  label: 'WhatsApp',         icon: 'chat',           color: '#25d366', flow: 'oauth'  },
+      { id: 'tiktok',    label: 'TikTok',           icon: 'music_note',     color: '#010101', flow: 'choice' },
       { id: 'fbgroups',  label: 'FB Groups',        icon: 'groups',         color: '#1877f2', flow: 'choice' },
-      { id: 'playstore', label: 'Google Play Store',icon: 'shop',           color: '#00c4b3', flow: 'handle' },
-      { id: 'appstore',  label: 'App Store',        icon: 'shopping_bag',   color: '#0d96f6', flow: 'handle' },
-      { id: 'gmb',       label: 'Google My Business',icon: 'storefront',    color: '#4285f4', flow: 'choice', pages: true },
+      { id: 'reddit',    label: 'Reddit (SubReddit)',icon: 'forum',         color: '#ff4500', flow: 'handle', tag: 'Premium' },
     ],
   },
   {
-    label: 'Premium Channels',
+    label: 'Messaging',
     channels: [
-      { id: 'glassdoor', label: 'Glassdoor',  icon: 'reviews',  color: '#0caa41', flow: 'handle', tag: 'Premium' },
-      { id: 'sitejabber',label: 'Sitejabber', icon: 'verified', color: '#f6a623', flow: 'handle', tag: 'Premium' },
-      { id: 'reddit',    label: 'Reddit',     icon: 'forum',    color: '#ff4500', flow: 'handle', tag: 'Premium' },
+      { id: 'whatsapp',  label: 'WhatsApp',         icon: 'chat',           color: '#25d366', flow: 'oauth'  },
+      { id: 'telegram',  label: 'Telegram',         icon: 'send',           color: '#229ed9', flow: 'oauth'  },
+      { id: 'line',      label: 'LINE',             icon: 'chat_bubble',    color: '#00c300', flow: 'oauth'  },
     ],
   },
   {
-    label: 'Other Channels',
+    label: 'Email',
     channels: [
-      { id: 'email',      label: 'Email',            icon: 'mail',          color: '#ea4335', flow: 'oauth'  },
-      { id: 'galerts',    label: 'Google Alerts',    icon: 'notifications', color: '#4285f4', flow: 'handle' },
-      { id: 'tripadvisor',label: 'TripAdvisor',      icon: 'travel_explore',color: '#00af87', flow: 'handle' },
-      { id: 'booking',    label: 'Booking',          icon: 'hotel',         color: '#003580', flow: 'handle' },
-      { id: 'expedia',    label: 'Expedia',          icon: 'flight',        color: '#fbc02d', flow: 'handle' },
-      { id: 'ganalytics', label: 'Google Analytics', icon: 'analytics',     color: '#e37400', flow: 'oauth'  },
-      { id: 'ecommerce',  label: 'E-Commerce',       icon: 'shopping_cart', color: '#7c4dff', flow: 'url'    },
-      { id: 'voice',      label: 'Voice',            icon: 'call',          color: '#34a853', flow: 'oauth'  },
+      { id: 'email',     label: 'Email',            icon: 'mail',           color: '#ea4335', flow: 'oauth'  },
+    ],
+  },
+  {
+    label: 'Review Platforms',
+    channels: [
+      { id: 'gmb',        label: 'Google My Business',icon: 'storefront',    color: '#4285f4', flow: 'choice', pages: true },
+      { id: 'playstore',  label: 'Google Play Store', icon: 'shop',          color: '#00c4b3', flow: 'handle' },
+      { id: 'appstore',   label: 'App Store',         icon: 'shopping_bag',  color: '#0d96f6', flow: 'handle' },
+      { id: 'glassdoor',  label: 'Glassdoor',         icon: 'reviews',       color: '#0caa41', flow: 'handle', tag: 'Premium' },
+      { id: 'sitejabber', label: 'Sitejabber',        icon: 'verified',      color: '#f6a623', flow: 'handle' },
+      { id: 'tripadvisor',label: 'TripAdvisor',       icon: 'travel_explore',color: '#00af87', flow: 'handle', tag: 'Premium' },
+      { id: 'booking',    label: 'Booking',           icon: 'hotel',         color: '#003580', flow: 'handle', tag: 'Premium' },
+      { id: 'expedia',    label: 'Expedia',           icon: 'flight',        color: '#fbc02d', flow: 'handle', tag: 'Premium' },
+    ],
+  },
+  {
+    label: 'E-Commerce',
+    channels: [
+      { id: 'amazon',    label: 'Amazon',           icon: 'shopping_cart',  color: '#ff9900', flow: 'url', tag: 'Premium' },
+      { id: 'flipkart',  label: 'Flipkart',         icon: 'shopping_bag',   color: '#2874f0', flow: 'url', tag: 'Premium' },
+      { id: 'bestbuy',   label: 'BestBuy',          icon: 'store',          color: '#0046be', flow: 'url', tag: 'Premium' },
+    ],
+  },
+  {
+    label: 'Web / News',
+    channels: [
+      { id: 'galerts',   label: 'Google Alerts',    icon: 'notifications',  color: '#4285f4', flow: 'handle' },
+    ],
+  },
+  {
+    label: 'Analytics & Messaging API',
+    channels: [
+      { id: 'ganalytics',label: 'Google Analytics', icon: 'analytics',      color: '#e37400', flow: 'oauth'  },
+      { id: 'voice',     label: 'Voice',            icon: 'call',           color: '#34a853', flow: 'oauth'  },
     ],
   },
 ];
@@ -251,4 +274,805 @@ export function mentionTypeIcon(type: string): string {
     case 'Recommendations': return 'thumb_up';
     default: return 'label';
   }
+}
+
+/* ===================================================================
+   Per-channel × per-mode content spec  (source: "Channel Config —
+   What to Show per Channel (Owned vs Public)" workbook → master tab).
+   Drives every wizard screen with channel-accurate copy.
+   =================================================================== */
+
+/** Copy that is identical on every channel (global, rewrite-once). */
+export const WIZARD_COPY = {
+  header: 'Add a channel',
+  sub: 'Connect a platform to listen to what people are saying, analyse it, and respond — all from one place. You can add more channels anytime.',
+  search: 'Search channels — try Instagram, Google reviews, WhatsApp…',
+  connectionSub:
+    "Owned connects your own account so you can reply and see private metrics. Public tracks a source you don't own — listen only, no replies. You can add the other mode later.",
+};
+
+export type ModeKey = 'owned' | 'public';
+export type ChannelTier = 'Regular' | 'Premium';
+/** ok = ships as-is · validate = unconfirmed source · planned = not live yet. */
+export type ChannelFlag = 'ok' | 'validate' | 'planned';
+
+export interface ModeReview {
+  account: string;      // ACCOUNT / SOURCE value
+  permissions: string;  // PERMISSIONS value
+  sync: string;         // MENTIONS SYNC value
+  history: string;      // HISTORY ON CONNECT value
+}
+
+export interface PublicField {
+  label: string;
+  placeholder: string;
+  guide: string;        // single-paragraph "where to find it"
+}
+
+export interface ChannelMode {
+  key: ModeKey;
+  cardHeading: string;  // e.g. "Connect your X account" / "Track public X conversation"
+  get: string[];        // What you GET
+  dontGet: string[];    // What you DON'T get
+  pickIf: string;       // "Pick this if…"
+  dataTypes: string;    // Data / mention types collected
+  sync: string;         // Mentions sync (real-time vs frequency)
+  history: string;      // History on connect (backfill)
+  review: ModeReview;
+  celebration: string;  // celebration sub-text
+
+  // --- owned / authenticate path ---
+  pages?: boolean;          // owned path includes a "select accounts" step
+  pagesNoun?: string;       // "pages" | "locations" | "Organisation Pages"
+  accessHeading?: string;   // "What we'll access on your X account:"
+  access?: string[];        // bullet list of access lines
+  accessNote?: string;      // trailing connect-method note (JSON key, IMAP…)
+  authButton?: string;      // big auth button label (defaults to "Login with {label}")
+
+  // --- public path ---
+  field?: PublicField;
+}
+
+export interface ChannelSpec {
+  id: string;
+  label: string;
+  tier: ChannelTier;
+  tileSub: string;              // step-1 tile sub-label
+  flag?: ChannelFlag;
+  flagText?: string;            // banner text when flag = validate / planned
+  connectionQuestion: string;   // "How do you want to add X (Twitter)?"
+  modes: ChannelMode[];         // 1 (single-mode) or 2 (choice)
+}
+
+export const CHANNEL_SPECS: Record<string, ChannelSpec> = {
+  twitter: {
+    id: 'twitter', label: 'X (Twitter)', tier: 'Regular', tileSub: 'Popular · OAuth · ~30s',
+    connectionQuestion: 'How do you want to add X (Twitter)?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your X account',
+        get: ['Reply to mentions & comments', 'Read & send DMs', 'Private impressions & engagement', 'Publish & schedule posts'],
+        dontGet: ['Requires login + token upkeep (re-authorise when the token expires)'],
+        pickIf: "Pick this if X is your brand's handle and you want to engage, not just monitor.",
+        dataTypes: 'Brand tweets, replies, @mentions, DMs, retweets, quote tweets, media, promoted tweets',
+        sync: 'Near real-time (Enterprise streaming) + batch backup',
+        history: '10 days tweets + 10 days mentions + 7 days DMs on connect, then continuous (up to ~1 yr backfill on request)',
+        accessHeading: "What we'll access on your X account:",
+        access: ['Read your tweets, replies, @mentions and DMs', 'Read post analytics (impressions, engagement)', 'Post & reply only when you click send'],
+        review: { account: '@your_handle', permissions: 'Read · Reply · DMs · Publish', sync: 'Near real-time', history: '10d tweets/mentions, 7d DMs' },
+        celebration: 'X (Twitter) is connected and listening for mentions — you can now reply from your inbox.',
+      },
+      {
+        key: 'public', cardHeading: 'Track public X conversation',
+        get: ['Listen to public tweets & brand mentions', 'Track competitors, keywords & hashtags', 'Sentiment & share-of-voice', 'No login required'],
+        dontGet: ['No replies or DMs', 'No private impressions/reach', 'Authors come in anonymous'],
+        pickIf: "Pick this if you only want to monitor what's said about a brand, topic or competitor.",
+        dataTypes: 'Public tweets, replies, @mentions, retweets, quote tweets, media',
+        sync: 'Near real-time streaming (Enterprise) + 10-day batch backup',
+        history: '10 days on connect (up to ~1 yr via Enterprise backfill on request)',
+        field: { label: 'Public X handle or keyword', placeholder: '@brand or "brand name"', guide: 'Open the profile on X and copy the @username' },
+        review: { account: '@handle / keyword', permissions: 'Read only (public)', sync: 'Near real-time', history: '10 days' },
+        celebration: 'X (Twitter) is connected and listening for public mentions.',
+      },
+    ],
+  },
+
+  facebook: {
+    id: 'facebook', label: 'Facebook', tier: 'Regular', tileSub: 'Popular · OAuth · ~30s',
+    connectionQuestion: 'How do you want to add Facebook?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Facebook Page', pages: true, pagesNoun: 'pages',
+        get: ['Reply to comments & reviews', 'Read & send Messenger DMs', 'Private reach & impressions', 'Reels, tagged posts & ads', 'Publish & schedule'],
+        dontGet: ['Requires login + token upkeep'],
+        pickIf: 'Pick this if you manage the Facebook Page and want to engage and see paid/organic stats.',
+        dataTypes: 'Feed posts, Reels, tagged posts, comments, Messenger DMs, reviews, reactions, ad posts & ad comments',
+        sync: 'Owned: 4×/day cycle + real-time webhooks',
+        history: '2 days posts + 2 days comments + 2 days DMs on connect (Enterprise backfill on request)',
+        accessHeading: "What we'll access on your Facebook Page:",
+        access: ['Read Page posts, comments and reviews', 'Read & send Page (Messenger) messages', 'Read Page insights (reach, impressions)', 'Publish & reply only when you click send'],
+        review: { account: 'N page(s)', permissions: 'Read · Reply · DMs · Insights · Publish', sync: '4×/day + webhooks', history: '2 days' },
+        celebration: 'Facebook is connected — listening for mentions and ready for replies.',
+      },
+      {
+        key: 'public', cardHeading: 'Track a public Facebook Page',
+        get: ['Listen to public Page posts & comments', 'Sentiment & volume', 'No login required'],
+        dontGet: ['Feed posts only — no Reels or tagged posts', 'No reach/impressions (engagement counts only)', 'No DMs or replies as the Page', 'Authors anonymous'],
+        pickIf: "Pick this to monitor a competitor or a Page you don't manage.",
+        dataTypes: 'Public Page feed posts, comments, reactions/shares (engagement counts only)',
+        sync: 'Daily (7d) + Weekly Sat 1 AM (30d) + Monthly last-day (90d)',
+        history: 'Up to 90 days via the monthly layer',
+        field: { label: 'Public Facebook Page URL', placeholder: 'https://www.facebook.com/yourpage', guide: 'Open the Page, copy the URL from the address bar (facebook.com/yourpage).' },
+        review: { account: 'Page URL', permissions: 'Read only (public)', sync: 'daily/weekly/monthly layers', history: 'up to 90 days' },
+        celebration: 'Facebook is connected and listening for public mentions.',
+      },
+    ],
+  },
+
+  instagram: {
+    id: 'instagram', label: 'Instagram', tier: 'Regular', tileSub: 'Popular · OAuth · ~30s',
+    connectionQuestion: 'How do you want to add Instagram?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Instagram account', pages: true, pagesNoun: 'accounts',
+        get: ['Reply to comments & story mentions', 'Read & send DMs', 'Private reach, impressions & saves', 'Reels & story insights', 'Publish & schedule'],
+        dontGet: ['Requires a Business/Creator account + token upkeep'],
+        pickIf: "Pick this if it's your account and you want to engage and see private insights.",
+        dataTypes: 'Posts, comments, DMs, story mentions, Reels, media, ad posts',
+        sync: 'Owned: 4×/day + real-time webhooks',
+        history: '2 days posts + 1 day comments + 1 day DMs on connect',
+        accessHeading: "What we'll access on your Instagram account:",
+        access: ['Read your posts, comments and @mentions', 'Read & send DMs and story replies', 'Read insights (reach, impressions, saves)', 'Reply & publish only when you click send'],
+        review: { account: '@handle', permissions: 'Read · Reply · DMs · Insights', sync: '4×/day + webhooks', history: '2 days' },
+        celebration: 'Instagram is connected — listening for mentions and ready for replies.',
+      },
+      {
+        key: 'public', cardHeading: 'Track an Instagram hashtag',
+        get: ['Track public posts using a hashtag', 'Discover brand/campaign tags', 'Sentiment & volume', 'No login required'],
+        dontGet: ['Hashtags only — no @handle listening', 'Max ~250 recent posts per hashtag (not chronological)', 'No reach/impressions; engagement counts only', 'No comments; authors anonymous'],
+        pickIf: "Pick this to monitor a campaign or brand hashtag you don't own.",
+        dataTypes: 'Hashtag posts (engagement counts only)',
+        sync: 'Hashtag: 4×/day, ~250 posts per run',
+        history: 'Recent ~250 posts per hashtag (no time-based control)',
+        field: { label: 'Hashtag to track', placeholder: '#yourbrand', guide: 'Enter a hashtag (without spaces). We pull the most recent ~250 public posts using it. NOTE: a profile URL will not work — Instagram public listening is hashtag-only.' },
+        review: { account: '#hashtag', permissions: 'Read only (public)', sync: '4×/day', history: 'recent ~250 posts' },
+        celebration: 'Instagram is connected and listening for that hashtag.',
+      },
+    ],
+  },
+
+  youtube: {
+    id: 'youtube', label: 'YouTube', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: 'How do you want to add YouTube?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your YouTube channel',
+        get: ['Reply to comments on your videos', 'Private analytics: watch time, retention, traffic sources', 'Subscriber & audience demographics', 'Video-level engagement'],
+        dontGet: ['Requires login + token upkeep', 'Top-level comments only (no threaded replies); no live-video comments'],
+        pickIf: "Pick this if it's your channel and you want analytics + to reply to comments.",
+        dataTypes: 'Channel videos, top-level comments, channel & video stats',
+        sync: 'Posts daily (30d); comments daily (7d); stats refresh bi-monthly (90d)',
+        history: '30 days posts + 7 days comments on connect',
+        accessHeading: "What we'll access on your YouTube channel:",
+        access: ['Read your videos and comments', 'Read channel analytics (views, watch time, retention)', 'Reply only when you click send'],
+        review: { account: 'channel', permissions: 'Read · Reply · Analytics', sync: 'daily', history: '30d posts / 7d comments' },
+        celebration: 'YouTube is connected — listening for comments and ready for replies.',
+      },
+      {
+        key: 'public', cardHeading: 'Track public YouTube',
+        get: ['Listen to public videos & comments', 'Track keywords & competitor channels', 'Sentiment & volume', 'No login required'],
+        dontGet: ['Top-level comments only', 'No watch-time/retention for public videos', 'Keyword API capped at 100 calls/day', 'Authors anonymous'],
+        pickIf: 'Pick this to monitor competitor channels or keyword mentions on YouTube.',
+        dataTypes: 'Public videos (posts), top-level comments, video stats (views, likes, comments)',
+        sync: 'Daily (posts 30d / comments 7d)',
+        history: '30 days posts + 7 days comments on connect',
+        field: { label: 'Public YouTube channel URL or keyword', placeholder: 'https://youtube.com/@channel or "keyword"', guide: 'Paste a channel URL, or enter a keyword to track mentions across YouTube.' },
+        review: { account: 'channel/keyword', permissions: 'Read only (public)', sync: 'daily', history: '30d / 7d' },
+        celebration: 'YouTube is connected and listening for public videos & comments.',
+      },
+    ],
+  },
+
+  linkedin: {
+    id: 'linkedin', label: 'LinkedIn', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: '(No connection-type choice — LinkedIn is owned-only)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your LinkedIn Page', pages: true, pagesNoun: 'Organisation Pages',
+        get: ['Reply to comments on your Page', 'Private page & post analytics', 'Follower demographics', 'Ad campaign metrics', 'Publish & schedule'],
+        dontGet: ["No public/competitor listening (LinkedIn API restriction) — you can't benchmark vs others", 'Requires re-authorisation periodically (no refresh token)'],
+        pickIf: 'LinkedIn supports your own Organisation Page only.',
+        dataTypes: 'Org page posts, comments, follower data, page insights (7/30/90d), ad campaign data (30d)',
+        sync: 'Posts daily (60d); comments daily (7d); insights 7/30/90d; ads daily (30d); webhook backup',
+        history: '60 days posts + 7 days comments + 7–90 days insights + 30 days ads',
+        accessHeading: "What we'll access on your LinkedIn Organisation Page:",
+        access: ['Read your page posts, comments and follower data', 'Read page & post insights and ad metrics', 'Reply & publish only when you click send'],
+        review: { account: 'Org Page', permissions: 'Read · Reply · Insights · Ads · Publish', sync: 'daily + webhook', history: '60d posts' },
+        celebration: 'LinkedIn is connected — listening for comments on your Page.',
+      },
+    ],
+  },
+
+  tiktok: {
+    id: 'tiktok', label: 'TikTok', tier: 'Premium', tileSub: 'Premium · OAuth · ~30s',
+    connectionQuestion: 'How do you want to add TikTok?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your TikTok account',
+        get: ['Private video stats: views, likes, shares, duets, stitches', 'Brand posts & comments', 'Profile insights'],
+        dontGet: ['Requires login + token upkeep', 'Max 60 comments per post'],
+        pickIf: "Pick this if it's your account and you want video performance stats.",
+        dataTypes: 'Brand posts (videos), comments (max 60/post), profile data',
+        sync: 'Owned: daily (7-day post window, 60 comments/post)',
+        history: '7 days on connect (max 365 days / 500 videos overall)',
+        accessHeading: "What we'll access on your TikTok account:",
+        access: ['Read your videos and comments (via TikTok Research API)', 'Read video & profile stats'],
+        review: { account: '@handle', permissions: 'Read · Stats', sync: 'daily', history: '7 days' },
+        celebration: 'TikTok is connected — collecting your posts and comments.',
+      },
+      {
+        key: 'public', cardHeading: 'Track TikTok keywords',
+        get: ['Track keywords & hashtags', 'Public posts & comments', 'Engagement stats'],
+        dontGet: ['No historical backfill — collects from setup time only', 'Max 60 comments per post', 'Stats are frozen after first fetch', 'Via 3rd-party scraper; authors anonymous'],
+        pickIf: "Pick this to monitor hashtags/keywords you don't own.",
+        dataTypes: 'Public/keyword posts, comments (max 60/post), profile data',
+        sync: 'From config time onward; cap ~1,500–1,800 posts/day',
+        history: 'None — keyword listening starts at setup (no backfill)',
+        field: { label: 'Hashtag or keyword', placeholder: '#yourbrand or "keyword"', guide: 'Enter a hashtag or keyword. Collection starts now — there is no history before setup.' },
+        review: { account: 'keyword/#tag', permissions: 'Read only (public)', sync: 'from setup, ~1.5–1.8k/day', history: 'none' },
+        celebration: 'TikTok is connected and listening from now on.',
+      },
+    ],
+  },
+
+  telegram: {
+    id: 'telegram', label: 'Telegram', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: '(No choice — Telegram is a messaging channel)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Telegram bot',
+        get: ['Two-way messaging: direct & group messages', 'Real-time', 'Auto-responses'],
+        dontGet: ['No public listening', 'No history before you connect', 'Bot must be added to a group to read group messages'],
+        pickIf: "Telegram connects your brand's Telegram bot for conversations.",
+        dataTypes: 'Direct messages, group messages, bot interactions',
+        sync: 'Real-time via webhooks (Telegram Bot API)',
+        history: 'None — messages collected from connection time onward',
+        accessHeading: "What we'll access via your Telegram bot:",
+        access: ['Receive incoming direct & group messages', 'Send replies you compose'],
+        authButton: 'Connect Telegram bot',
+        review: { account: '@yourbot', permissions: 'Receive · Reply', sync: 'Real-time', history: 'none (from connect)' },
+        celebration: 'Telegram is connected — ready to receive and reply to messages.',
+      },
+    ],
+  },
+
+  whatsapp: {
+    id: 'whatsapp', label: 'WhatsApp', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: '(No choice — WhatsApp is a messaging channel)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your WhatsApp Business number',
+        get: ['Two-way customer messaging', 'Template messages', 'Delivery & read receipts', 'Real-time'],
+        dontGet: ['No public listening', 'No history before connection', '24-hour reply window — outside it you must use an approved template'],
+        pickIf: 'WhatsApp connects your Business number for customer conversations.',
+        dataTypes: 'Inbound & outbound messages, template messages, media messages',
+        sync: 'Real-time via webhooks (continuous)',
+        history: 'None — messages collected from connection time onward',
+        accessHeading: "What we'll access on your WhatsApp Business number:",
+        access: ['Receive inbound messages', 'Send replies & approved template messages', 'Read delivery/read status'],
+        authButton: 'Connect WhatsApp Business',
+        review: { account: 'business number', permissions: 'Receive · Reply · Templates', sync: 'Real-time', history: 'none' },
+        celebration: 'WhatsApp is connected — ready to receive and reply to messages.',
+      },
+    ],
+  },
+
+  fbgroups: {
+    id: 'fbgroups', label: 'FB Groups', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    flag: 'validate',
+    flagText: 'Needs validation — FB Groups is not a separately documented source (Facebook public listening covers Pages, not Groups). Confirm Meta Groups API support before shipping; copy below is provisional.',
+    connectionQuestion: 'How do you want to add FB Groups?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect a Facebook Group you manage',
+        get: ['(Provisional) Read & reply to group posts/comments you administer'],
+        dontGet: ['Confirm scope — Groups API access is limited'],
+        pickIf: 'Provisional — validate support first.',
+        dataTypes: '(Provisional) Group posts & comments',
+        sync: 'Confirm', history: 'Confirm',
+        accessHeading: "What we'll access:",
+        access: [], accessNote: "Confirm what Meta's Groups API actually allows before writing this.",
+        review: { account: '—', permissions: 'Read · Reply (validate)', sync: 'Confirm', history: 'Confirm' },
+        celebration: 'FB Group is connected.',
+      },
+      {
+        key: 'public', cardHeading: 'Track a public Facebook Group',
+        get: ['(Provisional) Listen to public group posts & comments'],
+        dontGet: ['Group must be public; scope unconfirmed; anonymous'],
+        pickIf: 'Provisional — validate support first.',
+        dataTypes: '(Provisional) Public group posts & comments',
+        sync: 'Confirm', history: 'Confirm',
+        field: { label: 'Public Facebook group URL', placeholder: 'https://www.facebook.com/groups/yourgroup', guide: 'Paste the group URL (the group must be public).' },
+        review: { account: 'group URL', permissions: 'Read only (public)', sync: 'Confirm', history: 'Confirm' },
+        celebration: 'FB Group is connected and listening.',
+      },
+    ],
+  },
+
+  playstore: {
+    id: 'playstore', label: 'Google Play Store', tier: 'Regular', tileSub: 'JSON key · setup',
+    connectionQuestion: '(No choice — your own app only)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Play Store app',
+        get: ['Collect & reply to your app reviews & ratings', 'Rating distribution', 'App version & device context'],
+        dontGet: ['Your own app only — no competitor/public app reviews', '7-day collection window', 'Connected via a service-account JSON key, not a URL or OAuth login'],
+        pickIf: 'Play Store connects your own published app.',
+        dataTypes: 'App reviews, ratings, developer replies',
+        sync: 'Daily polling (7-day window)',
+        history: '7 days on connect',
+        accessHeading: "What we'll access for your app:",
+        access: ['Read reviews & ratings via the Google Play Developer API', 'Post developer replies you compose'],
+        accessNote: 'Connect by uploading your Google Play service-account JSON key.',
+        authButton: 'Upload service-account JSON & connect',
+        review: { account: 'your package', permissions: 'Read · Reply', sync: 'daily', history: '7 days' },
+        celebration: 'Google Play is connected — collecting your reviews and ratings.',
+      },
+    ],
+  },
+
+  appstore: {
+    id: 'appstore', label: 'App Store', tier: 'Regular', tileSub: 'API key · setup',
+    connectionQuestion: 'How do you want to add App Store?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your App Store app',
+        get: ['Collect & reply to your app reviews', 'Territory & version context', '30-day rolling window'],
+        dontGet: ['Your own app only', '30-day window (vs full history on public RSS)'],
+        pickIf: "Pick this if it's your app and you want to reply to reviews.",
+        dataTypes: 'App reviews, ratings, developer replies',
+        sync: 'Daily (30-day window) via App Store Connect API',
+        history: '30 days on connect',
+        accessHeading: "What we'll access for your app:",
+        access: ['Read reviews & ratings via the App Store Connect API', 'Post developer replies you compose'],
+        accessNote: 'Connect with an App Store Connect API key.',
+        authButton: 'Add App Store Connect API key',
+        review: { account: 'your app', permissions: 'Read · Reply', sync: 'daily', history: '30 days' },
+        celebration: 'App Store is connected — collecting your reviews and ratings.',
+      },
+      {
+        key: 'public', cardHeading: 'Track a public App Store app',
+        get: ['Public app reviews & ratings', 'Full RSS history (not day-bound)', 'No login required'],
+        dontGet: ['Reviews only', 'No owner reply in public mode', 'Authors anonymous'],
+        pickIf: "Pick this to monitor a competitor app or one you don't own.",
+        dataTypes: 'App reviews, ratings (via public RSS feed)',
+        sync: 'RSS feed polling (all available reviews)',
+        history: 'All available RSS reviews (not day-bound)',
+        field: { label: 'Apple App Store URL', placeholder: 'https://apps.apple.com/app/id123456789', guide: "Open the app's App Store page and copy the URL — it contains /id followed by numbers." },
+        review: { account: 'app URL', permissions: 'Read only (public)', sync: 'RSS polling', history: 'full RSS' },
+        celebration: 'App Store is connected and listening for public reviews.',
+      },
+    ],
+  },
+
+  gmb: {
+    id: 'gmb', label: 'Google My Business', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: 'How do you want to add Google My Business?',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Google Business Profile', pages: true, pagesNoun: 'locations',
+        get: ['Reply to reviews & answer Q&A', 'Business insights', 'Photos & owner responses', 'Real-time'],
+        dontGet: ['Requires login + token upkeep'],
+        pickIf: 'Pick this if you manage the locations and want to reply.',
+        dataTypes: 'Reviews, Q&A, business photos, owner responses, business insights',
+        sync: 'Webhooks (real-time) + daily batch (30-day window)',
+        history: '30 days on connect',
+        accessHeading: "What we'll access on your Business Profile:",
+        access: ['Read & respond to reviews and Q&A', 'Read business insights', 'Reply only when you click send'],
+        review: { account: 'N location(s)', permissions: 'Read · Reply · Q&A · Insights', sync: 'Real-time + daily', history: '30 days' },
+        celebration: 'Google My Business is connected — collecting reviews and ready for replies.',
+      },
+      {
+        key: 'public', cardHeading: 'Track a public Google listing',
+        get: ['Public reviews & ratings for any location', 'Rating distribution', 'Sentiment', 'No login required'],
+        dontGet: ['Reviews only — no Q&A or insights', 'No owner replies in public mode', 'Via 3rd-party scrape; authors anonymous'],
+        pickIf: "Pick this to monitor a competitor location or one you don't manage.",
+        dataTypes: 'Reviews, ratings, reviewer info (via Apify scrape)',
+        sync: 'Apify Actor polling',
+        history: '30 days on connect',
+        field: { label: 'Google Business profile / Maps link', placeholder: 'https://maps.google.com/?cid=...', guide: 'Find the business on Google Maps, tap Share and copy the link (or copy the address-bar URL).' },
+        review: { account: 'Maps link', permissions: 'Read only (public)', sync: 'scrape polling', history: '30 days' },
+        celebration: 'Google My Business is connected and listening for public reviews.',
+      },
+    ],
+  },
+
+  line: {
+    id: 'line', label: 'LINE', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    flag: 'validate',
+    flagText: 'Needs validation — LINE is not in the channel knowledge base. Treated as owned messaging (like Telegram) provisionally; confirm API & data scope before shipping.',
+    connectionQuestion: '(No choice — messaging channel, provisional)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your LINE account',
+        get: ['(Provisional) Two-way messaging'],
+        dontGet: ['Scope unconfirmed; no public listening; no history before connect'],
+        pickIf: 'Provisional — validate support first.',
+        dataTypes: '(Provisional) Direct/official-account messages',
+        sync: 'Confirm (likely real-time webhooks)',
+        history: 'Confirm (likely none before connect)',
+        accessHeading: "What we'll access:",
+        access: [], accessNote: 'Confirm LINE Messaging API scope before writing this.',
+        authButton: 'Connect LINE account',
+        review: { account: '—', permissions: 'Receive · Reply', sync: 'Confirm', history: 'Confirm' },
+        celebration: 'LINE is connected.',
+      },
+    ],
+  },
+
+  glassdoor: {
+    id: 'glassdoor', label: 'Glassdoor', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public listening only)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track a Glassdoor company',
+        get: ['Employer reviews & ratings', 'Pros/cons', 'CEO approval & recommend %', 'Interview reviews'],
+        dontGet: ['Public listening only — no owner reply', 'Via 3rd-party scrape; crawl depth varies', 'Authors anonymous'],
+        pickIf: 'Glassdoor tracks public employer reviews.',
+        dataTypes: 'Company reviews, ratings, interview reviews, pros/cons, CEO approval',
+        sync: 'Webz.io shared-pool polling',
+        history: 'Crawl depth varies (no official API backfill)',
+        field: { label: 'Glassdoor company page URL', placeholder: 'https://www.glassdoor.com/Reviews/your-company', guide: "Open your company's Glassdoor reviews page and copy the URL." },
+        review: { account: 'company URL', permissions: 'Read only (public)', sync: 'scheduled (shared pool)', history: 'crawl-dependent' },
+        celebration: 'Glassdoor is connected and listening for employer reviews.',
+      },
+    ],
+  },
+
+  sitejabber: {
+    id: 'sitejabber', label: 'Sitejabber', tier: 'Regular', tileSub: 'API · setup',
+    connectionQuestion: '(No choice — your business profile only)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect your Sitejabber business profile',
+        get: ['Collect & respond to your business reviews'],
+        dontGet: ['Your business profile only — no public/competitor listening', 'Backfill, polling cadence & reply need validation'],
+        pickIf: 'Sitejabber connects your own business profile.',
+        dataTypes: 'Reviews, comments on reviews',
+        sync: 'API polling (cadence needs validation)',
+        history: 'Unknown — needs engineering validation',
+        accessHeading: "What we'll access on your Sitejabber profile:",
+        access: ['Read reviews & comments via the Sitejabber API', 'Post responses you compose'],
+        authButton: 'Connect via API key',
+        review: { account: 'your profile', permissions: 'Read · Reply (validate)', sync: 'validate', history: 'validate' },
+        celebration: 'Sitejabber is connected — collecting your reviews.',
+      },
+    ],
+  },
+
+  reddit: {
+    id: 'reddit', label: 'Reddit (SubReddit)', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public listening only)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track Reddit',
+        get: ['Track subreddits, users & keywords', 'Posts & comments', 'Karma & awards', 'Subreddit metrics'],
+        dontGet: ['Public listening only — no owner reply', 'Via 3rd-party API', 'Authors anonymous'],
+        pickIf: 'Reddit tracks public posts and comments.',
+        dataTypes: 'Posts, comments, subreddit data (karma, awards)',
+        sync: 'Once a day 6:00 AM UTC',
+        history: 'API response depth varies',
+        field: { label: 'Subreddit, user URL or keyword', placeholder: 'https://www.reddit.com/r/yourbrand or /u/username', guide: 'Paste a subreddit (r/…) or user (u/…) URL, or enter a keyword to track.' },
+        review: { account: 'r/ or u/ or keyword', permissions: 'Read only (public)', sync: 'API polling', history: 'varies' },
+        celebration: 'Reddit is connected and listening for public mentions.',
+      },
+    ],
+  },
+
+  email: {
+    id: 'email', label: 'Email', tier: 'Regular', tileSub: 'OAuth · ~30s',
+    connectionQuestion: '(No choice — connect your mailbox)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect a support mailbox',
+        get: ['Turn support emails into tickets', 'Two-way email (reply from your address)', 'Auto-response rules'],
+        dontGet: ['No public listening', 'From connection time — no historical email backfill', 'Sending needs SPF/DKIM/DMARC set up'],
+        pickIf: 'Email connects a support inbox like support@brand.com.',
+        dataTypes: 'Email threads, attachment metadata, auto-created tickets',
+        sync: 'Continuous polling (IMAP) / OAuth (Gmail, Office 365)',
+        history: 'None — from connection time onward',
+        accessHeading: "What we'll access on the connected mailbox:",
+        access: ['Read incoming email in this mailbox', 'Send replies from your address'],
+        accessNote: 'Connect via Gmail/Office 365 (OAuth) or IMAP/SMTP.',
+        authButton: 'Connect mailbox',
+        review: { account: 'support@brand.com', permissions: 'Read inbox · Send replies', sync: 'continuous', history: 'none' },
+        celebration: 'Email is connected — ready to turn incoming email into tickets and reply.',
+      },
+    ],
+  },
+
+  galerts: {
+    id: 'galerts', label: 'Google Alerts', tier: 'Regular', tileSub: 'URL · instant',
+    flag: 'validate',
+    flagText: "Needs validation — Google Alerts isn't in the channel knowledge base and is normally an RSS/keyword feed, not a 'public profile URL'. Confirm the real input (likely a Google Alerts RSS feed URL) before shipping.",
+    connectionQuestion: '(No choice — public listening)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Add a Google Alerts feed',
+        get: ['(Provisional) Keyword alerts from across the web'],
+        dontGet: ['Confirm input type; authors anonymous'],
+        pickIf: 'Provisional — validate input first.',
+        dataTypes: '(Provisional) Web mentions matching your alert',
+        sync: 'Feed-based (confirm)',
+        history: 'Confirm',
+        field: { label: 'Google Alerts RSS feed URL (VALIDATE)', placeholder: 'https://www.google.com/alerts/feeds/...', guide: "In Google Alerts, set delivery to 'RSS feed', then copy the feed URL. (Confirm this is the real input.)" },
+        review: { account: 'RSS feed', permissions: 'Read only (public)', sync: 'feed', history: 'confirm' },
+        celebration: 'Google Alerts is connected and listening.',
+      },
+    ],
+  },
+
+  tripadvisor: {
+    id: 'tripadvisor', label: 'TripAdvisor', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public listening only)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track a TripAdvisor property',
+        get: ['Property reviews & ratings', 'Sub-scores (cleanliness, location…)', 'Traveller type & info'],
+        dontGet: ['Public listening only — no owner reply via this channel', 'Via 3rd-party scrape; crawl depth varies', 'Authors anonymous'],
+        pickIf: 'TripAdvisor tracks public property reviews.',
+        dataTypes: 'Reviews, ratings, reviewer profiles, property photos, sub-scores',
+        sync: 'Apify Actor polling',
+        history: 'Crawl depth varies (no official API backfill)',
+        field: { label: 'TripAdvisor property URL', placeholder: 'https://www.tripadvisor.com/Hotel_Review-...', guide: 'Open the property page on TripAdvisor and copy the URL.' },
+        review: { account: 'property URL', permissions: 'Read only (public)', sync: 'scrape polling', history: 'crawl-dependent' },
+        celebration: 'TripAdvisor is connected and listening for reviews.',
+      },
+    ],
+  },
+
+  booking: {
+    id: 'booking', label: 'Booking', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public listening only)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track a Booking.com property',
+        get: ['Guest reviews & scores', 'Sub-scores (staff, facilities…)', 'Pros/cons & guest info'],
+        dontGet: ['Public listening only — no owner reply via this channel', 'Via 3rd-party scrape; crawl depth varies', 'Authors anonymous'],
+        pickIf: 'Booking tracks public property reviews.',
+        dataTypes: 'Reviews, ratings, property data, sub-scores',
+        sync: 'Smartproxy crawl schedule',
+        history: 'Crawl depth varies',
+        field: { label: 'Booking.com property URL', placeholder: 'https://www.booking.com/hotel/...', guide: 'Open the property page on Booking.com and copy the URL.' },
+        review: { account: 'property URL', permissions: 'Read only (public)', sync: 'crawl schedule', history: 'crawl-dependent' },
+        celebration: 'Booking.com is connected and listening for reviews.',
+      },
+    ],
+  },
+
+  expedia: {
+    id: 'expedia', label: 'Expedia', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    flag: 'validate',
+    flagText: 'Needs validation — Expedia is not in the channel knowledge base (Booking.com is supported; Expedia is not separately documented). Confirm it is a live source before showing the tile.',
+    connectionQuestion: '(No choice — public listening, provisional)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track an Expedia property',
+        get: ['(Provisional) Property reviews & ratings'],
+        dontGet: ['Source not confirmed in knowledge base; public-only; anonymous'],
+        pickIf: 'Provisional — validate support first.',
+        dataTypes: '(Provisional) Reviews & ratings',
+        sync: 'Confirm (likely scrape)',
+        history: 'Confirm',
+        field: { label: 'Expedia property URL', placeholder: 'https://www.expedia.com/...', guide: '(Provisional) copy the property URL.' },
+        review: { account: 'property URL', permissions: 'Read only (public)', sync: 'Confirm', history: 'Confirm' },
+        celebration: 'Expedia is connected and listening for reviews.',
+      },
+    ],
+  },
+
+  ganalytics: {
+    id: 'ganalytics', label: 'Google Analytics', tier: 'Regular', tileSub: 'OAuth · ~30s · Analytics',
+    connectionQuestion: '(No choice — analytics integration)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect Google Analytics',
+        get: ['Website traffic, sessions & conversion metrics in your dashboards'],
+        dontGet: ['No mentions, posts, comments, DMs or reviews', 'No engagement or replies — read-only metrics'],
+        pickIf: 'Google Analytics adds website metrics, not social mentions.',
+        dataTypes: 'GA property metrics (sessions, users, conversions, traffic sources)',
+        sync: 'Scheduled metric pulls (not mention streaming)',
+        history: 'Per GA property / API limits',
+        accessHeading: "What we'll access:",
+        access: ['Read your Google Analytics property metrics (read-only)'],
+        accessNote: 'No posting or messaging access.',
+        authButton: 'Connect Google Analytics',
+        review: { account: 'GA property', permissions: 'Read metrics (read-only)', sync: 'scheduled', history: 'per GA' },
+        celebration: 'Google Analytics is connected — pulling your website metrics.',
+      },
+    ],
+  },
+
+  amazon: {
+    id: 'amazon', label: 'Amazon', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public product reviews)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track an Amazon product',
+        get: ['Product reviews, ratings & Q&A', 'Verified-purchase badge', 'Rating distribution & trends', 'No login required'],
+        dontGet: ['Public listening only — no seller reply', 'Via 3rd-party API (RapidAPI); depth varies', 'Reviewers come in anonymous'],
+        pickIf: 'Amazon tracks reviews & ratings on a product or storefront you want to monitor.',
+        dataTypes: 'Product reviews, star ratings, Q&A, verified-purchase flag',
+        sync: 'Once a day 6:00 AM UTC',
+        history: 'API depth varies',
+        field: { label: 'Amazon product or store URL', placeholder: 'https://www.amazon.in/dp/B0CXXXX', guide: 'Open the product page on Amazon and copy the URL — it contains /dp/ followed by the ASIN. Point to the product page, not your seller dashboard.' },
+        review: { account: 'product URL', permissions: 'Read only (public)', sync: 'Once a day 6:00 AM UTC', history: 'depth-dependent' },
+        celebration: 'Amazon is connected and listening for product reviews.',
+      },
+    ],
+  },
+
+  flipkart: {
+    id: 'flipkart', label: 'Flipkart', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public product reviews)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track a Flipkart product',
+        get: ['Product reviews & ratings', 'Rating distribution', 'Reviewer highlights', 'No login required'],
+        dontGet: ['Public listening only — no seller reply', 'Via crawl; depth & cadence vary', 'Reviewers come in anonymous'],
+        pickIf: 'Flipkart tracks reviews & ratings on a product listing you want to monitor.',
+        dataTypes: 'Product reviews, ratings, reviewer highlights',
+        sync: 'Crawl schedule',
+        history: 'Crawl depth varies',
+        field: { label: 'Flipkart product URL', placeholder: 'https://www.flipkart.com/product/p/itmXXXX', guide: 'Open the product page on Flipkart and copy the URL from the address bar. It must open without a login.' },
+        review: { account: 'product URL', permissions: 'Read only (public)', sync: 'crawl schedule', history: 'crawl-dependent' },
+        celebration: 'Flipkart is connected and listening for product reviews.',
+      },
+    ],
+  },
+
+  bestbuy: {
+    id: 'bestbuy', label: 'BestBuy', tier: 'Premium', tileSub: 'Premium · URL · instant',
+    connectionQuestion: '(No choice — public product reviews)',
+    modes: [
+      {
+        key: 'public', cardHeading: 'Track a BestBuy product',
+        get: ['Product reviews & ratings', 'Rating distribution', 'Verified-buyer flag', 'No login required'],
+        dontGet: ['Public listening only — no seller reply', 'Via crawl/API; depth varies', 'Reviewers come in anonymous'],
+        pickIf: 'BestBuy tracks reviews & ratings on a product page you want to monitor.',
+        dataTypes: 'Product reviews, ratings, verified-buyer flag',
+        sync: 'Scheduled polling / crawl',
+        history: 'Depth varies',
+        field: { label: 'BestBuy product URL', placeholder: 'https://www.bestbuy.com/site/.../1234567.p', guide: 'Open the product page on BestBuy.com and copy the URL — it ends with a product id like /1234567.p' },
+        review: { account: 'product URL', permissions: 'Read only (public)', sync: 'scheduled polling', history: 'depth-dependent' },
+        celebration: 'BestBuy is connected and listening for product reviews.',
+      },
+    ],
+  },
+
+  voice: {
+    id: 'voice', label: 'Voice', tier: 'Regular', tileSub: 'Coming soon',
+    flag: 'planned',
+    flagText: "Planned — not live. VOIP/Voice provider & cost are unconfirmed. Don't present it as Active / ready to sync.",
+    connectionQuestion: '(No choice — planned)',
+    modes: [
+      {
+        key: 'owned', cardHeading: 'Connect Voice (coming soon)',
+        get: ['(Planned) Voice calls & recordings', 'Call metrics & resolution'],
+        dontGet: ['Not confirmed live; provider & cost unknown', 'No public listening'],
+        pickIf: 'Voice is planned — validate before showing.',
+        dataTypes: '(Planned) Voice calls, recordings',
+        sync: '(Planned) Real-time',
+        history: 'N/A',
+        accessHeading: "What we'll access:",
+        access: [], accessNote: 'Define once the provider is confirmed.',
+        authButton: 'Coming soon',
+        review: { account: '—', permissions: '—', sync: '(Planned) Real-time', history: 'N/A' },
+        celebration: 'Voice is connected.',
+      },
+    ],
+  },
+};
+
+/** Lookup helper — spec for a catalog channel id (or null). */
+export function channelSpec(id: string | undefined): ChannelSpec | null {
+  return id ? (CHANNEL_SPECS[id] ?? null) : null;
+}
+
+/* ===================================================================
+   X (Twitter) — Owned account splits its access across two APIs.
+   The user can authenticate either or both; each unlocks different
+   capabilities. Shown as a dedicated step after picking "Owned".
+   =================================================================== */
+export interface XApiVersion {
+  id: 'v1' | 'v2';
+  tag: string;        // short label e.g. "v1.1"
+  badge: string;      // "API v1.1 · OAuth 1.0a"
+  title: string;      // "Legacy API"
+  sub: string;        // one-line summary
+  caps: string[];     // what it unlocks
+  best: string;       // "Best for …"
+  recommended?: boolean;
+}
+
+export const X_API_VERSIONS: XApiVersion[] = [
+  {
+    id: 'v1', tag: 'v1.1', badge: 'API v1.1 · OAuth 1.0a', title: 'Legacy API',
+    sub: 'Direct messages, media upload and real-time webhooks.',
+    caps: [
+      'Read & send Direct Messages',
+      'Upload media — images, video & GIFs',
+      'Account Activity webhooks (real-time DMs & mentions)',
+    ],
+    best: 'Best for DMs & engagement',
+  },
+  {
+    id: 'v2', tag: 'v2', badge: 'API v2 · OAuth 2.0', title: 'Modern API',
+    sub: 'Reading, search and analytics on the current X platform.',
+    caps: [
+      'Read tweets, @mentions & replies',
+      'Recent search & filtered stream (keywords, hashtags)',
+      'Conversation threading & context',
+      'Post analytics — impressions & engagement',
+    ],
+    best: 'Best for listening & analytics',
+  },
+];
+
+/* ===================================================================
+   E-Commerce — "Add by search" mock product catalog.
+   Readable product data only (NO price). Used to preview the search
+   experience for Amazon / Flipkart / BestBuy. Verify / extend freely.
+   =================================================================== */
+export interface EcomProduct {
+  id: string;
+  title: string;
+  brand: string;
+  category: string;      // Phone · Earbuds · Smartwatch · Speaker · Headphones …
+  rating: number;        // 4.6
+  ratingCount: string;   // "3.2k ratings"
+  attrs: string[];       // readable specs, NO price
+  color: string;         // tile colour
+  emoji: string;         // simple visual stand-in for a product image
+  keywords?: string[];   // extra search terms
+}
+
+export const ECOM_PRODUCTS: EcomProduct[] = [
+  // Apple
+  { id: 'ip17',     title: 'Apple iPhone 17',            brand: 'Apple',   category: 'Phone',      rating: 4.6, ratingCount: '3.2k ratings',  attrs: ['6.1-inch', '128 GB', '5G', 'Black'],        color: '#000000', emoji: '📱', keywords: ['ios', 'mobile'] },
+  { id: 'ip17pro',  title: 'Apple iPhone 17 Pro',        brand: 'Apple',   category: 'Phone',      rating: 4.7, ratingCount: '1.8k ratings',  attrs: ['6.3-inch', '256 GB', '5G', 'A19 Pro'],      color: '#1d1d1f', emoji: '📱', keywords: ['ios', 'mobile'] },
+  { id: 'ip17max',  title: 'Apple iPhone 17 Pro Max',    brand: 'Apple',   category: 'Phone',      rating: 4.8, ratingCount: '1.1k ratings',  attrs: ['6.9-inch', '512 GB', '5G'],                 color: '#1d1d1f', emoji: '📱', keywords: ['ios', 'mobile'] },
+  { id: 'ip16',     title: 'Apple iPhone 16',            brand: 'Apple',   category: 'Phone',      rating: 4.6, ratingCount: '22.4k ratings', attrs: ['6.1-inch', '128 GB', '5G'],                 color: '#000000', emoji: '📱', keywords: ['ios', 'mobile'] },
+  { id: 'awatch10', title: 'Apple Watch Series 10',      brand: 'Apple',   category: 'Smartwatch', rating: 4.7, ratingCount: '5.1k ratings',  attrs: ['46 mm', 'GPS', 'Aluminium'],                color: '#000000', emoji: '⌚', keywords: ['watch'] },
+  { id: 'airpods3', title: 'Apple AirPods Pro 3',        brand: 'Apple',   category: 'Earbuds',    rating: 4.7, ratingCount: '18.9k ratings', attrs: ['ANC', 'USB-C', 'Spatial audio'],            color: '#000000', emoji: '🎧', keywords: ['earphones', 'tws'] },
+
+  // boAt
+  { id: 'boat191',  title: 'boAt Airdopes 191',          brand: 'boAt',    category: 'Earbuds',    rating: 4.2, ratingCount: '44.1k ratings', attrs: ['ENx tech', '45h playback', 'BT 5.3'],       color: '#e63946', emoji: '🎧', keywords: ['earphones', 'tws'] },
+  { id: 'boat311',  title: 'boAt Airdopes 311 Pro',      brand: 'boAt',    category: 'Earbuds',    rating: 4.1, ratingCount: '12.3k ratings', attrs: ['50h playback', 'Low latency'],              color: '#e63946', emoji: '🎧', keywords: ['earphones', 'tws'] },
+  { id: 'boatwave', title: 'boAt Wave Call 2',           brand: 'boAt',    category: 'Smartwatch', rating: 4.0, ratingCount: '9.7k ratings',  attrs: ['1.83-inch', 'BT calling', 'HR monitor'],    color: '#e63946', emoji: '⌚', keywords: ['watch'] },
+  { id: 'boatstorm',title: 'boAt Storm Pro',             brand: 'boAt',    category: 'Smartwatch', rating: 4.1, ratingCount: '6.2k ratings',  attrs: ['AMOLED', 'IP68', 'BT calling'],             color: '#e63946', emoji: '⌚', keywords: ['watch'] },
+  { id: 'boatstone',title: 'boAt Stone 350',             brand: 'boAt',    category: 'Speaker',    rating: 4.3, ratingCount: '15.6k ratings', attrs: ['10 W', 'IPX7', 'BT 5.3'],                   color: '#e63946', emoji: '🔊', keywords: ['bluetooth speaker'] },
+  { id: 'boatrock', title: 'boAt Rockerz 450',           brand: 'boAt',    category: 'Headphones', rating: 4.2, ratingCount: '38.5k ratings', attrs: ['15h playback', '40 mm drivers'],            color: '#e63946', emoji: '🎧', keywords: ['headphone'] },
+
+  // Samsung
+  { id: 's24',      title: 'Samsung Galaxy S24',         brand: 'Samsung', category: 'Phone',      rating: 4.5, ratingCount: '8.9k ratings',  attrs: ['6.2-inch', '256 GB', '5G'],                 color: '#1428a0', emoji: '📱', keywords: ['android', 'mobile'] },
+  { id: 'gwatch7',  title: 'Samsung Galaxy Watch 7',     brand: 'Samsung', category: 'Smartwatch', rating: 4.4, ratingCount: '3.3k ratings',  attrs: ['44 mm', 'GPS', 'BioActive'],                color: '#1428a0', emoji: '⌚', keywords: ['watch'] },
+  { id: 'buds3',    title: 'Samsung Galaxy Buds3',       brand: 'Samsung', category: 'Earbuds',    rating: 4.3, ratingCount: '2.1k ratings',  attrs: ['ANC', 'IPX7'],                              color: '#1428a0', emoji: '🎧', keywords: ['earphones', 'tws'] },
+
+  // OnePlus
+  { id: 'op13',     title: 'OnePlus 13',                 brand: 'OnePlus', category: 'Phone',      rating: 4.5, ratingCount: '4.4k ratings',  attrs: ['6.8-inch', '256 GB', '5G'],                 color: '#eb0028', emoji: '📱', keywords: ['android', 'mobile'] },
+  { id: 'opnord',   title: 'OnePlus Nord Buds 3',        brand: 'OnePlus', category: 'Earbuds',    rating: 4.1, ratingCount: '7.7k ratings',  attrs: ['49h playback', 'BT 5.4'],                   color: '#eb0028', emoji: '🎧', keywords: ['earphones', 'tws'] },
+
+  // Noise
+  { id: 'noise5',   title: 'Noise ColorFit Pro 5',       brand: 'Noise',   category: 'Smartwatch', rating: 4.0, ratingCount: '11.2k ratings', attrs: ['1.85-inch', 'BT calling'],                  color: '#ff3b30', emoji: '⌚', keywords: ['watch'] },
+];
+
+/** AND-match every query token against title + brand + category + keywords. */
+export function searchEcom(q: string): EcomProduct[] {
+  const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  return ECOM_PRODUCTS.filter(p => {
+    const hay = (p.title + ' ' + p.brand + ' ' + p.category + ' ' + (p.keywords ?? []).join(' ')).toLowerCase();
+    return tokens.every(t => hay.includes(t));
+  });
 }
