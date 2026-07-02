@@ -14,6 +14,7 @@ import { ConsumptionComponent } from './features/account-settings/data-consumpti
 import { ConsumptionAlertComponent } from './features/account-settings/data-consumption/consumption-alert.component';
 import { MonthlyConsumptionComponent } from './features/account-settings/data-consumption/monthly/monthly-consumption.component';
 import { HistoricConsumptionComponent } from './features/account-settings/data-consumption/historic/historic-consumption.component';
+import { AlertsListComponent } from './features/account-settings/alerts-manager/alerts-list.component';
 
 export const routes: Routes = [
   {
@@ -45,6 +46,7 @@ export const routes: Routes = [
       { path: 'manage-brands', component: ManageBrandsComponent },
       { path: 'manage-users', component: ManageUsersComponent },
       { path: 'keywords-configuration', component: KeywordsConfigurationComponent },
+      { path: 'alert', component: AlertsListComponent },
       { path: 'data-consumption/consumption', component: ConsumptionComponent },
       { path: 'data-consumption/consumption-alert', component: ConsumptionAlertComponent },
       { path: 'data-consumption/monthly', component: MonthlyConsumptionComponent },

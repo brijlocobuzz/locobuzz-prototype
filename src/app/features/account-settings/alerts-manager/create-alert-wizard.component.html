@@ -1,0 +1,592 @@
+<div class="wz-backdrop" (click)="close()"></div>
+
+<div class="wz-modal" role="dialog" aria-modal="true" aria-label="Create new alert">
+
+  <!-- ═══════════════════ Celebration screen ═══════════════════ -->
+  <div class="wz-celebrate" *ngIf="celebrating">
+    <span class="wz-confetti">
+      <i *ngFor="let p of confetti" [class.round]="p.round"
+         [style.left.%]="p.left" [style.background]="p.color"
+         [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.duration"
+         [style.--drift.px]="p.drift" [style.--rot.deg]="p.rotate"></i>
+    </span>
+
+    <div class="wz-burst">
+      <span class="wz-ring"></span>
+      <span class="wz-ring r2"></span>
+      <span class="wz-badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="wz-badge-circle" cx="26" cy="26" r="24"></circle>
+          <path class="wz-badge-check" d="M16 27 l7 7 l14 -15"></path>
+        </svg>
+      </span>
+    </div>
+
+    <h2 class="wz-celebrate-title">Alert is live!</h2>
+    <p class="wz-celebrate-sub">
+      <b>{{ alertName }}</b> will notify {{ recipientEmails.length }}
+      recipient{{ recipientEmails.length !== 1 ? 's' : '' }} via {{ deliveryModeLabel }}.
+    </p>
+
+    <div class="wz-celebrate-pill">
+      <span class="msr">notifications_active</span>
+      {{ alertName }} · {{ deliveryModeLabel }}
+    </div>
+
+    <div class="wz-done-card">
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">hub</span></span>
+        <span class="wz-done-tx">
+          <span class="wz-done-k">Channels monitored</span>
+          <span class="wz-done-v">{{ selectedChannels.length }} channel{{ selectedChannels.length !== 1 ? 's' : '' }}</span>
+        </span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">filter_alt</span></span>
+        <span class="wz-done-tx">
+          <span class="wz-done-k">Filter conditions</span>
+          <span class="wz-done-v">{{ conditions.length || 'None' }} — {{ conditions.length ? 'custom rules active' : 'all content matches' }}</span>
+        </span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">schedule</span></span>
+        <span class="wz-done-tx">
+          <span class="wz-done-k">Delivery</span>
+          <span class="wz-done-v">{{ deliveryModeLabel }} · {{ scheduleLabel }}</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="wz-done-acts">
+      <button class="wz-back" (click)="complete()"><span class="msr">check</span>Done</button>
+      <button class="wz-next finish" (click)="complete()"><span class="msr">add</span>Create another</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ Two-pane shell ═══════════════════ -->
+  <div class="wz-shell" *ngIf="!celebrating">
+
+    <!-- ─────────────── Left: wizard ─────────────── -->
+    <div class="wz-main">
+
+      <!-- Header -->
+      <header class="wz-head">
+        <span class="wz-spark al-spark">
+          <span class="msr">notifications_active</span>
+        </span>
+        <div class="wz-titles">
+          <h2>{{ alertName || 'New Alert' }}</h2>
+          <p>Scheduled email alert · {{ steps[stepIndex].label }}</p>
+        </div>
+        <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
+      </header>
+
+      <!-- Stepper -->
+      <nav class="wz-stepper compact">
+        <ng-container *ngFor="let s of steps; let i = index; let last = last">
+          <div class="wz-step" [class.done]="i < stepIndex" [class.active]="i === stepIndex">
+            <span class="wz-dot">
+              <span class="msr" *ngIf="i < stepIndex">check</span>
+              <span class="msr" *ngIf="i >= stepIndex">{{ s.icon }}</span>
+            </span>
+            <span class="wz-step-label">{{ s.label }}</span>
+          </div>
+          <span class="wz-conn" *ngIf="!last" [class.done]="i < stepIndex" [class.next]="i === stepIndex"></span>
+        </ng-container>
+      </nav>
+
+      <!-- Body -->
+      <div class="wz-body" [ngSwitch]="current">
+
+        <!-- ══════════════ STEP 1 · NAME ══════════════ -->
+        <section *ngSwitchCase="'name'" class="al-step">
+          <h3 class="wz-q left">Name your alert</h3>
+          <p class="wz-sub left">A clear name helps your team understand what this alert is tracking at a glance.</p>
+
+          <div class="wz-field al-name-field">
+            <label>Alert name</label>
+            <input type="text" [(ngModel)]="alertName" [maxlength]="60"
+                   placeholder="e.g. Negative Sentiment on Twitter" />
+            <div class="al-field-foot">
+              <span>Shown in the email subject line and your alert list.</span>
+              <span [class.warn]="alertName.length > 50">{{ alertName.length }}/60</span>
+            </div>
+          </div>
+
+          <p class="al-sec-label">
+            Quick-start from a template
+            <span class="al-sec-hint">Optional — click to prefill name &amp; conditions</span>
+          </p>
+          <div class="al-preset-grid">
+            <button class="al-preset-card" *ngFor="let t of alertTemplates"
+                    [class.sel]="alertName === t.name"
+                    (click)="applyTemplate(t)">
+              <span class="al-preset-ic" [style.background]="t.color + '15'" [style.color]="t.color">
+                <span class="msr">{{ t.icon }}</span>
+              </span>
+              <span class="al-preset-txt">
+                <span class="al-preset-name">{{ t.name }}</span>
+                <span class="al-preset-desc">{{ t.desc }}</span>
+              </span>
+              <span class="al-preset-check" [class.on]="alertName === t.name">
+                <span class="msr">check</span>
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ══════════════ STEP 2 · SCHEDULE ══════════════ -->
+        <section *ngSwitchCase="'schedule'" class="al-step">
+          <h3 class="wz-q left">Set the schedule</h3>
+          <p class="wz-sub left">Define the date range, active days, and how often you want to receive notifications.</p>
+
+          <!-- Date range -->
+          <div class="al-date-row">
+            <div class="al-date-card">
+              <p class="al-field-label">From date <span class="al-req">*</span></p>
+              <div class="al-input-wrap">
+                <span class="msr">calendar_month</span>
+                <input type="date" [(ngModel)]="startDate" />
+              </div>
+            </div>
+            <div class="al-date-card" [class.muted]="!hasEndDate">
+              <p class="al-field-label">
+                <label class="al-chk">
+                  <input type="checkbox" [(ngModel)]="hasEndDate" />
+                  <span class="al-chk-box"><span class="msr">check</span></span>
+                  End date
+                </label>
+              </p>
+              <div class="al-input-wrap">
+                <span class="msr">event</span>
+                <input type="date" [(ngModel)]="endDate" [disabled]="!hasEndDate" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Day picker -->
+          <p class="al-field-label al-section-gap">Active days <span class="al-req">*</span></p>
+          <div class="al-days-row">
+            <div class="al-days">
+              <button class="al-day" *ngFor="let d of days"
+                      [class.on]="selectedDays.has(d.key)"
+                      [attr.aria-label]="d.label" [title]="d.label"
+                      (click)="toggleDay(d.key)">{{ d.abbr }}</button>
+            </div>
+            <div class="al-day-shortcuts">
+              <button class="al-day-quick" (click)="selectWeekdays()">Weekdays</button>
+              <button class="al-day-quick" (click)="selectAllDays()">Every day</button>
+            </div>
+          </div>
+
+          <!-- Delivery mode -->
+          <p class="al-field-label al-section-gap">How would you like to be notified?</p>
+          <div class="al-delivery-grid">
+            <button class="al-del-card" *ngFor="let m of deliveryModes"
+                    [class.sel]="deliveryMode === m.key"
+                    [ngClass]="m.key"
+                    (click)="deliveryMode = m.key">
+              <span class="al-del-check"><span class="msr">check</span></span>
+              <span class="al-del-ic"><span class="msr">{{ m.icon }}</span></span>
+              <span class="al-del-name">{{ m.label }}</span>
+              <span class="al-del-desc">{{ m.desc }}</span>
+            </button>
+          </div>
+
+          <!-- Conditional time input -->
+          <div class="al-time-row" *ngIf="deliveryMode === 'custom' || deliveryMode === 'digest'">
+            <p class="al-field-label">{{ deliveryMode === 'digest' ? 'Digest delivery time' : 'Send time' }}</p>
+            <div class="al-input-wrap slim">
+              <span class="msr">schedule</span>
+              <input type="time" [(ngModel)]="deliveryMode === 'digest' ? digestTime : customTime" />
+            </div>
+          </div>
+
+          <div class="al-realtime-note" *ngIf="deliveryMode === 'realtime'">
+            <span class="msr">bolt</span>
+            <div>
+              <b>You'll be notified immediately</b>
+              <p>Emails fire the moment conditions are met. Add precise conditions in Step 4 to avoid inbox noise.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════ STEP 3 · CHANNELS ══════════════ -->
+        <section *ngSwitchCase="'channels'" class="al-step">
+          <h3 class="wz-q left">Choose channels to monitor</h3>
+          <p class="wz-sub left">Select every channel you want this alert to watch. You can narrow the signal with conditions in the next step.</p>
+
+          <div class="al-ch-bar">
+            <span class="al-ch-count">
+              <span class="msr">{{ selectedChannels.length ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              <b>{{ selectedChannels.length }}</b>&nbsp;of {{ channels.length }} channels selected
+            </span>
+            <button class="al-selectall" (click)="toggleAllChannels()">
+              <span class="msr">{{ allChannelsSelected ? 'remove_done' : 'done_all' }}</span>
+              {{ allChannelsSelected ? 'Clear all' : 'Select all' }}
+            </button>
+          </div>
+
+          <div class="al-ch-grid">
+            <button class="al-ch-tile" *ngFor="let c of channels"
+                    [class.sel]="c.selected"
+                    [style.--ch]="c.color"
+                    (click)="toggleChannel(c)">
+              <span class="al-ch-check" [class.on]="c.selected"><span class="msr">check</span></span>
+              <span class="al-ch-ic" [style.background]="tint(c.color)" [style.color]="c.color">
+                <span class="msr">{{ c.icon }}</span>
+              </span>
+              <span class="al-ch-label">{{ c.label }}</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ══════════════ STEP 4 · CONDITIONS ══════════════ -->
+        <section *ngSwitchCase="'conditions'" class="al-step">
+          <h3 class="wz-q left">Define alert conditions</h3>
+          <p class="wz-sub left">Only alert when these conditions are met. Leave empty to match all incoming content from the selected channels.</p>
+
+          <!-- Condition rows -->
+          <div class="al-cond-list" *ngIf="conditions.length">
+            <div class="al-cond-row" *ngFor="let c of conditions; let i = index">
+              <span class="al-cond-num">{{ i + 1 }}</span>
+              <div class="al-cond-sel">
+                <select [(ngModel)]="c.field">
+                  <option *ngFor="let f of conditionFields" [value]="f">{{ f }}</option>
+                </select>
+                <span class="msr">expand_more</span>
+              </div>
+              <div class="al-cond-sel">
+                <select [(ngModel)]="c.operator">
+                  <option *ngFor="let op of operatorsFor(c.field)" [value]="op">{{ op }}</option>
+                </select>
+                <span class="msr">expand_more</span>
+              </div>
+              <input class="al-cond-val" type="text" [(ngModel)]="c.value" placeholder="Value…" />
+              <button class="al-cond-rm" (click)="removeCondition(c)" title="Remove">
+                <span class="msr">close</span>
+              </button>
+            </div>
+          </div>
+
+          <button class="al-add-cond" (click)="addCondition()">
+            <span class="msr">add_circle</span>Add condition
+          </button>
+
+          <div class="al-cond-empty" *ngIf="!conditions.length">
+            <div class="al-ce-icon"><span class="msr">filter_alt_off</span></div>
+            <p><b>No conditions set</b></p>
+            <p>This alert will fire for <em>all</em> incoming content. Add at least one condition to narrow the signal.</p>
+          </div>
+
+          <div class="al-preset-conds" *ngIf="!conditions.length">
+            <p class="al-sec-label">Jump-start from a preset</p>
+            <div class="al-cond-preset-row">
+              <button class="al-cond-preset" *ngFor="let p of conditionPresets"
+                      (click)="applyConditionPreset(p)">
+                <span class="msr">{{ p.icon }}</span>{{ p.label }}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════ STEP 5 · NOTIFY ══════════════ -->
+        <section *ngSwitchCase="'notify'" class="al-step">
+          <h3 class="wz-q left">Who gets notified?</h3>
+          <p class="wz-sub left">Add the team members who should receive this alert by email.</p>
+
+          <!-- Selected recipient chips -->
+          <div class="al-recipients" *ngIf="recipientEmails.length">
+            <div class="al-rec-chip" *ngFor="let r of recipientEmails">
+              <span class="al-rec-av" [style.background]="r.color">{{ r.initials }}</span>
+              <span class="al-rec-email">{{ r.email }}</span>
+              <button class="al-rec-x" (click)="removeRecipient(r)" title="Remove">
+                <span class="msr">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search input -->
+          <div class="al-email-search" [class.focused]="emailFocused">
+            <span class="msr">search</span>
+            <input type="text" [(ngModel)]="emailSearch" placeholder="Search by name or email…"
+                   (focus)="emailFocused = true" (blur)="onEmailBlur()" />
+          </div>
+
+          <!-- Suggestions dropdown -->
+          <div class="al-suggestions" *ngIf="filteredSuggestions.length && emailFocused">
+            <div class="al-sug-head">Team members</div>
+            <button class="al-sug" *ngFor="let s of filteredSuggestions" (click)="addRecipient(s)">
+              <span class="al-sug-av" [style.background]="s.color">{{ s.initials }}</span>
+              <span class="al-sug-info">
+                <span class="al-sug-email">{{ s.email }}</span>
+              </span>
+              <span class="msr al-sug-add">add</span>
+            </button>
+          </div>
+
+          <div class="al-empty-rec" *ngIf="!recipientEmails.length">
+            <span class="msr">inbox</span>
+            <p>No recipients yet — search and add team members above.</p>
+          </div>
+
+          <!-- Whitelist note -->
+          <div class="al-notify-note">
+            <span class="msr">shield</span>
+            <div>
+              <b>Whitelist <em>alerts&#64;locobuzz.com</em></b>
+              <p>Alert emails are sent from this address. Add it to your allowlist to ensure delivery.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════════ STEP 6 · REVIEW ══════════════ -->
+        <section *ngSwitchCase="'review'" class="al-step wz-review">
+
+          <!-- Hero summary card -->
+          <div class="wz-hero al-hero">
+            <div class="wz-hero-main">
+              <span class="wz-hero-av al-hero-av">
+                <span class="msr">notifications_active</span>
+              </span>
+              <div class="wz-hero-id">
+                <span class="wz-hero-name">{{ alertName }}</span>
+                <span class="wz-hero-handle">{{ deliveryModeLabel }} · from {{ startDate }}</span>
+              </div>
+              <span class="wz-hero-status"><span class="led"></span>Ready</span>
+            </div>
+            <div class="wz-hero-tags">
+              <span class="wz-modepill">
+                <span class="msr">calendar_today</span>{{ scheduleLabel }}
+              </span>
+              <span class="wz-modepill sync">
+                <span class="msr">{{ deliveryModeIcon }}</span>{{ deliveryModeLabel }}
+              </span>
+              <span class="wz-modepill" *ngIf="hasEndDate">
+                <span class="msr">event</span>Ends {{ endDate }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Channels -->
+          <div class="wz-collect">
+            <span class="wz-collect-h">
+              <span class="msr">hub</span>Channels
+              <span class="wz-sum-count">{{ selectedChannels.length }}</span>
+            </span>
+            <div class="wz-chiprow">
+              <span class="al-rev-chan" *ngFor="let c of selectedChannels">
+                <span class="al-rev-ic" [style.background]="tint(c.color)" [style.color]="c.color">
+                  <span class="msr">{{ c.icon }}</span>
+                </span>{{ c.label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Conditions -->
+          <div class="wz-collect">
+            <span class="wz-collect-h">
+              <span class="msr">filter_alt</span>Conditions
+              <span class="wz-sum-count">{{ conditions.length || 'All' }}</span>
+            </span>
+            <div class="al-rev-conds" *ngIf="conditions.length">
+              <div class="al-rev-cond" *ngFor="let c of conditions">
+                <span class="al-rcc field">{{ c.field }}</span>
+                <span class="al-rcc op">{{ c.operator }}</span>
+                <span class="al-rcc val">{{ c.value || '—' }}</span>
+              </div>
+            </div>
+            <p class="al-rev-all" *ngIf="!conditions.length">All incoming content — no conditions applied.</p>
+          </div>
+
+          <!-- Recipients -->
+          <div class="wz-collect">
+            <span class="wz-collect-h">
+              <span class="msr">mail</span>Recipients
+              <span class="wz-sum-count">{{ recipientEmails.length }}</span>
+            </span>
+            <div class="wz-chiprow">
+              <span class="wz-chip2" *ngFor="let r of recipientEmails">
+                <span class="wz-chip2-av" [style.background]="r.color">{{ r.initials }}</span>
+                {{ r.email }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Meta strip -->
+          <div class="wz-metastrip">
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">calendar_month</span>Start</span>
+              <span class="wz-meta-v">{{ startDate }}</span>
+            </div>
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">event</span>End</span>
+              <span class="wz-meta-v">{{ hasEndDate ? endDate : 'No expiry' }}</span>
+            </div>
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">schedule</span>Days</span>
+              <span class="wz-meta-v">{{ scheduleLabel }}</span>
+            </div>
+          </div>
+
+        </section>
+
+      </div><!-- /wz-body -->
+
+      <!-- Footer -->
+      <footer class="wz-foot">
+        <span class="wz-meta">Step {{ stepIndex + 1 }} of {{ totalSteps }} · {{ steps[stepIndex].label }}</span>
+        <div class="wz-foot-btns">
+          <button class="wz-back" *ngIf="stepIndex > 0" (click)="back()">
+            <span class="msr">arrow_back</span>Back
+          </button>
+          <button class="wz-next" [class.finish]="onReview" [disabled]="!canContinue" (click)="next()">
+            <span class="msr" *ngIf="onReview">notifications_active</span>
+            {{ onReview ? 'Create alert' : 'Continue' }}
+            <span class="msr" *ngIf="!onReview">arrow_forward</span>
+          </button>
+        </div>
+      </footer>
+    </div><!-- /wz-main -->
+
+    <!-- ─────────────── Right: contextual aside ─────────────── -->
+    <aside class="wz-aside" [ngSwitch]="current">
+
+      <!-- NAME -->
+      <ng-container *ngSwitchCase="'name'">
+        <span class="wz-aside-eyebrow">Step 1 · Identity</span>
+        <h3 class="wz-aside-title">A great alert starts with a clear name.</h3>
+        <p class="wz-aside-lead">Name it so anyone on your team instantly knows what it tracks and why it matters.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">label</span></span>
+          <div class="wz-feat-text"><b>Use channel + topic format</b><span>e.g. "Negative Sentiment — Twitter" or "Influencer Buzz — India".</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">bolt</span></span>
+          <div class="wz-feat-text"><b>Start from a template</b><span>Pick a preset below the name field to auto-fill the name and pre-configure conditions.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">tips_and_updates</span>Build a library</span>
+          <p>Create one alert per scenario — crisis, influencer, competitor, rating — so each sends only what matters to that audience.</p>
+        </div>
+      </ng-container>
+
+      <!-- SCHEDULE -->
+      <ng-container *ngSwitchCase="'schedule'">
+        <span class="wz-aside-eyebrow">Step 2 · Schedule</span>
+        <h3 class="wz-aside-title">Control when you hear from us.</h3>
+        <p class="wz-aside-lead">Three delivery modes let you balance awareness with inbox sanity.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">bolt</span></span>
+          <div class="wz-feat-text"><b>Real-Time</b><span>Best for high-priority alerts like crises or viral content where every minute counts.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">summarize</span></span>
+          <div class="wz-feat-text"><b>Daily Digest</b><span>One clean summary per day. Ideal for routine monitoring without overwhelming your inbox.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">schedule</span></span>
+          <div class="wz-feat-text"><b>Custom Time</b><span>Deliver at your chosen hour — great for shift-handover reports or morning briefings.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">info</span>No end date?</span>
+          <p>Leave "End date" unchecked for an ongoing alert that monitors indefinitely.</p>
+        </div>
+      </ng-container>
+
+      <!-- CHANNELS -->
+      <ng-container *ngSwitchCase="'channels'">
+        <span class="wz-aside-eyebrow">Step 3 · Data scope</span>
+        <h3 class="wz-aside-title">Listen where your audience talks.</h3>
+        <p class="wz-aside-lead">Select every channel relevant to this alert — more channels means wider coverage. You'll narrow the signal with conditions next.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">checklist</span></span>
+          <div class="wz-feat-text"><b>Mix social, reviews &amp; messaging</b><span>Combine Twitter, GMB, Trustpilot, WhatsApp and more in a single alert.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">tune</span></span>
+          <div class="wz-feat-text"><b>Fine-tune with conditions</b><span>Cast a wide net here, then filter precisely in Step 4 so only meaningful events fire.</span></div>
+        </div>
+        <div class="wz-safe">
+          <span class="wz-safe-head"><span class="msr">info</span>Connected channels only</span>
+          <ul>
+            <li><span class="msr">check</span>Only your configured channels appear here</li>
+            <li><span class="msr">check</span>Add new channels in Channel Configuration</li>
+          </ul>
+        </div>
+      </ng-container>
+
+      <!-- CONDITIONS -->
+      <ng-container *ngSwitchCase="'conditions'">
+        <span class="wz-aside-eyebrow">Step 4 · Conditions</span>
+        <h3 class="wz-aside-title">Only get alerted when it counts.</h3>
+        <p class="wz-aside-lead">Conditions filter the stream — without them, every mention on every selected channel fires an email.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">sentiment_dissatisfied</span></span>
+          <div class="wz-feat-text"><b>Sentiment</b><span>Alert on negative posts to catch issues early, or positive ones to amplify success.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">trending_up</span></span>
+          <div class="wz-feat-text"><b>Follower count</b><span>Prioritise mentions from high-reach accounts to spot influencer activity fast.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">manage_search</span></span>
+          <div class="wz-feat-text"><b>Keyword match</b><span>Trigger only when specific words appear in the post — brand name, product, competitor.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">tips_and_updates</span>Multiple conditions</span>
+          <p>All conditions must match for the alert to fire (AND logic). Use separate alerts for OR scenarios.</p>
+        </div>
+      </ng-container>
+
+      <!-- NOTIFY -->
+      <ng-container *ngSwitchCase="'notify'">
+        <span class="wz-aside-eyebrow">Step 5 · Recipients</span>
+        <h3 class="wz-aside-title">The right people, at the right time.</h3>
+        <p class="wz-aside-lead">Add anyone who needs to know when this alert fires — team leads, analysts, or external stakeholders.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">group</span></span>
+          <div class="wz-feat-text"><b>No limit on recipients</b><span>Add as many as needed — each person gets their own individual email.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">alternate_email</span></span>
+          <div class="wz-feat-text"><b>External emails welcome</b><span>You can add any valid address, not just Locobuzz accounts.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">shield</span>Whitelist the sender</span>
+          <p>Alert emails come from <b>alerts&#64;locobuzz.com</b>. Ask recipients to add it to their allowlist for reliable delivery.</p>
+        </div>
+      </ng-container>
+
+      <!-- REVIEW -->
+      <ng-container *ngSwitchCase="'review'">
+        <span class="wz-aside-eyebrow">You're all set</span>
+        <h3 class="wz-aside-title">{{ alertName }} is ready to go.</h3>
+        <p class="wz-aside-lead">Here's what happens the moment you create it.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">sensors</span></span>
+          <div class="wz-feat-text"><b>Monitoring starts immediately</b><span>Locobuzz begins watching the selected channels as soon as you save.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">mail</span></span>
+          <div class="wz-feat-text"><b>Emails fire on match</b><span>Recipients are notified via {{ deliveryModeLabel }} whenever conditions are met.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">edit</span></span>
+          <div class="wz-feat-text"><b>Edit or pause anytime</b><span>Manage this alert from the Alerts Manager list at any time.</span></div>
+        </div>
+        <div class="wz-safe">
+          <span class="wz-safe-head"><span class="msr">check_circle</span>Summary</span>
+          <ul>
+            <li><span class="msr">check</span>{{ selectedChannels.length }} channel{{ selectedChannels.length !== 1 ? 's' : '' }} monitored</li>
+            <li><span class="msr">check</span>{{ conditions.length ? conditions.length + ' condition' + (conditions.length !== 1 ? 's' : '') : 'All content' }}</li>
+            <li><span class="msr">check</span>{{ recipientEmails.length }} recipient{{ recipientEmails.length !== 1 ? 's' : '' }}</li>
+            <li><span class="msr">check</span>{{ deliveryModeLabel }} delivery</li>
+          </ul>
+        </div>
+      </ng-container>
+
+    </aside>
+
+  </div><!-- /wz-shell -->
+</div><!-- /wz-modal -->
