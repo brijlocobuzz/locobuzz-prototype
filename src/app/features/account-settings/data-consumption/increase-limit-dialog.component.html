@@ -7,15 +7,19 @@
     <!-- Form state -->
     <ng-container *ngIf="!sent; else sentTpl">
       <header class="rq-head">
-        <div class="rq-head-text"><h2 id="rq-title">Request More Limit</h2></div>
+        <span class="rq-head-icon" aria-hidden="true"><span class="msr">trending_up</span></span>
+        <div class="rq-head-text">
+          <h2 id="rq-title">Request More Limit</h2>
+          <p class="rq-head-sub">{{ serviceName }}</p>
+        </div>
         <button class="rq-close" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
       <div class="rq-body">
         <p class="rq-lead">
           You've used <strong>{{ fmt(usedAmount) }}</strong> of your <strong>{{ fmt(currentLimit) }}</strong>
-          limit for <strong>{{ serviceName }}</strong>. Enter how much more you need and a short reason —
-          we'll review your request and get back to you shortly.
+          limit. Enter how much more you need and a short reason — we'll review your request
+          and get back to you shortly.
         </p>
 
         <div class="rq-compare">

@@ -1129,13 +1129,13 @@
 /* ===================== Step 2 · logo & color (live preview) ===================== */
 .ab2-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   gap: 22px;
   align-items: start;
 }
 
 /* ---- live preview card ---- */
-.ab2-preview { display: flex; flex-direction: column; gap: 12px; }
+.ab2-preview { display: flex; flex-direction: column; gap: 12px; order: 2; }
 .ab2-card {
   border: 1px solid var(--ab-line);
   border-radius: 18px;
@@ -1247,7 +1247,7 @@
 .ab2-preview-cap .msr { font-size: var(--font-size-16); }
 
 /* ---- controls ---- */
-.ab2-controls { display: flex; flex-direction: column; gap: 16px; }
+.ab2-controls { display: flex; flex-direction: column; gap: 16px; order: 1; }
 .ab2-block-title {
   margin: 0 0 10px;
   font-size: var(--font-size-14);

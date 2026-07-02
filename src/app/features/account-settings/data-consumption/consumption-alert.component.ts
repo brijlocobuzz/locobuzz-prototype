@@ -16,6 +16,8 @@ interface HistoryEntry {
   text: string;
   actor: string;
   at: Date;
+  /** 'sent' = an alert email actually delivered to the client; 'change' = a settings edit. */
+  kind: 'change' | 'sent';
 }
 
 interface ConfirmDialog {
@@ -42,19 +44,25 @@ export class ConsumptionAlertComponent {
   /** Most usage levels a user can watch at once. */
   readonly maxThresholds = 5;
 
-  /** How many recent history entries the timeline shows. */
-  readonly historyLimit = 10;
+  /** How far back the timeline reaches (in days) — the last month of activity. */
+  readonly historyWindowDays = 30;
 
-  /** The signed-in user — recorded as the actor on every history entry. */
+  /** The signed-in user — recorded as the actor on every settings change. */
   readonly currentUser = 'amit.nayak@locobuzz.com';
 
-  /** Audit trail of recent changes, newest first. */
+  /** Shown as the actor on automated alert-delivery entries. */
+  readonly systemActor = 'Locobuzz (automated)';
+
+  /** Activity trail — both settings changes and alerts delivered to the client, newest first. */
   history: HistoryEntry[] = [
-    { icon: 'save',     text: 'Alert settings saved',                          actor: 'amit.nayak@locobuzz.com',  at: this.ago(60 * 26) },
-    { icon: 'mail',     text: 'Recipient amit.nayak@locobuzz.com added to Threshold alerts', actor: 'amit.nayak@locobuzz.com', at: this.ago(60 * 26) },
-    { icon: 'tune',     text: 'Threshold levels updated to 10, 20, 25, 30, 90, 95%',         actor: 'amit.nayak@locobuzz.com', at: this.ago(60 * 27) },
-    { icon: 'schedule', text: 'Daily digest second notification set to 11:45',  actor: 'priya.shah@locobuzz.com',  at: this.ago(60 * 24 * 4) },
-    { icon: 'mail',     text: 'Recipient #hydcce-crf@goindigo.in added to Daily digest',     actor: 'priya.shah@locobuzz.com', at: this.ago(60 * 24 * 4) },
+    { icon: 'send',     text: 'Threshold alert emailed to recipients — 95% of monthly limit reached', actor: 'Locobuzz (automated)', at: this.ago(60 * 2),  kind: 'sent' },
+    { icon: 'save',     text: 'Alert settings saved',                          actor: 'amit.nayak@locobuzz.com',  at: this.ago(60 * 26), kind: 'change' },
+    { icon: 'mail',     text: 'Recipient amit.nayak@locobuzz.com added to Threshold alerts', actor: 'amit.nayak@locobuzz.com', at: this.ago(60 * 26), kind: 'change' },
+    { icon: 'tune',     text: 'Threshold levels updated to 10, 20, 25, 30, 90, 95%',         actor: 'amit.nayak@locobuzz.com', at: this.ago(60 * 27), kind: 'change' },
+    { icon: 'send',     text: 'Threshold alert emailed to recipients — 90% of monthly limit reached', actor: 'Locobuzz (automated)', at: this.ago(60 * 34), kind: 'sent' },
+    { icon: 'send',     text: 'Daily digest emailed to recipients',            actor: 'Locobuzz (automated)',     at: this.ago(60 * 24 * 3), kind: 'sent' },
+    { icon: 'schedule', text: 'Daily digest second notification set to 11:45',  actor: 'priya.shah@locobuzz.com',  at: this.ago(60 * 24 * 4), kind: 'change' },
+    { icon: 'mail',     text: 'Recipient #hydcce-crf@goindigo.in added to Daily digest',     actor: 'priya.shah@locobuzz.com', at: this.ago(60 * 24 * 4), kind: 'change' },
   ];
 
   threshold: AlertSection & { thresholds: number[] } = {
@@ -63,7 +71,7 @@ export class ConsumptionAlertComponent {
     recipients: ['amit.nayak@locobuzz.com'],
     draftEmail: '',
     emailError: '',
-    thresholds: [10, 25, 50, 90, 95],
+    thresholds: [75, 90],
   };
 
   digest: AlertSection & { time1: string; time2Enabled: boolean; time2: string } = {
@@ -103,15 +111,19 @@ export class ConsumptionAlertComponent {
   get dirty(): boolean { return this.snapshot() !== this.savedSnapshot; }
 
   /* ---- history ---- */
-  /** The most recent entries shown in the timeline (newest first, capped). */
-  get recentHistory(): HistoryEntry[] { return this.history.slice(0, this.historyLimit); }
+  /** Activity from the last month (settings changes + sent alerts), newest first. */
+  get recentHistory(): HistoryEntry[] {
+    const cutoff = Date.now() - this.historyWindowDays * 24 * 60 * 60_000;
+    return this.history.filter(h => h.at.getTime() >= cutoff);
+  }
 
   /** A Date `minutes` in the past — used to seed the audit trail. */
   private ago(minutes: number): Date { return new Date(Date.now() - minutes * 60_000); }
 
-  /** Prepend an entry to the change history (newest first). */
-  private logHistory(icon: string, text: string) {
-    this.history.unshift({ icon, text, actor: this.currentUser, at: new Date() });
+  /** Prepend an entry to the activity history (newest first). */
+  private logHistory(icon: string, text: string, kind: 'change' | 'sent' = 'change') {
+    const actor = kind === 'sent' ? this.systemActor : this.currentUser;
+    this.history.unshift({ icon, text, actor, at: new Date(), kind });
   }
 
   /** Human-friendly "x ago" label for a history timestamp. */
