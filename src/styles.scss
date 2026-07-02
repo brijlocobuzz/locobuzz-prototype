@@ -140,3 +140,13 @@ body {
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-thumb { background: #d4d9e2; border-radius: 8px; }
 *::-webkit-scrollbar-track { background: transparent; }
+
+/* Multi-line Material tooltip (used by Manage Brands "Tickets creation" info) */
+.mdc-tooltip.lb-tip .mdc-tooltip__surface {
+  white-space: pre-line;
+  max-width: 280px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}

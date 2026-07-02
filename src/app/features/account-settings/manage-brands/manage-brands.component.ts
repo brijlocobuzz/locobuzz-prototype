@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { MANAGED_BRANDS, brandLogo, ManagedBrand, BrandMember } from './manage-brands-data';
 import { BRAND_ICONS } from '../channel-data';
-import { AddBrandWizardComponent } from './add-brand-wizard.component';
+import { AddBrandWizardComponent, NewBrandPayload } from './add-brand-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
 /** A single custom-view filter condition (same model as Channel Config). */
@@ -16,16 +17,31 @@ export interface ViewCondition {
 }
 export interface SavedView { id: string; label: string; filter: ViewCondition; }
 
+/** A pending confirmation prompt shown over the grid. */
+export interface ConfirmPrompt {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  danger: boolean;
+  action: () => void;
+}
+
 @Component({
   selector: 'app-manage-brands',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddBrandWizardComponent, PaginationBarComponent],
+  imports: [CommonModule, FormsModule, MatTooltipModule, AddBrandWizardComponent, PaginationBarComponent],
   templateUrl: './manage-brands.component.html',
   styleUrl: './manage-brands.component.scss',
 })
 export class ManageBrandsComponent {
   readonly brandLogo = brandLogo;
   brands: ManagedBrand[] = [...MANAGED_BRANDS];
+
+  /** Explainer shown on hovering the Tickets-creation info icon. */
+  readonly ticketsTip =
+    'Ticket creation decides whether incoming mentions become actionable tickets.\n\n'
+    + 'On — qualifying mentions create tickets your team can action.\n'
+    + 'Off — mentions are captured for listening & analytics only; no tickets are created.';
 
   search = '';
   wizardOpen = false;
@@ -62,10 +78,62 @@ export class ManageBrandsComponent {
     return u.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
   }
 
-  /** Segmented On/Off setter for ticket creation. */
-  setTickets(b: ManagedBrand, on: boolean, ev: Event) {
+  /* ===================================================================
+     Confirmation prompts for destructive / stateful grid actions
+     =================================================================== */
+  confirm: ConfirmPrompt | null = null;
+
+  private ask(p: ConfirmPrompt) { this.confirm = p; }
+  onConfirm() { this.confirm?.action(); this.confirm = null; }
+  onCancelConfirm() { this.confirm = null; }
+
+  /** Ask before flipping ticket creation for a brand. */
+  requestToggleTickets(b: ManagedBrand, ev: Event) {
     ev.stopPropagation();
-    b.ticketsEnabled = on;
+    const next = !b.ticketsEnabled;
+    this.ask({
+      title: next ? 'Enable ticket creation?' : 'Disable ticket creation?',
+      message: next
+        ? `Mentions for “${b.name}” will start creating actionable tickets for your team.`
+        : `Mentions for “${b.name}” will no longer create tickets — they'll be captured for listening & analytics only.`,
+      confirmLabel: next ? 'Enable' : 'Disable',
+      danger: !next,
+      action: () => (b.ticketsEnabled = next),
+    });
+  }
+
+  /** Ask before deleting a brand. */
+  requestDelete(b: ManagedBrand, ev: Event) {
+    ev.stopPropagation();
+    this.ask({
+      title: 'Delete brand?',
+      message: `“${b.name}” and its configuration will be permanently removed. This action can't be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      action: () => this.deleteBrand(b),
+    });
+  }
+
+  private deleteBrand(b: ManagedBrand) {
+    this.brands = this.brands.filter(x => x.id !== b.id);
+    this.selected.delete(b.id);
+    if (this.detail?.id === b.id) this.detail = null;
+  }
+
+  /** Ask before deleting the current selection (bulk). */
+  requestBulkDelete() {
+    const n = this.selected.size;
+    if (!n) return;
+    this.ask({
+      title: `Delete ${n} brand${n === 1 ? '' : 's'}?`,
+      message: `The selected brand${n === 1 ? '' : 's'} and their configuration will be permanently removed. This action can't be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      action: () => {
+        this.brands = this.brands.filter(x => !this.selected.has(x.id));
+        this.selected.clear();
+      },
+    });
   }
 
   /* ===================================================================
@@ -231,19 +299,33 @@ export class ManageBrandsComponent {
     this.detail = null;
   }
 
-  onBrandSaved(brand: { name: string; color: string; country: string; users: number }) {
+  onBrandSaved(b: NewBrandPayload) {
+    const slug = b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     this.brands = [
       {
-        id: brand.name.toLowerCase().replace(/\s+/g, '-'),
-        name: brand.name,
-        domain: `${brand.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        color: brand.color,
-        country: brand.country,
-        users: brand.users,
+        id: `${slug || 'brand'}-${this.brands.length}`,
+        name: b.name,
+        domain: `${b.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+        color: b.color,
+        country: b.country,
+        users: b.users.length,
         channels: 0,
-        ticketsEnabled: true,
+        ticketsEnabled: b.ticketsEnabled,
+        logoUrl: b.logoUrl ?? undefined,
+        aiFriendlyName: b.aiFriendlyName,
+        description: b.description,
+        userPreview: b.users,
+        channelIds: [],
+        categoryGroup: b.categoryGroup,
+        catchAll: b.catchAll,
+        products: b.products,
+        competitors: b.competitors,
       },
       ...this.brands,
     ];
+    // jump to the first page so the newly added brand is visible
+    this.page = 1;
+    this.search = '';
+    this.activeViewId = 'all';
   }
 }

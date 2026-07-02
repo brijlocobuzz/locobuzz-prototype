@@ -33,7 +33,8 @@
   </div>
 </header>
 
-<!-- ===== SSO (single sign-on) ===== -->
+<!-- ===== SSO (single sign-on) — commented out / hidden above the grid ===== -->
+<ng-container *ngIf="false">
 <!-- Not configured: feature promo + setup CTA -->
 <section class="sso-card setup" [class.collapsed]="ssoCardCollapsed" *ngIf="!sso.configured">
   <div class="sso-main">
@@ -117,6 +118,7 @@
     </button>
   </div>
 </section>
+</ng-container>
 
 <!-- ===== SSO setup modal ===== -->
 <div class="sso-modal-scrim" *ngIf="ssoModalOpen" (click)="closeSsoModal()"></div>
@@ -296,6 +298,7 @@
           <th class="sortable" (click)="sortBy('status')">
             <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
           </th>
+          <th class="col-lastlogin">Last Login</th>
           <th class="col-sso" *ngIf="sso.configured">SSO Enabled</th>
           <th class="col-act">Action</th>
         </tr>
@@ -334,6 +337,11 @@
               <button class="seg-btn" [class.on]="u.active" (click)="setActive(u, true, $event)">Active</button>
               <button class="seg-btn" [class.off]="!u.active" (click)="setActive(u, false, $event)">Inactive</button>
             </div>
+          </td>
+
+          <!-- last login: relative recency -->
+          <td class="col-lastlogin">
+            <span class="t-lastlogin"><span class="msr">schedule</span>{{ lastLogin(u) }}</span>
           </td>
 
           <!-- SSO: enabled chip, or an Invite button to grant work-email sign-in -->

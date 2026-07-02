@@ -370,6 +370,8 @@
 .t-owner { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-13); color: var(--text-3); }
 .t-owner .msr { font-size: var(--font-size-14); }
 .t-role { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; color: var(--text-2); background: #eef1f6; }
+.t-lastlogin { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-13); color: var(--text-3); white-space: nowrap; }
+.t-lastlogin .msr { font-size: var(--font-size-15); color: var(--text-3); }
 
 /* avatar / logo stacks */
 .stack { display: inline-flex; align-items: center; }
@@ -393,6 +395,7 @@
 
 /* ===== SSO-enabled column ===== */
 .col-sso { width: 130px; }
+.col-lastlogin { width: 130px; }
 .sso-on { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; color: #16794c; background: #e7f6ee; }
 .sso-on .msr { font-size: var(--font-size-16); }
 .sso-invite { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; cursor: pointer; color: var(--brand, #4f46e5); background: #eef0fe; border: 1px solid #dcdffb; transition: background .15s, color .15s; }

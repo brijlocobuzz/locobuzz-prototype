@@ -24,6 +24,8 @@ export interface ManagedUser {
   color: string;
   brands: number;
   active: boolean;
+  /** Days since the user last logged in (drives the "5 days ago" column). */
+  lastLoginDays?: number;
   /** Whether this user can sign in via the configured SSO org (work email). */
   ssoEnabled?: boolean;
 

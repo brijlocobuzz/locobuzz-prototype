@@ -113,7 +113,12 @@
             <span class="th-in">Channels <span class="msr sort-ic" [class.on]="sortKey==='channels'">{{ sortIcon('channels') }}</span></span>
           </th>
           <th class="sortable" (click)="sortBy('tickets')">
-            <span class="th-in">Tickets creation <span class="msr sort-ic" [class.on]="sortKey==='tickets'">{{ sortIcon('tickets') }}</span></span>
+            <span class="th-in">
+              Tickets creation
+              <span class="msr th-info" [matTooltip]="ticketsTip" matTooltipClass="lb-tip"
+                    matTooltipPosition="above" (click)="$event.stopPropagation()">info</span>
+              <span class="msr sort-ic" [class.on]="sortKey==='tickets'">{{ sortIcon('tickets') }}</span>
+            </span>
           </th>
           <th class="col-act">Action</th>
         </tr>
@@ -126,7 +131,7 @@
 
           <td class="col-name pin">
             <div class="t-profile">
-              <span class="t-avatar" [style.background]="b.color + '1a'"><img [src]="brandLogo(b.domain)" [alt]="b.name" /></span>
+              <span class="t-avatar" [style.background]="b.color + '1a'"><img [src]="b.logoUrl || brandLogo(b.domain)" [alt]="b.name" /></span>
               <span class="t-who">
                 <span class="t-name">{{ b.name }}</span>
                 <span class="t-owner"><span class="msr">language</span>{{ b.domain }}</span>
@@ -154,21 +159,20 @@
             </div>
           </td>
 
-          <!-- tickets creation: segmented control -->
+          <!-- tickets creation: toggle switch -->
           <td>
-            <div class="seg" (click)="$event.stopPropagation()">
-              <button class="seg-btn" [class.on]="b.ticketsEnabled" (click)="setTickets(b, true, $event)">On</button>
-              <button class="seg-btn" [class.off]="!b.ticketsEnabled" (click)="setTickets(b, false, $event)">Off</button>
-            </div>
+            <button class="tk-toggle" [class.on]="b.ticketsEnabled"
+                    (click)="requestToggleTickets(b, $event)"
+                    [attr.aria-pressed]="b.ticketsEnabled">
+              <span class="tk-track"><span class="tk-knob"></span></span>
+              <span class="tk-lbl">{{ b.ticketsEnabled ? 'On' : 'Off' }}</span>
+            </button>
           </td>
 
           <td class="col-act">
             <div class="t-acts">
               <button class="t-act" title="Edit"><span class="msr">edit</span></button>
-              <button class="t-act" title="{{ b.ticketsEnabled ? 'Disable tickets' : 'Enable tickets' }}">
-                <span class="msr">{{ b.ticketsEnabled ? 'block' : 'check_circle' }}</span>
-              </button>
-              <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+              <button class="t-act danger" title="Delete" (click)="requestDelete(b, $event)"><span class="msr">delete</span></button>
             </div>
           </td>
         </tr>
@@ -182,7 +186,7 @@
     <span class="bb-sep"></span>
     <button class="bb-btn"><span class="msr">block</span>Disable tickets</button>
     <button class="bb-btn"><span class="msr">group_add</span>Assign users</button>
-    <button class="bb-btn danger"><span class="msr">delete</span>Delete</button>
+    <button class="bb-btn danger" (click)="requestBulkDelete()"><span class="msr">delete</span>Delete</button>
     <span class="bb-sep"></span>
     <button class="bb-btn close" (click)="clearSelection()"><span class="msr">close</span></button>
   </div>
@@ -191,7 +195,7 @@
   <div class="pf-grid" *ngIf="viewMode === 'card'">
     <article class="card" *ngFor="let b of displayBrands" (click)="openDetail(b)">
       <div class="card-head">
-        <span class="card-avatar" [style.background]="b.color + '1a'"><img [src]="brandLogo(b.domain)" [alt]="b.name" /></span>
+        <span class="card-avatar" [style.background]="b.color + '1a'"><img [src]="b.logoUrl || brandLogo(b.domain)" [alt]="b.name" /></span>
         <div class="card-who">
           <span class="card-name">{{ b.name }}</span>
           <span class="card-owner"><span class="msr">public</span>{{ b.country }}</span>
@@ -207,8 +211,7 @@
 
       <div class="card-actions" (click)="$event.stopPropagation()">
         <button class="ca-btn"><span class="msr">edit</span>Edit</button>
-        <button class="ca-btn"><span class="msr">{{ b.ticketsEnabled ? 'block' : 'check_circle' }}</span>{{ b.ticketsEnabled ? 'Disable' : 'Enable' }}</button>
-        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+        <button class="ca-btn danger" (click)="requestDelete(b, $event)"><span class="msr">delete</span>Delete</button>
       </div>
     </article>
 
@@ -229,7 +232,7 @@
 
       <div class="dw-head">
         <div class="dw-title">
-          <span class="t-avatar lg" [style.background]="d.color + '1a'"><img [src]="brandLogo(d.domain)" [alt]="d.name" /></span>
+          <span class="t-avatar lg" [style.background]="d.color + '1a'"><img [src]="d.logoUrl || brandLogo(d.domain)" [alt]="d.name" /></span>
           <div class="dw-who">
             <h2>{{ d.name }}</h2>
             <span class="dw-owner"><span class="msr">language</span>{{ d.domain }}</span>
@@ -261,10 +264,11 @@
         </div>
         <div class="dw-field">
           <span class="dw-lbl"><span class="msr">confirmation_number</span>Ticket creation</span>
-          <div class="seg" (click)="$event.stopPropagation()">
-            <button class="seg-btn" [class.on]="d.ticketsEnabled" (click)="setTickets(d, true, $event)">On</button>
-            <button class="seg-btn" [class.off]="!d.ticketsEnabled" (click)="setTickets(d, false, $event)">Off</button>
-          </div>
+          <button class="tk-toggle" [class.on]="d.ticketsEnabled"
+                  (click)="requestToggleTickets(d, $event)" [attr.aria-pressed]="d.ticketsEnabled">
+            <span class="tk-track"><span class="tk-knob"></span></span>
+            <span class="tk-lbl">{{ d.ticketsEnabled ? 'On' : 'Off' }}</span>
+          </button>
         </div>
 
         <!-- Listening channels -->
@@ -304,8 +308,7 @@
 
       <div class="dw-foot">
         <button class="ca-btn"><span class="msr">edit</span>Edit</button>
-        <button class="ca-btn"><span class="msr">{{ d.ticketsEnabled ? 'block' : 'check_circle' }}</span>{{ d.ticketsEnabled ? 'Disable' : 'Enable' }}</button>
-        <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+        <button class="ca-btn danger" (click)="requestDelete(d, $event)"><span class="msr">delete</span>Delete</button>
       </div>
     </ng-container>
   </aside>
@@ -316,3 +319,17 @@
                       (closed)="wizardOpen = false"
                       (saved)="onBrandSaved($event)">
 </app-add-brand-wizard>
+
+<!-- ===== Confirmation prompt ===== -->
+<div class="cf-scrim" *ngIf="confirm" (click)="onCancelConfirm()"></div>
+<div class="cf-modal" *ngIf="confirm" role="alertdialog" aria-modal="true">
+  <span class="cf-ic" [class.danger]="confirm.danger">
+    <span class="msr">{{ confirm.danger ? 'warning' : 'help' }}</span>
+  </span>
+  <h3 class="cf-title">{{ confirm.title }}</h3>
+  <p class="cf-msg">{{ confirm.message }}</p>
+  <div class="cf-actions">
+    <button class="cf-btn" (click)="onCancelConfirm()">Cancel</button>
+    <button class="cf-btn primary" [class.danger]="confirm.danger" (click)="onConfirm()">{{ confirm.confirmLabel }}</button>
+  </div>
+</div>

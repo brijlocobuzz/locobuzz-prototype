@@ -22,20 +22,41 @@
       </span>
     </div>
 
-    <h2 class="ab-celebrate-title">Brand created!</h2>
-    <p class="ab-celebrate-sub">{{ brandSummary }}</p>
+    <h2 class="ab-celebrate-title">{{ brandName }} is ready! 🎉</h2>
+    <p class="ab-celebrate-sub">Your brand is set up for monitoring and analytics.</p>
 
-    <div class="ab-celebrate-pill">
-      <span class="ab-mini-ic" [style.background]="color + '1a'" [style.color]="color">
-        <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="" />
-        <span *ngIf="!logoDataUrl">{{ brandInitials }}</span>
-      </span>
-      {{ brandName }} · {{ country }}
+    <!-- recap card -->
+    <div class="ab-recap">
+      <div class="ab-recap-head">
+        <span class="ab-recap-logo" [style.background]="color + '1a'" [style.color]="color">
+          <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="" />
+          <span *ngIf="!logoDataUrl">{{ brandInitials }}</span>
+        </span>
+        <span class="ab-recap-id">
+          <span class="ab-recap-name">{{ brandName }}</span>
+          <span class="ab-recap-meta"><span class="msr">public</span>{{ country }}</span>
+        </span>
+        <span class="ab-recap-color"><span class="ab-recap-dot" [style.background]="color"></span>{{ color | uppercase }}</span>
+      </div>
+
+      <div class="ab-recap-grid">
+        <span class="ab-recap-fact"><span class="msr">group</span><b>{{ selectedUserIds.size }}</b> user{{ selectedUserIds.size === 1 ? '' : 's' }}</span>
+        <span class="ab-recap-fact"><span class="msr">confirmation_number</span>Ticket creation {{ ticketsEnabled ? 'on' : 'off' }}</span>
+        <span class="ab-recap-fact"><span class="msr">account_tree</span>{{ categoryGroup }}</span>
+        <span class="ab-recap-fact"><span class="msr">label</span>Catch-all: {{ catchAll }}</span>
+        <span class="ab-recap-fact"><span class="msr">deployed_code</span><b>{{ products.length }}</b> product{{ products.length === 1 ? '' : 's' }}</span>
+        <span class="ab-recap-fact"><span class="msr">flag</span><b>{{ competitors.length }}</b> competitor{{ competitors.length === 1 ? '' : 's' }}</span>
+      </div>
     </div>
 
-    <button type="button" class="ab-btn-primary ab-celebrate-done" (click)="complete()">
-      <span class="msr">close</span> Close
-    </button>
+    <div class="ab-celebrate-actions">
+      <button type="button" class="ab-btn-stroked" (click)="addAnother()">
+        <span class="msr">add</span> Add another Brand
+      </button>
+      <button type="button" class="ab-btn-primary" (click)="complete()">
+        <span class="msr">check</span> Close
+      </button>
+    </div>
   </div>
 
   <ng-container *ngIf="!celebrating">
@@ -75,7 +96,7 @@
     <!-- ---------- Step 1 · Brand identity ---------- -->
     <section class="ab-step-pane" *ngIf="currentStep === 1">
       <h1 class="ab-pane-title">Brand identity</h1>
-      <p class="ab-pane-sub">Name your brand and write a short description so your team and AI know what it stands for.</p>
+      <p class="ab-pane-sub">Name your brand and add a short description so your team and AI understand it.</p>
 
       <!-- Brand Name -->
       <div class="ab-field ab-field-name">
@@ -108,41 +129,47 @@
 
         <!-- Tab 2 · AI -->
         <div class="ab-tabpanel" *ngIf="descMode === 'ai'">
-          <p class="ab-hint top" *ngIf="brandName.trim().length < 3">Enter a brand name above to generate AI values.</p>
+          <p class="ab-hint top" *ngIf="brandName.trim().length < 3">Enter a brand name above to generate a description with AI.</p>
 
-          <ng-container *ngIf="brandName.trim().length >= 3">
-            <!-- AI friendly name -->
-            <label class="ab-sublabel">AI Friendly Name <i>*</i></label>
-            <div class="ab-ainame">
-              <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100"
-                     [disabled]="aiNameLoading" [(ngModel)]="aiFriendlyName" />
-              <span class="ab-ainame-loading" *ngIf="aiNameLoading"><span class="ab-spinner dark"></span>Generating…</span>
-            </div>
-            <p class="ab-hint" *ngIf="!aiNameError && !aiNameLoading">Used internally so the AI references your brand consistently.</p>
-            <p class="ab-err" *ngIf="aiNameError">
-              <span class="msr">error</span>{{ aiNameError }}
-              <button type="button" class="ab-link" (click)="generateAiName()">Try again</button>
+          <div class="ab-ai-box" *ngIf="brandName.trim().length >= 3">
+            <p class="ab-ai-box-note">
+              <span class="msr">auto_awesome</span>
+              We use the AI Friendly Name to write your description.
             </p>
 
-            <!-- generate description -->
-            <div class="ab-ai-row" *ngIf="aiNameReady && !descGenerated">
-              <p class="ab-hint">Generate a description from the AI friendly name.</p>
-              <button type="button" class="ab-ai-btn" [disabled]="generating" (click)="generateDescription()">
+            <div class="ab-ai-box-top">
+              <div class="ab-ai-name-field">
+                <label class="ab-sublabel">AI Friendly Name <i>*</i></label>
+                <div class="ab-ainame">
+                  <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100"
+                         [disabled]="aiNameLoading" [(ngModel)]="aiFriendlyName" />
+                  <span class="ab-ainame-loading" *ngIf="aiNameLoading"><span class="ab-spinner dark"></span>Generating…</span>
+                </div>
+              </div>
+              <button type="button" class="ab-ai-btn" *ngIf="!descGenerated"
+                      [disabled]="!aiNameReady || generating" (click)="generateDescription()">
                 <span class="msr" *ngIf="!generating">auto_awesome</span>
                 <span class="ab-spinner" *ngIf="generating"></span>
                 {{ generating ? 'Generating…' : 'Generate Description' }}
               </button>
             </div>
 
-            <!-- generated description -->
-            <div class="ab-ai-desc" *ngIf="descGenerated">
-              <textarea class="ab-textarea" rows="3" maxlength="200" [(ngModel)]="brandDescription"></textarea>
-              <div class="ab-counter-row">
-                <button type="button" class="ab-link" (click)="generateDescription()">Regenerate</button>
+            <p class="ab-hint" *ngIf="!aiNameError && !aiNameLoading">Used internally so the AI references your brand consistently.</p>
+            <p class="ab-err" *ngIf="aiNameError">
+              <span class="msr">error</span>{{ aiNameError }}
+              <button type="button" class="ab-link" (click)="generateAiName()">Try again</button>
+            </p>
+
+            <div class="ab-ai-box-desc">
+              <textarea class="ab-textarea" rows="3" maxlength="200" [disabled]="!descGenerated"
+                        [placeholder]="descGenerated ? '' : 'Your AI-generated description will appear here.'"
+                        [(ngModel)]="brandDescription"></textarea>
+              <div class="ab-counter-row" [class.end]="!descGenerated">
+                <button type="button" class="ab-link" *ngIf="descGenerated" (click)="generateDescription()">Regenerate</button>
                 <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
               </div>
             </div>
-          </ng-container>
+          </div>
         </div>
       </div>
 
@@ -198,8 +225,8 @@
                 <span *ngIf="!aiFriendlyName && !country">How your brand appears across the product</span>
               </p>
               <div class="ab2-chips">
-                <span class="ab2-chip"><span class="msr">dashboard</span>Dashboards</span>
-                <span class="ab2-chip"><span class="msr">bar_chart</span>Reports</span>
+                <span class="ab2-chip"><span class="msr">analytics</span>Analytics</span>
+                <span class="ab2-chip"><span class="msr">summarize</span>Reports</span>
                 <span class="ab2-chip ghost"><span class="msr">forum</span>Mentions</span>
               </div>
             </div>
@@ -239,6 +266,7 @@
           <!-- color -->
           <div class="ab2-block">
             <p class="ab2-block-title">Brand Color</p>
+            <p class="ab2-color-help">This color represents your brand in Analytics — used for its charts, graphs and maps.</p>
             <div class="ab2-palette">
               <button type="button" class="ab2-swatch" *ngFor="let c of brandColors"
                       [class.sel]="c === color" [style.background]="c" (click)="pickColor(c)">
@@ -262,7 +290,7 @@
     </section>
 
     <!-- ---------- Step 3 · Products & Competitors ---------- -->
-    <section class="ab-step-pane" *ngIf="currentStep === 3">
+    <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 3">
       <h1 class="ab-pane-title">Products &amp; Competitors</h1>
       <p class="ab-pane-sub">List your products and competitors to give the AI richer market context.</p>
 
@@ -273,7 +301,7 @@
             <span class="ab-pc-ic products"><span class="msr">deployed_code</span></span>
             <div class="ab-pc-head-text">
               <p class="ab-pc-title">Products &amp; Services</p>
-              <p class="ab-pc-sub">Your key offerings</p>
+              <p class="ab-pc-sub">The products or services your brand offers</p>
             </div>
             <span class="ab-pc-count">{{ products.length }}</span>
           </div>
@@ -498,7 +526,7 @@
     </section>
 
     <!-- ---------- Step 6 · Assign Users ---------- -->
-    <section class="ab-step-pane" *ngIf="currentStep === 6">
+    <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 6">
       <h1 class="ab-pane-title">Assign Users</h1>
       <p class="ab-pane-sub">Choose who can access and work on this brand.</p>
 
@@ -512,7 +540,7 @@
           <div class="ab-pill-input" (click)="openUsersDropdown()">
             <span class="ab-user-pill" *ngFor="let u of selectedUsers">
               <span class="ab-pill-avatar">{{ userInitials(u) }}</span>
-              {{ u.name }}
+              {{ u.fullName }}
               <button type="button" class="ab-pill-x" (click)="removeUser(u.id); $event.stopPropagation()">
                 <span class="msr">close</span>
               </button>
@@ -535,8 +563,8 @@
             <button type="button" class="ab-user-row" *ngFor="let u of filteredUsers" (click)="toggleUser(u.id)">
               <span class="ab-user-avatar">{{ userInitials(u) }}</span>
               <span class="ab-user-meta">
-                <span class="ab-user-name">{{ u.name }}</span>
-                <span class="ab-user-role">{{ u.role }}</span>
+                <span class="ab-user-name">{{ u.fullName }} <span class="ab-user-uname">({{ u.name }})</span></span>
+                <span class="ab-user-role">{{ u.role }} • {{ u.team }}</span>
               </span>
               <span class="ab-check" [class.on]="selectedUserIds.has(u.id)">
                 <span class="msr" *ngIf="selectedUserIds.has(u.id)">check</span>
@@ -546,6 +574,33 @@
           </div>
         </div>
       </div>
+
+      <!-- selected users — basic info, fills the space below -->
+      <div class="ab-assigned" *ngIf="selectedUsers.length; else noAssigned">
+        <div class="ab-assigned-head">
+          <span class="ab-assigned-title">Assigned users</span>
+          <span class="ab-assigned-count">{{ selectedUsers.length }}</span>
+        </div>
+        <div class="ab-assigned-list">
+          <div class="ab-assigned-item" *ngFor="let u of selectedUsers">
+            <span class="ab-assigned-av">{{ userInitials(u) }}</span>
+            <span class="ab-assigned-info">
+              <span class="ab-assigned-name">{{ u.fullName }} <span class="ab-assigned-uname">({{ u.name }})</span></span>
+              <span class="ab-assigned-sub">{{ u.role }} • {{ u.team }}</span>
+            </span>
+            <button type="button" class="ab-assigned-x" (click)="removeUser(u.id)" aria-label="Remove user">
+              <span class="msr">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noAssigned>
+        <div class="ab-assigned-empty">
+          <span class="msr">group</span>
+          <p>No users assigned yet</p>
+          <span>Search above and select the users who can access this brand.</span>
+        </div>
+      </ng-template>
     </section>
   </div>
 
