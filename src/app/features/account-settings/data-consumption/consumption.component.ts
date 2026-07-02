@@ -61,6 +61,11 @@ export class ConsumptionComponent {
     exceeded: -1, critical: 0, low: 1, good: 2,
   };
 
+  /** User-facing label per status — kept in one place so the badge and filter chip always agree. */
+  private readonly statusLabels: Record<UsageStatus, string> = {
+    exceeded: 'Exceeded', critical: 'Critical', low: 'Low', good: 'Good',
+  };
+
   cards: UsageCard[] = this.raw
     .map(r => this.toCard(r))
     .sort((a, b) =>
@@ -84,7 +89,7 @@ export class ConsumptionComponent {
       remainingPct,
       usedPct,
       status,
-      statusLabel: status.charAt(0).toUpperCase() + status.slice(1),
+      statusLabel: this.statusLabels[status],
       isEmpty: r.used === 0,
       hasDetails: !!r.hasDetails,
       detailsRoute: r.detailsRoute,
@@ -103,17 +108,6 @@ export class ConsumptionComponent {
     return c.status === 'critical' || c.status === 'exceeded';
   }
 
-  /* ---- Global at-risk banner ---- */
-  bannerDismissed = false;
-  get atRiskCards(): UsageCard[] { return this.cards.filter(c => this.isAtRisk(c)); }
-  get hasExceeded(): boolean { return this.cards.some(c => c.status === 'exceeded'); }
-  /** e.g. "Brand, Monthly Data Consumption and 3 more". */
-  get atRiskNames(): string {
-    const names = this.atRiskCards.map(c => c.title);
-    if (names.length <= 2) return names.join(' and ');
-    return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
-  }
-
   get filteredCards(): UsageCard[] {
     return this.filter === 'all'
       ? this.cards
@@ -125,7 +119,7 @@ export class ConsumptionComponent {
       keeping status priority (exceeded → critical, and warning → good). */
   private byUrgency = (a: UsageCard, b: UsageCard) =>
     this.order[a.status] - this.order[b.status]   // severity first
-    || a.remaining - b.remaining;                 // lowest remaining count first within a status
+    || b.remaining - a.remaining;                 // highest remaining count first within a status
 
   get bigCards(): UsageCard[] {
     return this.filteredCards.filter(c => this.isAtRisk(c)).sort(this.byUrgency);
@@ -138,9 +132,6 @@ export class ConsumptionComponent {
     // Clicking the active chip clears the filter (toggle back to all).
     this.filter = this.filter === f ? 'all' : f;
   }
-
-  /** Banner action — always focus the critical services (one-way, never toggles off). */
-  reviewCritical() { this.filter = 'critical'; }
 
   /** Exact, grouped value for tooltips — e.g. "5,960,000". */
   exact(n: number): string {
