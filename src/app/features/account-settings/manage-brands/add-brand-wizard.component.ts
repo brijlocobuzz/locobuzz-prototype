@@ -8,8 +8,10 @@ import {
   flattenCategories,
 } from './manage-brands-data';
 
+type StepKey = 'identity' | 'logo' | 'products' | 'categories' | 'tickets' | 'users';
+
 interface WizardStep {
-  num: number;
+  key: StepKey;
   label: string;
   subtitle: string;
   /** Material Symbols Rounded glyph for the stepper node. */
@@ -47,20 +49,35 @@ export class AddBrandWizardComponent {
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
-  readonly totalSteps = 6;
+
+  /**
+   * Does the current account plan include ticket creation (Digital Care)?
+   * When false, the Tickets step is dropped and the wizard has one fewer step.
+   */
+  planHasTicketing = true;
 
   /** Celebration screen shown after Save. */
   celebrating = false;
   /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
   readonly confetti = this.makeConfetti();
-  readonly steps: WizardStep[] = [
-    { num: 1, label: 'Brand identity', subtitle: 'Basics & AI context', icon: 'badge' },
-    { num: 2, label: 'Logo & color',   subtitle: 'Visual identity',     icon: 'palette' },
-    { num: 3, label: 'Products & Competitors', subtitle: 'Market context', icon: 'deployed_code' },
-    { num: 4, label: 'Categories',     subtitle: 'Taxonomy mapping',    icon: 'sell' },
-    { num: 5, label: 'Tickets',        subtitle: 'Ticket creation',     icon: 'confirmation_number' },
-    { num: 6, label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
+
+  /** All possible steps; the Tickets step is filtered out on plans without it. */
+  private readonly allSteps: WizardStep[] = [
+    { key: 'identity', label: 'Brand identity', subtitle: 'Basics & AI context', icon: 'badge' },
+    { key: 'logo',     label: 'Logo & color',   subtitle: 'Visual identity',     icon: 'palette' },
+    { key: 'products', label: 'Products & Competitors', subtitle: 'Market context', icon: 'deployed_code' },
+    { key: 'categories', label: 'Categories',   subtitle: 'Taxonomy mapping',    icon: 'sell' },
+    { key: 'tickets',  label: 'Tickets',        subtitle: 'Ticket creation',     icon: 'confirmation_number' },
+    { key: 'users',    label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
   ];
+
+  /** The visible steps for this plan, numbered sequentially (computed once). */
+  readonly steps: (WizardStep & { num: number })[] = this.allSteps
+    .filter(s => s.key !== 'tickets' || this.planHasTicketing)
+    .map((s, i) => ({ ...s, num: i + 1 }));
+  get totalSteps(): number { return this.steps.length; }
+  get currentKey(): StepKey { return this.steps[this.currentStep - 1]?.key ?? 'identity'; }
+  isStep(key: StepKey): boolean { return this.currentKey === key; }
 
   // ---- reference data ----------------------------------------------------
   readonly countries = COUNTRIES;
@@ -100,7 +117,7 @@ export class AddBrandWizardComponent {
   selectedUserIds = new Set<string>();
   usersDropdownOpen = false;
   userSearch = '';
-  ticketsEnabled = true;
+  ticketsEnabled = this.planHasTicketing;   // off by default when the plan has no ticketing
 
   // ---- step 4 · categories -----------------------------------------------
   categoryGroup = '';                                 // selected group name (for payload/summary)
@@ -158,18 +175,23 @@ export class AddBrandWizardComponent {
   // =======================================================================
   //  Step navigation
   // =======================================================================
+  /** Validate the visible step at 1-based index `step`. */
   isStepValid(step: number): boolean {
-    switch (step) {
-      case 1: {                                       // brand identity
+    return this.stepValid(this.steps[step - 1]?.key);
+  }
+
+  private stepValid(key: StepKey | undefined): boolean {
+    switch (key) {
+      case 'identity': {
         const n = this.brandName.trim().length;
         return n >= 3 && n <= 50 && !!this.country
           && !!this.brandDescription.trim() && this.brandDescription.length <= 200;
       }
-      case 2: return !!this.logoDataUrl;              // logo & color
-      case 3: return true;                            // products & competitors (optional)
-      case 4: return !!this.categoryGroup && !!this.catchAll;  // categories
-      case 5: return true;                            // ticket creation (toggle always valid)
-      case 6: return this.selectedUserIds.size > 0;   // assign users
+      case 'logo': return !!this.logoDataUrl;
+      case 'products': return true;                   // optional
+      case 'categories': return !!this.categoryGroup && !!this.catchAll;
+      case 'tickets': return true;                    // toggle always valid
+      case 'users': return this.selectedUserIds.size > 0;
       default: return false;
     }
   }
@@ -566,7 +588,8 @@ export class AddBrandWizardComponent {
   // =======================================================================
   /** Every required step must pass before the brand can be saved. */
   get canSubmit(): boolean {
-    return this.isStepValid(1) && this.isStepValid(2) && this.isStepValid(4) && this.isStepValid(6);
+    return this.stepValid('identity') && this.stepValid('logo')
+      && this.stepValid('categories') && this.stepValid('users');
   }
 
   onSubmit() {
@@ -653,7 +676,7 @@ export class AddBrandWizardComponent {
     this.cancelAddGroup();
     this.cancelAddCat();
     // step 5 / 6
-    this.ticketsEnabled = true;
+    this.ticketsEnabled = this.planHasTicketing;
     this.selectedUserIds = new Set<string>();
     this.userSearch = '';
     this.usersDropdownOpen = false;

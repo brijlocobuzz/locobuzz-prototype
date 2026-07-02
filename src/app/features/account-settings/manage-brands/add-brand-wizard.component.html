@@ -99,7 +99,7 @@
   <div class="ab-body">
 
     <!-- ---------- Step 1 · Brand identity ---------- -->
-    <section class="ab-step-pane" *ngIf="currentStep === 1">
+    <section class="ab-step-pane" *ngIf="isStep('identity')">
       <h1 class="ab-pane-title">Brand identity</h1>
       <p class="ab-pane-sub">Name your brand and add a short description so your team and AI understand it.</p>
 
@@ -211,7 +211,7 @@
     </section>
 
     <!-- ---------- Step 2 · Logo & color ---------- -->
-    <section class="ab-step-pane" *ngIf="currentStep === 2">
+    <section class="ab-step-pane" *ngIf="isStep('logo')">
       <h1 class="ab-pane-title">Logo &amp; color</h1>
       <p class="ab-pane-sub">Upload a logo and pick a color that represents your brand across reports and dashboards.</p>
 
@@ -318,7 +318,7 @@
     </section>
 
     <!-- ---------- Step 3 · Products & Competitors ---------- -->
-    <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 3">
+    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('products')">
       <h1 class="ab-pane-title">Products &amp; Competitors</h1>
       <p class="ab-pane-sub">Tell us about your products and competitors so the AI understands your brand better. It helps the AI notice conversations that matter to you and gently skip the ones that don't.</p>
 
@@ -469,7 +469,7 @@
     </section>
 
     <!-- ---------- Step 4 · Categories ---------- -->
-    <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 4">
+    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('categories')">
       <div class="ab-cat4-head">
         <div>
           <h1 class="ab-pane-title">Categories</h1>
@@ -610,7 +610,7 @@
     </section>
 
     <!-- ---------- Step 5 · Ticket Creation ---------- -->
-    <section class="ab-step-pane" *ngIf="currentStep === 5">
+    <section class="ab-step-pane" *ngIf="isStep('tickets')">
       <h1 class="ab-pane-title">Ticket Creation</h1>
       <p class="ab-pane-sub">Decide whether incoming mentions become actionable tickets your team can work on.</p>
 
@@ -624,15 +624,26 @@
         </button>
       </div>
 
-      <!-- what becomes a ticket — explainer -->
-      <div class="ab-explain" *ngIf="ticketsEnabled">
-        <p class="ab-explain-title"><span class="msr">confirmation_number</span>What becomes a ticket?</p>
-        <ul class="ab-explain-list">
-          <li><span class="msr">check_circle</span>Complaints &amp; service issues that need a response</li>
-          <li><span class="msr">check_circle</span>Questions &amp; help requests from customers</li>
-          <li><span class="msr">check_circle</span>Mentions matching your category &amp; keyword rules</li>
+      <!-- Digital Care info (ticket creation on) -->
+      <div class="ab-care" *ngIf="ticketsEnabled">
+        <div class="ab-care-head">
+          <span class="ab-care-ic"><span class="msr">support_agent</span></span>
+          <div>
+            <p class="ab-care-title">This brand joins Digital Care</p>
+            <p class="ab-care-sub">Turning on ticket creation enables your full Care workflow for this brand.</p>
+          </div>
+        </div>
+        <ul class="ab-care-list">
+          <li><span class="msr">move_to_inbox</span>Convert incoming mentions into tickets</li>
+          <li><span class="msr">group_add</span>Assign tickets to team members</li>
+          <li><span class="msr">forum</span>Respond to customers and continue the conversation until the issue is resolved</li>
+          <li><span class="msr">diversity_3</span>Collaborate with other team members</li>
+          <li><span class="msr">insights</span>Get ticketing access and ticketing analytics</li>
         </ul>
-        <p class="ab-explain-foot">Promotional noise, spam and pure praise stay as non-actionable mentions.</p>
+        <p class="ab-care-tip">
+          <span class="msr">tips_and_updates</span>
+          <span><b>Pro tip:</b> since this brand is now part of Digital Care, explore the Care-specific features to streamline your workflow.</span>
+        </p>
       </div>
 
       <div class="ab-explain muted" *ngIf="!ticketsEnabled">
@@ -642,7 +653,7 @@
     </section>
 
     <!-- ---------- Step 6 · Assign Users ---------- -->
-    <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 6">
+    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('users')">
       <h1 class="ab-pane-title">Assign Users</h1>
       <p class="ab-pane-sub">Choose who can access and work on this brand.</p>
 
