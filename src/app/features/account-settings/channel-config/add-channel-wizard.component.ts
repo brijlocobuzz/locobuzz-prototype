@@ -156,14 +156,14 @@ export class AddChannelWizardComponent {
   /** The steps shown in the top progress bar — depends on channel + mode. */
   get steps(): Step[] {
     const choose: Step = { key: 'choose', label: 'Choose channel' };
-    const review: Step = { key: 'review', label: 'Review & complete' };
+    const review: Step = { key: 'review', label: 'Review & Complete' };
     const s = this.spec;
     // Default preview (no channel chosen yet): a typical 3-step path.
     if (!s) return [choose, { key: 'authenticate', label: 'Authenticate' }, review];
 
     const ownedPath = (m: ChannelMode, withConnection: boolean): Step[] => {
       const arr: Step[] = [choose];
-      if (withConnection) arr.push({ key: 'connection', label: 'Connection type' });
+      if (withConnection) arr.push({ key: 'connection', label: 'Account Type' });
       arr.push({ key: 'authenticate', label: 'Authenticate' });
       if (m.pages) arr.push({ key: 'pages', label: 'Select accounts' });
       arr.push(review);
@@ -171,14 +171,14 @@ export class AddChannelWizardComponent {
     };
     const publicPath = (withConnection: boolean): Step[] => {
       const arr: Step[] = [choose];
-      if (withConnection) arr.push({ key: 'connection', label: 'Connection type' });
+      if (withConnection) arr.push({ key: 'connection', label: 'Account Type' });
       arr.push({ key: 'public', label: 'Add source' }, review);
       return arr;
     };
 
     if (s.modes.length === 2) {
       const m = this.activeMode;
-      if (!m) return [choose, { key: 'connection', label: 'Connection type' }, review];
+      if (!m) return [choose, { key: 'connection', label: 'Account Type' }, review];
       return m.key === 'owned' ? ownedPath(m, true) : publicPath(true);
     }
     const only = s.modes[0];
@@ -367,7 +367,7 @@ export class AddChannelWizardComponent {
     switch (this.current) {
       case 'choose':       return !!this.selected;
       case 'connection':   return !!this.connectionType;
-      case 'authenticate': return this.isXVersionAuth ? this.xConnectedCount > 0 : this.authDone;
+      case 'authenticate': return this.isXVersionAuth ? this.xConnectedCount === 2 : this.authDone;
       case 'public':       return this.isEcommerce ? this.ecomTotal > 0 : this.publicHandle.trim().length > 0;
       case 'pages':        return this.selectedPages.size > 0;
       case 'review':       return true;
@@ -388,18 +388,37 @@ export class AddChannelWizardComponent {
   }
 
   finish() {
-    // Show the celebration, then auto-complete; user can also click Done.
+    // Show the success screen and register the channel — but keep the popover open
+    // so the user can review the details and choose to add another or close.
     this.celebrating = true;
-    setTimeout(() => this.complete(), 3600);
+    if (this.selected && !this.completedOnce) {
+      this.completedOnce = true;
+      this.added.emit(this.selected);
+    }
   }
 
-  /** Emit the added channel and close — guarded so it only runs once. */
-  complete() {
-    if (this.completedOnce) return;
-    this.completedOnce = true;
-    if (this.selected) this.added.emit(this.selected);
-    this.close();
+  /** Reset the wizard back to the channel picker to add another channel. */
+  addAnother() {
+    this.celebrating = false;
+    this.completedOnce = false;
+    this.selected = null;
+    this.stepIndex = 0;
+    this.search = '';
+    this.connectionType = null;
+    this.publicHandle = '';
+    this.authDone = false;
+    this.authLoading = false;
+    this.selectedPages.clear();
+    this.xState = { v1: { loading: false, done: false }, v2: { loading: false, done: false } };
+    this.ecomTab = 'url';
+    this.urlDraft = ''; this.urlList = []; this.editIndex = -1; this.editDraft = '';
+    this.csvName = ''; this.csvCols = []; this.csvRows = [];
+    this.searchQuery = ''; this.searchResults = []; this.selectedProducts.clear();
+    this.searchLoading = false; this.hasSearched = false; clearTimeout(this.searchTimer);
   }
+
+  /** Close the popover from the success screen. */
+  complete() { this.close(); }
 
   close() { this.closed.emit(); }
 

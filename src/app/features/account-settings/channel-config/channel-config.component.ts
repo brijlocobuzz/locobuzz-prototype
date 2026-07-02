@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
@@ -38,12 +38,29 @@ export class ChannelConfigComponent {
 
   /** Switch the profiles panel to another channel (resets transient view state). */
   selectChannel(c: Channel) {
-    if (c === this.activeChannel) return;
+    if (c === this.activeChannel && !this.expiredMode) return;
+    this.expiredMode = false;
     this.activeChannel = c;
     this.clearSelection();
     this.closeDetail();
     this.activeViewId = 'all';
     this.page = 1;
+  }
+
+  /* ===================================================================
+     Account-wide "Token Expired" roll-up — cross-channel list, grouped
+     by channel, opened from the pill in the channels-panel header.
+     =================================================================== */
+  expiredMode = false;
+  expiredGroups: ExpiredGroup[] = EXPIRED_PROFILES;
+  /** Total token-expired profiles across every channel (drives the pill badge). */
+  get totalExpiredAll(): number {
+    return this.expiredGroups.reduce((n, g) => n + g.profiles.length, 0);
+  }
+  toggleExpiredList() {
+    this.expiredMode = !this.expiredMode;
+    this.clearSelection();
+    this.closeDetail();
   }
 
   /** Light tint of a brand colour for soft backgrounds. */
@@ -173,7 +190,7 @@ export class ChannelConfigComponent {
      Group view — group the profiles by a fixed-value attribute
      =================================================================== */
   /** Active grouping field (null = flat list). Only fixed-value fields are groupable. */
-  groupBy: string | null = null;
+  groupBy: string | null = 'Account Type';
   groupMenuOpen = false;
   /** Attributes that have a fixed set of values, so grouping makes sense. */
   readonly groupableFields = ['Account Type', 'Status'];

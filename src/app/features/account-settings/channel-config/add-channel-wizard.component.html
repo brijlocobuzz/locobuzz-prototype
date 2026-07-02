@@ -22,7 +22,7 @@
       </span>
     </div>
 
-    <h2 class="wz-celebrate-title">Channel connected!</h2>
+    <h2 class="wz-celebrate-title">{{ selected?.label }} is connected!</h2>
     <p class="wz-celebrate-sub">{{ celebrationSub }}</p>
 
     <div class="wz-celebrate-pill">
@@ -35,9 +35,30 @@
       {{ selected?.label }} · {{ connectionLabel }}
     </div>
 
-    <button class="wz-next finish wz-celebrate-done" (click)="complete()">
-      <span class="msr">arrow_forward</span>Go to channel
-    </button>
+    <!-- what happens next -->
+    <div class="wz-done-card">
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">{{ isRealtime ? 'bolt' : 'schedule' }}</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Data collection</span><span class="wz-done-v">{{ reviewReadySub }}</span></span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">sync</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Mentions sync</span><span class="wz-done-v">{{ reviewSync }}</span></span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">history</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">History on connect</span><span class="wz-done-v">{{ reviewHistory }}</span></span>
+      </div>
+      <div class="wz-done-row" *ngIf="activeMode?.dataTypes">
+        <span class="wz-done-ic"><span class="msr">database</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Data collected</span><span class="wz-done-v">{{ activeMode?.dataTypes }}</span></span>
+      </div>
+    </div>
+
+    <div class="wz-done-acts">
+      <button class="wz-back" (click)="complete()"><span class="msr">check</span>Done</button>
+      <button class="wz-next finish" (click)="addAnother()"><span class="msr">add</span>Add another channel</button>
+    </div>
   </div>
 
   <!-- ===== two-pane shell ===== -->
@@ -60,15 +81,16 @@
         <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
-      <!-- stepper -->
-      <nav class="wz-stepper">
+      <!-- stepper (compact spacing once a flow has 5+ steps so it never overflows) -->
+      <nav class="wz-stepper" [class.compact]="steps.length > 4">
         <ng-container *ngFor="let s of steps; let i = index; let last = last">
           <div class="wz-step" [class.done]="i < stepIndex" [class.active]="i === stepIndex">
             <span class="wz-dot">
               <span class="msr" *ngIf="i < stepIndex">check</span>
               <ng-container *ngIf="i >= stepIndex">{{ i + 1 }}</ng-container>
             </span>
-            <span class="wz-step-label">{{ s.label }}</span>
+            <span class="wz-step-label" [class.trunc]="s.key === 'review' && steps.length > 4"
+                  [title]="s.key === 'review' && steps.length > 4 ? s.label : null">{{ s.label }}</span>
           </div>
           <span class="wz-conn" *ngIf="!last" [class.done]="i < stepIndex" [class.next]="i === stepIndex"></span>
         </ng-container>
@@ -136,10 +158,15 @@
                     [class.owned]="m.key === 'owned'" [class.pub]="m.key === 'public'"
                     [class.sel]="connectionType === m.key" (click)="connectionType = m.key">
               <span class="wz-choice-check"><span class="msr">check</span></span>
-              <span class="wz-choice-ic" [class.pub]="m.key === 'public'">
-                <span class="msr">{{ m.key === 'public' ? 'public' : 'lock' }}</span>
+              <span class="wz-choice-head">
+                <span class="wz-choice-ic" [class.pub]="m.key === 'public'">
+                  <span class="msr">{{ m.key === 'public' ? 'public' : 'lock' }}</span>
+                </span>
+                <span class="wz-choice-htx">
+                  <span class="wz-choice-name">{{ m.key === 'owned' ? 'Owned' : 'Public' }}</span>
+                  <span class="wz-choice-sub">{{ m.cardHeading }}</span>
+                </span>
               </span>
-              <span class="wz-choice-name">{{ m.cardHeading }}</span>
 
               <ul class="wz-bullets">
                 <li *ngFor="let b of m.get"><span class="msr">check</span>{{ b }}</li>
@@ -164,11 +191,11 @@
         <!-- X (Twitter) owned: connect API v1.1 and/or v2 independently -->
         <ng-container *ngIf="isXVersionAuth; else normalAuth">
           <div class="wz-xhead">
-            <h3 class="wz-q">Connect the X APIs you need</h3>
+            <h3 class="wz-q">Connect both X APIs</h3>
             <p class="wz-sub">X splits access across two APIs — they’re <b>complementary, not the same</b>. v2 powers
-              listening, search &amp; analytics; v1.1 powers DMs, media &amp; real-time webhooks. Connect either, but
-              both gives full coverage.</p>
-            <span class="wz-xreco"><span class="msr">recommend</span>Recommended · connect both for full coverage</span>
+              listening, search &amp; analytics; v1.1 powers DMs, media &amp; real-time webhooks. <b>Both are required</b>
+              for full X coverage.</p>
+            <span class="wz-xreco"><span class="msr">check_circle</span>Both APIs are required to add X</span>
           </div>
 
           <div class="wz-xgrid">
@@ -182,7 +209,6 @@
               <ul class="wz-bullets">
                 <li *ngFor="let c of v.caps"><span class="msr">check</span>{{ c }}</li>
               </ul>
-              <span class="wz-xbest"><span class="msr">star</span>{{ v.best }}</span>
 
               <button class="wz-xbtn" [class.ok]="xDone(v.id)"
                       [disabled]="xLoading(v.id) || xDone(v.id)" (click)="startXAuth(v.id)">
@@ -196,12 +222,12 @@
             </div>
           </div>
 
-          <!-- <div class="wz-xnote" [class.ok]="xConnectedCount > 0">
-            <span class="msr">{{ xConnectedCount > 0 ? 'verified' : 'verified_user' }}</span>
-            <span *ngIf="xConnectedCount === 0">Connect at least one API to continue — v2 to listen &amp; analyse, v1.1 for DMs &amp; media. We never see your password.</span>
-            <span *ngIf="xConnectedCount === 1">Nice — <b>{{ xConnectedCount }} API connected</b>. You can add the other now for full coverage, or continue.</span>
-            <span *ngIf="xConnectedCount === 2">Both APIs connected — full X coverage for listening, analytics, DMs &amp; media. </span>
-          </div> -->
+          <div class="wz-xnote" *ngIf="xConnectedCount < 2">
+            <span class="msr">info</span>
+            <span *ngIf="xConnectedCount === 0">Both APIs are required to continue — connect <b>v1.1</b> and <b>v2</b>.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v2')">Now connect <b>API v2</b> too — it powers tweet &amp; &#64;mention listening, keyword search and analytics that v1.1 can’t provide.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v1')">Now connect <b>API v1.1</b> too — it powers DMs, media uploads and real-time webhooks that v2 can’t provide.</span>
+          </div>
         </ng-container>
 
         <!-- default single OAuth / key auth -->
@@ -226,11 +252,11 @@
           <!-- capabilities (single-mode channels teach here) -->
           <!-- <div class="wz-caps" *ngIf="showCaps && activeMode as m">
             <div class="wz-caps-col">
-              <span class="wz-caps-h"><span class="msr">check_circle</span>What you get</span>
+              <span class="wz-caps-h"><span class="msr">check_circle</span>What we’ll collect</span>
               <ul><li *ngFor="let b of m.get">{{ b }}</li></ul>
             </div>
             <div class="wz-caps-col dont" *ngIf="m.dontGet.length">
-              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What you don’t get</span>
+              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What we won’t collect</span>
               <ul><li *ngFor="let b of m.dontGet">{{ b }}</li></ul>
             </div>
           </div> -->
@@ -275,11 +301,11 @@
           <!-- capabilities (single-mode channels teach here; hidden for e-commerce — shown in the aside) -->
           <div class="wz-caps" *ngIf="showCaps && !isEcommerce && activeMode as m">
             <div class="wz-caps-col">
-              <span class="wz-caps-h"><span class="msr">check_circle</span>What you get</span>
+              <span class="wz-caps-h"><span class="msr">check_circle</span>What we’ll collect</span>
               <ul><li *ngFor="let b of m.get">{{ b }}</li></ul>
             </div>
             <div class="wz-caps-col dont" *ngIf="m.dontGet.length">
-              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What you don’t get</span>
+              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What we won’t collect</span>
               <ul><li *ngFor="let b of m.dontGet">{{ b }}</li></ul>
             </div>
           </div>
@@ -461,6 +487,10 @@
             <h3 class="wz-q left">{{ selectHeading }}</h3>
             <p class="wz-sub left">Pick the {{ pagesNoun }} you want Locobuzz to listen to — each one becomes its
               own profile with its own mentions, status and replies. You can change this anytime.</p>
+            <p class="wz-ig-note left" *ngIf="selected?.id === 'facebook'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>
+              Pages with a linked Instagram account also bring in Instagram posts, comments &amp; messages — no separate connection needed.
+            </p>
           </div>
 
           <!-- selection summary bar -->
@@ -489,10 +519,18 @@
                   <svg *ngIf="brandSvg(selected?.id) as d" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
                   <span class="msr" *ngIf="!brandSvg(selected?.id)">{{ selected?.icon }}</span>
                 </span>
+                <!-- linked Instagram account (Meta grants IG access via the same Page) -->
+                <span class="wz-page-net ig" *ngIf="p.igHandle && selected?.id === 'facebook'" title="Linked Instagram account">
+                  <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>
+                </span>
               </span>
               <span class="wz-page-who">
                 <span class="wz-page-name">{{ p.name }}</span>
                 <span class="wz-page-sub"><span class="msr">group</span>{{ p.followers }}</span>
+                <span class="wz-page-ig" *ngIf="p.igHandle && selected?.id === 'facebook'">
+                  <span class="wz-igtag"><svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>{{ p.igHandle }}</span>
+                  <span class="wz-igmsg" *ngIf="p.igMessages"><span class="msr">chat</span>Messages</span>
+                </span>
               </span>
             </button>
           </div>
@@ -633,15 +671,21 @@
             <p class="wz-aside-lead">{{ sp.modes[0].pickIf }}</p>
 
             <div class="wz-safe">
-              <span class="wz-safe-head"><span class="msr">check_circle</span>What you’ll be able to do</span>
+              <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
               <ul>
                 <li *ngFor="let b of sp.modes[0].get.slice(0, 4)"><span class="msr">check</span>{{ b }}</li>
               </ul>
             </div>
 
             <div class="wz-facts">
-              <div class="wz-fact"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ sp.modes[0].sync }}</span></div>
-              <div class="wz-fact"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ sp.modes[0].history }}</span></div>
+              <div class="wz-fact">
+                <span class="wz-fact-ic"><span class="msr">sync</span></span>
+                <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ sp.modes[0].sync }}</span></span>
+              </div>
+              <div class="wz-fact">
+                <span class="wz-fact-ic"><span class="msr">history</span></span>
+                <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ sp.modes[0].history }}</span></span>
+              </div>
             </div>
 
             <div class="wz-flag" *ngIf="sp.flag" [class.planned]="sp.flag === 'planned'">
@@ -712,9 +756,18 @@
           <div class="wz-feat-text"><b>Then we start collecting</b><span>{{ reviewReadySub }}</span></div>
         </div>
         <div class="wz-facts" *ngIf="activeMode as m">
-          <div class="wz-fact"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></div>
-          <div class="wz-fact"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></div>
-          <div class="wz-fact"><span class="wz-fact-k">Data collected</span><span class="wz-fact-v">{{ m.dataTypes }}</span></div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">sync</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">history</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">database</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Data collected</span><span class="wz-fact-v">{{ m.dataTypes }}</span></span>
+          </div>
         </div>
       </ng-container>
 
@@ -724,7 +777,7 @@
         <h3 class="wz-aside-title">Track {{ selected?.label }} without logging in.</h3>
         <p class="wz-aside-lead">We collect public mentions as they appear — no credentials needed.</p>
         <div class="wz-safe" *ngIf="activeMode as m">
-          <span class="wz-safe-head"><span class="msr">check_circle</span>What you’ll get</span>
+          <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
           <ul>
             <li *ngFor="let b of m.get.slice(0, 3)"><span class="msr">check</span>{{ b }}</li>
           </ul>
@@ -734,8 +787,14 @@
           <p>{{ activeMode?.dontGet?.[0] }}</p>
         </div>
         <div class="wz-facts" *ngIf="activeMode as m">
-          <div class="wz-fact"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></div>
-          <div class="wz-fact"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">sync</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">history</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
+          </div>
         </div>
       </ng-container>
 

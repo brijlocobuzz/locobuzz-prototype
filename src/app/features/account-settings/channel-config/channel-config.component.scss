@@ -109,9 +109,70 @@
   border: 1px solid var(--border); border-radius: var(--radius);
   display: flex; flex-direction: column; min-height: 0;
 }
-.ch-head { padding: 10px; border-bottom: 1px solid var(--border-soft); }
+.ch-head {
+  padding: 10px; border-bottom: 1px solid var(--border-soft);
+  display: flex; align-items: center; gap: 8px;
+}
+.ch-head-l { flex: 1; min-width: 0; }
 .ch-head h3 { margin: 0; font-size: var(--font-size-16); font-weight: 600; color: var(--text-1); }
 .ch-sub { font-size: var(--font-size-13); color: var(--text-3); }
+
+/* account-wide token-expired entry point — deliberately attention-grabbing */
+.ch-expired-pill {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 6px 3px 5px; border-radius: 20px;
+  border: 1px solid #f0b4ac; cursor: pointer;
+  background: linear-gradient(180deg, #fdeeeb, #fbe3de);
+  color: #b03224; font: inherit; font-size: var(--font-size-12); font-weight: 700;
+  box-shadow: 0 1px 2px rgba(192, 57, 43, .12);
+  transition: background .15s, box-shadow .15s, transform .05s;
+}
+.ch-expired-pill:hover { background: linear-gradient(180deg, #fce6e1, #f9d5ce); box-shadow: 0 2px 8px rgba(192, 57, 43, .2); }
+.ch-expired-pill:active { transform: translateY(1px); }
+.ch-expired-pill.on {
+  background: linear-gradient(180deg, #c0392b, #a52f22);
+  border-color: #93271b; color: #fff;
+  box-shadow: 0 2px 10px rgba(192, 57, 43, .35);
+}
+.ch-expired-pill .msr { font-size: var(--font-size-16); }
+.ch-expired-pill .cep-count {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 20px; background: #fff; color: #c0392b; font-size: var(--font-size-11); font-weight: 800;
+}
+.ch-expired-pill.on .cep-count { background: #fff; color: #a52f22; }
+/* soft pulsing dot to pull the eye */
+.ch-expired-pill .cep-pulse {
+  width: 7px; height: 7px; border-radius: 50%; background: #e0483a; flex: 0 0 auto;
+  box-shadow: 0 0 0 0 rgba(224, 72, 58, .6); animation: cepPulse 1.8s ease-out infinite;
+}
+.ch-expired-pill.on .cep-pulse { background: #fff; box-shadow: 0 0 0 0 rgba(255, 255, 255, .6); }
+@keyframes cepPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(224, 72, 58, .55); }
+  70%  { box-shadow: 0 0 0 6px rgba(224, 72, 58, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 72, 58, 0); }
+}
+
+/* channel logo chip inside a group heading (cross-channel expired roll-up) */
+.pf-group-hd .gr-chip {
+  width: 22px; height: 22px; border-radius: 6px; flex: 0 0 auto;
+  display: grid; place-items: center; color: #fff;
+}
+.pf-group-hd .gr-chip .brand-svg { width: 13px; height: 13px; fill: #fff; }
+.pf-group-hd .gr-chip .msr { font-size: var(--font-size-14); color: #fff; }
+
+/* expired-mode profiles header */
+.pf-title.expired-title { color: #b03224; }
+.pf-fb.danger { background: #fdecea; color: #c0392b; }
+.pf-fb.danger .msr { color: #c0392b; }
+.pf-back {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 10px;
+  padding: 4px 10px; border-radius: 16px; border: 1px solid var(--border);
+  background: #fff; color: var(--text-2); cursor: pointer;
+  font: inherit; font-size: var(--font-size-12); font-weight: 600;
+}
+.pf-back:hover { background: var(--surface-2, #f4f6f9); color: var(--text-1); }
+.pf-back .msr { font-size: var(--font-size-15); }
 .ch-list { flex: 1; overflow-y: auto; padding: 8px; }
 
 .grp {
