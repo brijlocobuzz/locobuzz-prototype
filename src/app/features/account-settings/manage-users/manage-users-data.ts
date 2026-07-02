@@ -253,14 +253,14 @@ export interface AssignableBrand {
 }
 
 export const ASSIGNABLE_BRANDS: AssignableBrand[] = [
-  { id: 'b1', name: 'Amazon', color: '#ff9900', ticketsEnabled: true, description: 'E-commerce · Retail & Marketplace', users: 42, channels: 9 },
-  { id: 'b2', name: 'Nike', color: '#0f172a', ticketsEnabled: true, description: 'Apparel · Sportswear & Footwear', users: 18, channels: 6 },
-  { id: 'b3', name: 'Air India', color: '#c8102e', ticketsEnabled: true, description: 'Aviation · Airlines & Travel', users: 27, channels: 7 },
-  { id: 'b4', name: 'Myntra', color: '#e91e63', ticketsEnabled: false, description: 'E-commerce · Fashion & Lifestyle', users: 15, channels: 5 },
-  { id: 'b5', name: 'Zomato', color: '#ef4444', ticketsEnabled: true, description: 'Food Tech · Delivery & Dining', users: 33, channels: 8 },
-  { id: 'b6', name: 'Tata Cliq', color: '#2563eb', ticketsEnabled: false, description: 'E-commerce · Electronics & Luxury', users: 11, channels: 4 },
-  { id: 'b7', name: 'Swiggy', color: '#fc8019', ticketsEnabled: true, description: 'Food Tech · Delivery & Instamart', users: 29, channels: 8 },
-  { id: 'b8', name: 'Flipkart', color: '#2874f0', ticketsEnabled: false, description: 'E-commerce · Retail & Marketplace', users: 24, channels: 7 },
+  { id: 'b1', name: 'Amazon', color: '#ff9900', ticketsEnabled: true, description: 'Global online marketplace for retail, electronics, and Prime services.', users: 42, channels: 9 },
+  { id: 'b2', name: 'Nike', color: '#0f172a', ticketsEnabled: true, description: 'Athletic footwear, apparel, and sportswear for athletes worldwide.', users: 18, channels: 6 },
+  { id: 'b3', name: 'Air India', color: '#c8102e', ticketsEnabled: true, description: 'National flag carrier airline offering domestic and international travel.', users: 27, channels: 7 },
+  { id: 'b4', name: 'Myntra', color: '#e91e63', ticketsEnabled: false, description: 'Online fashion and lifestyle store for clothing, footwear, and accessories.', users: 15, channels: 5 },
+  { id: 'b5', name: 'Zomato', color: '#ef4444', ticketsEnabled: true, description: 'Food delivery and restaurant discovery platform for dining out and in.', users: 33, channels: 8 },
+  { id: 'b6', name: 'Tata Cliq', color: '#2563eb', ticketsEnabled: false, description: 'Curated marketplace for premium electronics, fashion, and luxury brands.', users: 11, channels: 4 },
+  { id: 'b7', name: 'Swiggy', color: '#fc8019', ticketsEnabled: true, description: 'On-demand food delivery and Instamart grocery service across cities.', users: 29, channels: 8 },
+  { id: 'b8', name: 'Flipkart', color: '#2874f0', ticketsEnabled: false, description: 'Leading Indian e-commerce marketplace for electronics, fashion, and more.', users: 24, channels: 7 },
 ];
 
 export interface Team {

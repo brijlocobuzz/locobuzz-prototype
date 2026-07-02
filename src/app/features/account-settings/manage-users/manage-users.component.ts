@@ -16,6 +16,15 @@ export interface ViewCondition {
 }
 export interface SavedView { id: string; label: string; filter: ViewCondition; }
 
+/** A confirmation prompt shown before a consequential change (same model as Manage Brands). */
+export interface ConfirmPrompt {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  danger: boolean;
+  action: () => void;
+}
+
 /** Varied sample "days since last login" values, cycled across the mock users. */
 const SAMPLE_LAST_LOGIN = [1, 3, 6, 11, 0, 21, 34, 58, 92, 140, 210, 365, 520, 2, 45];
 
@@ -83,6 +92,28 @@ export class ManageUsersComponent {
   setActive(u: ManagedUser, on: boolean, ev: Event) {
     ev.stopPropagation();
     u.active = on;
+  }
+
+  // ---- confirm prompt (activate / deactivate a user) ----------------------
+  confirm: ConfirmPrompt | null = null;
+
+  private ask(p: ConfirmPrompt) { this.confirm = p; }
+  onConfirm() { this.confirm?.action(); this.confirm = null; }
+  onCancelConfirm() { this.confirm = null; }
+
+  /** Ask before flipping a user's active status. */
+  requestToggleActive(u: ManagedUser, ev: Event) {
+    ev.stopPropagation();
+    const next = !u.active;
+    this.ask({
+      title: next ? 'Activate this user?' : 'Deactivate this user?',
+      message: next
+        ? `${this.fullName(u)} will regain access and can sign in to their account again.`
+        : `${this.fullName(u)} will lose access immediately and won't be able to sign in until reactivated.`,
+      confirmLabel: next ? 'Activate' : 'Deactivate',
+      danger: !next,
+      action: () => (u.active = next),
+    });
   }
 
   /** Invite a user to sign in via SSO — flips them to SSO-enabled. */

@@ -629,6 +629,7 @@
   gap: 10px;
   padding: 12px 14px;
 }
+.au-team-stats-grid.two { grid-template-columns: repeat(2, 1fr); }
 .au-team-stat-tile {
   display: flex;
   align-items: center;
@@ -1602,11 +1603,12 @@
 }
 .au-summary-text strong { color: var(--au-dark); font-weight: 700; }
 .au-celebrate-done { margin-top: 18px; animation: au-rise .4s ease .55s both; }
+.au-celebrate-actions { display: flex; gap: 12px; margin-top: 18px; animation: au-rise .4s ease .55s both; }
 @keyframes au-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .au-modal, .au-step-pane, .au-dropdown, .au-btn-primary { animation: none; transition: none; }
   .au-confetti, .au-ring { display: none; }
   .au-badge, .au-badge-check, .au-celebrate-title, .au-celebrate-sub,
-  .au-summary, .au-celebrate-done { animation: none; transform: none; opacity: 1; stroke-dashoffset: 0; }
+  .au-summary, .au-celebrate-done, .au-celebrate-actions { animation: none; transform: none; opacity: 1; stroke-dashoffset: 0; }
 }

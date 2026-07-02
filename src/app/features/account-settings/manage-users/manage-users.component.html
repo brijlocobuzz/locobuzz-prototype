@@ -331,12 +331,14 @@
             </div>
           </td>
 
-          <!-- status: segmented control -->
+          <!-- status: toggle switch (asks to confirm) -->
           <td>
-            <div class="seg" (click)="$event.stopPropagation()">
-              <button class="seg-btn" [class.on]="u.active" (click)="setActive(u, true, $event)">Active</button>
-              <button class="seg-btn" [class.off]="!u.active" (click)="setActive(u, false, $event)">Inactive</button>
-            </div>
+            <button class="tk-toggle" [class.on]="u.active"
+                    (click)="requestToggleActive(u, $event)"
+                    [attr.aria-pressed]="u.active">
+              <span class="tk-track"><span class="tk-knob"></span></span>
+              <span class="tk-lbl">{{ u.active ? 'Active' : 'Inactive' }}</span>
+            </button>
           </td>
 
           <!-- last login: relative recency -->
@@ -507,3 +509,17 @@
                      (closed)="wizardOpen = false"
                      (saved)="onUserSaved($event)">
 </app-add-user-wizard>
+
+<!-- ===== Confirmation prompt (activate / deactivate) ===== -->
+<div class="cf-scrim" *ngIf="confirm" (click)="onCancelConfirm()"></div>
+<div class="cf-modal" *ngIf="confirm" role="alertdialog" aria-modal="true">
+  <span class="cf-ic" [class.danger]="confirm.danger">
+    <span class="msr">{{ confirm.danger ? 'warning' : 'help' }}</span>
+  </span>
+  <h3 class="cf-title">{{ confirm.title }}</h3>
+  <p class="cf-msg">{{ confirm.message }}</p>
+  <div class="cf-actions">
+    <button class="cf-btn" (click)="onCancelConfirm()">Cancel</button>
+    <button class="cf-btn primary" [class.danger]="confirm.danger" (click)="onConfirm()">{{ confirm.confirmLabel }}</button>
+  </div>
+</div>

@@ -22,8 +22,8 @@
       </span>
     </div>
 
-    <h2 class="au-celebrate-title">User created!</h2>
-    <p class="au-celebrate-sub">The account is ready and good to go.</p>
+    <h2 class="au-celebrate-title">{{ firstName }} {{ lastName }} is ready! 🎉</h2>
+    <p class="au-celebrate-sub">The account is set up and good to go.</p>
 
     <!-- summary statement of the new user -->
     <div class="au-summary">
@@ -39,9 +39,14 @@
       </p>
     </div>
 
-    <button type="button" class="au-btn-primary au-celebrate-done" (click)="complete()">
-      <span class="msr">close</span> Close
-    </button>
+    <div class="au-celebrate-actions">
+      <button type="button" class="au-btn-primary" (click)="addAnother()">
+        <span class="msr">add</span> Add another user
+      </button>
+      <button type="button" class="au-btn-stroked" (click)="complete()">
+        <span class="msr">check</span> Close
+      </button>
+    </div>
   </div>
 
   <ng-container *ngIf="!celebrating">
@@ -331,7 +336,7 @@
               </span>
               <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
                 <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
-                {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+                {{ b.ticketsEnabled ? 'Tickets creation On' : 'Tickets creation Off' }}
               </span>
               <span class="au-check" [class.on]="selectedBrandIds.has(b.id)">
                 <span class="msr" *ngIf="selectedBrandIds.has(b.id)">check</span>
@@ -363,7 +368,7 @@
                 {{ b.name }}
                 <span class="au-ticket-pill sm" [class.off]="!b.ticketsEnabled">
                   <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
-                  {{ b.ticketsEnabled ? 'Tickets On' : 'Tickets Off' }}
+                  {{ b.ticketsEnabled ? 'Tickets creation On' : 'Tickets creation Off' }}
                 </span>
               </span>
               <span class="au-assigned-desc">{{ b.description }}</span>
@@ -509,14 +514,7 @@
             </button>
           </div>
 
-          <div class="au-team-stats-grid">
-            <div class="au-team-stat-tile">
-              <span class="au-team-stat-ic"><span class="msr">shield_person</span></span>
-              <span class="au-team-stat-body">
-                <span class="au-team-stat-k">Team Lead</span>
-                <span class="au-team-stat-v">{{ selectedTeam.lead }}</span>
-              </span>
-            </div>
+          <div class="au-team-stats-grid two">
             <div class="au-team-stat-tile">
               <span class="au-team-stat-ic"><span class="msr">group</span></span>
               <span class="au-team-stat-body">
@@ -529,13 +527,6 @@
               <span class="au-team-stat-body">
                 <span class="au-team-stat-k">Brands covered</span>
                 <span class="au-team-stat-v">{{ selectedTeam.brands }}</span>
-              </span>
-            </div>
-            <div class="au-team-stat-tile">
-              <span class="au-team-stat-ic"><span class="msr">schedule</span></span>
-              <span class="au-team-stat-body">
-                <span class="au-team-stat-k">Coverage</span>
-                <span class="au-team-stat-v">{{ selectedTeam.shift }}</span>
               </span>
             </div>
           </div>

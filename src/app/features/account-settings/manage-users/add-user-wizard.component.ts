@@ -36,7 +36,6 @@ export class AddUserWizardComponent {
 
   /** Celebration screen shown after Save. */
   celebrating = false;
-  private completedOnce = false;
   /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
   readonly confetti = this.makeConfetti();
 
@@ -455,10 +454,8 @@ export class AddUserWizardComponent {
     this.celebrating = true;
   }
 
-  /** Emit the saved user and close — guarded so it only runs once. */
-  complete() {
-    if (this.completedOnce) return;
-    this.completedOnce = true;
+  /** Emit the newly-created user to the parent listing. */
+  private emitSavedUser() {
     this.saved.emit({
       firstName: this.firstName.trim(),
       lastName: this.lastName.trim(),
@@ -467,7 +464,57 @@ export class AddUserWizardComponent {
       role: this.role!.label,
       brands: this.selectedBrandIds.size,
     });
+  }
+
+  /** Save this user and close the dialog. */
+  complete() {
+    this.emitSavedUser();
     this.close();
+  }
+
+  /** Save this user and reset the wizard to add another one. */
+  addAnother() {
+    this.emitSavedUser();
+    this.resetForNewUser();
+  }
+
+  /** Wipe all step state so the wizard starts fresh for a new user. */
+  private resetForNewUser() {
+    this.celebrating = false;
+    this.currentStep = 1;
+    this.committedName = '';
+    // step 1 — profile
+    this.photoDataUrl = null;
+    this.firstName = this.lastName = this.username = this.email = '';
+    this.gender = '0';
+    this.role = null;
+    this.roleOpen = false;
+    this.isSupervisorAdmin = false;
+    this.country = COUNTRY_CODES[0];
+    this.countryOpen = false;
+    this.countrySearch = '';
+    this.contactNumber = '';
+    // step 2 — role & permissions
+    this.selectedGroupIds.clear();
+    this.checkedPermissions.clear();
+    this.expandedModules = {};
+    this.platformsDropdownOpen = false;
+    this.platformSearch = '';
+    // step 3 — brands
+    this.selectedBrandIds.clear();
+    this.brandsDropdownOpen = false;
+    this.brandSearch = '';
+    // step 4 — signature
+    this.perBrandSignatures = false;
+    this.signature = '';
+    this.brandSignatures = {};
+    // step 5 — team & notify
+    this.selectedTeam = null;
+    this.teamOpen = false;
+    this.teamSearch = '';
+    this.selectedNotifyEmails.clear();
+    this.notifyDropdownOpen = false;
+    this.notifySearch = '';
   }
 
   close() {
