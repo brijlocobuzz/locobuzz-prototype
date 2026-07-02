@@ -150,3 +150,12 @@ body {
   line-height: 1.5;
   padding: 10px 12px;
 }
+
+/* "View other brand colors" menu (Add Brand wizard, step 2) */
+.ab2-colors-menu.mat-mdc-menu-panel { min-width: 210px; max-width: 240px; max-height: 260px; }
+.ab2-colors-menu .mat-mdc-menu-item { min-height: 34px; padding: 0 12px; }
+.ab2-colors-menu .mat-mdc-menu-item .mat-mdc-menu-item-text { font-size: 12px; }
+.ab2-oc { display: flex; align-items: center; gap: 8px; width: 100%; }
+.ab2-oc-dot { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 auto; box-shadow: 0 0 0 1px rgba(15, 23, 42, .12); }
+.ab2-oc-name { flex: 1; text-align: left; font-size: 12px; font-weight: 600; color: #0f172a; }
+.ab2-oc-hex { font-size: 10px; font-weight: 700; color: #64748b; }

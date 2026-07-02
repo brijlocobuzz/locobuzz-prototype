@@ -242,11 +242,26 @@ export function brandLogo(domain: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 }
 
+/** India is pinned first; the rest follow. */
 export const COUNTRIES: string[] = [
-  'United States', 'India', 'United Kingdom', 'United Arab Emirates', 'Australia',
+  'India', 'United States', 'United Kingdom', 'United Arab Emirates', 'Australia',
   'Canada', 'Germany', 'France', 'Singapore', 'Japan', 'Brazil', 'South Africa',
   'Spain', 'Italy', 'Netherlands', 'Saudi Arabia', 'Indonesia', 'Mexico',
 ];
+
+/** Country → ISO-3166 alpha-2 code (used to build the flag image URL). */
+export const COUNTRY_CODES: Record<string, string> = {
+  'India': 'in', 'United States': 'us', 'United Kingdom': 'gb',
+  'United Arab Emirates': 'ae', 'Australia': 'au', 'Canada': 'ca',
+  'Germany': 'de', 'France': 'fr', 'Singapore': 'sg', 'Japan': 'jp',
+  'Brazil': 'br', 'South Africa': 'za', 'Spain': 'es', 'Italy': 'it',
+  'Netherlands': 'nl', 'Saudi Arabia': 'sa', 'Indonesia': 'id', 'Mexico': 'mx',
+};
+/** Real flag image (renders reliably everywhere, unlike emoji flags on Windows). */
+export function countryFlagUrl(name: string): string {
+  const code = COUNTRY_CODES[name];
+  return code ? `https://flagcdn.com/${code}.svg` : '';
+}
 
 export interface BrandUser {
   id: string;
@@ -278,15 +293,14 @@ export const BRAND_USERS: BrandUser[] = [
 ];
 
 /**
- * A single category inside a group's taxonomy. Any of these can also be chosen
- * as the brand's catch-all (the fallback bucket for unmatched mentions).
+ * A node in a group's hierarchical category taxonomy. Categories can nest into
+ * sub-categories (L1 → L2 → L3 …). Any node can be chosen as the catch-all.
  */
-export interface TaxonomyCategory {
+export interface CategoryNode {
   name: string;
-  /** What kinds of mentions land here — shown to help the user choose. */
-  description: string;
   /** Keywords that drive auto-tagging into this category. */
   keywords: number;
+  children?: CategoryNode[];
 }
 
 /**
@@ -299,73 +313,114 @@ export interface CategoryGroupInfo {
   description: string;
   /** Brands already sharing this group's taxonomy. */
   brands: number;
-  /** Total categories defined in the taxonomy. */
-  categories: number;
-  /** The categories available within this group (catch-all candidates). */
-  categoryList: TaxonomyCategory[];
+  /** The hierarchical category tree for this group. */
+  tree: CategoryNode[];
+}
+
+/** Flatten a category tree into a single list of nodes (depth-first). */
+export function flattenCategories(nodes: CategoryNode[]): CategoryNode[] {
+  const out: CategoryNode[] = [];
+  const walk = (list: CategoryNode[]) => list.forEach(n => { out.push(n); if (n.children) walk(n.children); });
+  walk(nodes);
+  return out;
 }
 
 export const CATEGORY_GROUPS: CategoryGroupInfo[] = [
   {
     name: 'Default',
     description: 'Standard out-of-the-box taxonomy for general listening.',
-    brands: 8, categories: 5,
-    categoryList: [
-      { name: 'General', description: 'Anything that doesn\'t fit a specific category.', keywords: 12 },
-      { name: 'Query', description: 'Questions and information requests.', keywords: 34 },
-      { name: 'Complaint', description: 'Negative experiences and grievances.', keywords: 56 },
-      { name: 'Feedback', description: 'Suggestions and general opinions.', keywords: 28 },
-      { name: 'Spam', description: 'Irrelevant or promotional noise.', keywords: 19 },
+    brands: 8,
+    tree: [
+      { name: 'General', keywords: 12 },
+      { name: 'Query', keywords: 34, children: [
+        { name: 'Product Query', keywords: 18 },
+        { name: 'Account Query', keywords: 12 },
+      ] },
+      { name: 'Complaint', keywords: 56, children: [
+        { name: 'Service Issue', keywords: 30, children: [
+          { name: 'Delay', keywords: 14 },
+        ] },
+        { name: 'Billing', keywords: 22 },
+      ] },
+      { name: 'Feedback', keywords: 28 },
+      { name: 'Spam', keywords: 19 },
     ],
   },
   {
     name: 'Customer Care',
     description: 'Service-oriented taxonomy for support and resolution tickets.',
-    brands: 14, categories: 7,
-    categoryList: [
-      { name: 'Account Related', description: 'Login, profile and account-access issues.', keywords: 41 },
-      { name: 'Complaint', description: 'Service failures and dissatisfaction.', keywords: 63 },
-      { name: 'Query', description: 'How-to questions and clarifications.', keywords: 38 },
-      { name: 'Escalation', description: 'High-priority issues needing senior attention.', keywords: 22 },
-      { name: 'Refund', description: 'Returns, refunds and billing disputes.', keywords: 30 },
-      { name: 'Delivery', description: 'Shipping, tracking and delivery delays.', keywords: 27 },
-      { name: 'General', description: 'Uncategorised support mentions.', keywords: 10 },
+    brands: 14,
+    tree: [
+      { name: 'Account Related', keywords: 41, children: [
+        { name: 'Login Issue', keywords: 24 },
+        { name: 'Profile', keywords: 17 },
+      ] },
+      { name: 'Complaint', keywords: 63, children: [
+        { name: 'Service Failure', keywords: 33 },
+        { name: 'Rude Staff', keywords: 15 },
+      ] },
+      { name: 'Query', keywords: 38 },
+      { name: 'Escalation', keywords: 22 },
+      { name: 'Refund', keywords: 30, children: [
+        { name: 'Return', keywords: 16 },
+        { name: 'Billing Dispute', keywords: 14 },
+      ] },
+      { name: 'Delivery', keywords: 27, children: [
+        { name: 'Delay', keywords: 15 },
+        { name: 'Damaged', keywords: 12 },
+      ] },
+      { name: 'General', keywords: 10 },
     ],
   },
   {
     name: 'Marketing',
     description: 'Campaign, brand and engagement taxonomy.',
-    brands: 9, categories: 5,
-    categoryList: [
-      { name: 'Feedback', description: 'Reactions to campaigns and content.', keywords: 33 },
-      { name: 'Appreciation', description: 'Praise, love and positive shout-outs.', keywords: 25 },
-      { name: 'Campaign', description: 'Mentions tied to active campaigns.', keywords: 44 },
-      { name: 'Brand Promotion', description: 'User-driven promotion and advocacy.', keywords: 18 },
-      { name: 'General', description: 'Everything else.', keywords: 9 },
+    brands: 9,
+    tree: [
+      { name: 'Feedback', keywords: 33 },
+      { name: 'Appreciation', keywords: 25, children: [
+        { name: 'Praise', keywords: 14 },
+        { name: 'Love', keywords: 11 },
+      ] },
+      { name: 'Campaign', keywords: 44, children: [
+        { name: 'Contest', keywords: 20 },
+        { name: 'Launch', keywords: 24 },
+      ] },
+      { name: 'Brand Promotion', keywords: 18 },
+      { name: 'General', keywords: 9 },
     ],
   },
   {
     name: 'Product Feedback',
     description: 'Captures feature requests, bugs and product sentiment.',
-    brands: 6, categories: 5,
-    categoryList: [
-      { name: 'Bug Report', description: 'Defects and things that don\'t work.', keywords: 47 },
-      { name: 'Feature Request', description: 'Asks for new capabilities.', keywords: 36 },
-      { name: 'Usability', description: 'Ease-of-use and experience friction.', keywords: 21 },
-      { name: 'Pricing', description: 'Cost, plans and value concerns.', keywords: 15 },
-      { name: 'General', description: 'Unsorted product mentions.', keywords: 8 },
+    brands: 6,
+    tree: [
+      { name: 'Bug Report', keywords: 47, children: [
+        { name: 'Crash', keywords: 21 },
+        { name: 'UI Bug', keywords: 18 },
+      ] },
+      { name: 'Feature Request', keywords: 36 },
+      { name: 'Usability', keywords: 21 },
+      { name: 'Pricing', keywords: 15 },
+      { name: 'General', keywords: 8 },
     ],
   },
   {
     name: 'Operations',
     description: 'Logistics, fulfilment and on-ground operations.',
-    brands: 5, categories: 5,
-    categoryList: [
-      { name: 'Complaint', description: 'Operational failures and grievances.', keywords: 52 },
-      { name: 'Delivery', description: 'Order fulfilment and delivery issues.', keywords: 40 },
-      { name: 'Service Quality', description: 'Quality of on-ground service.', keywords: 29 },
-      { name: 'Logistics', description: 'Routing, dispatch and supply concerns.', keywords: 24 },
-      { name: 'General', description: 'Other operational mentions.', keywords: 11 },
+    brands: 5,
+    tree: [
+      { name: 'Complaint', keywords: 52 },
+      { name: 'Delivery', keywords: 40, children: [
+        { name: 'Delay', keywords: 22 },
+        { name: 'Lost', keywords: 12 },
+      ] },
+      { name: 'Service Quality', keywords: 29 },
+      { name: 'Logistics', keywords: 24, children: [
+        { name: 'Routing', keywords: 13 },
+        { name: 'Dispatch', keywords: 11 },
+      ] },
+      { name: 'General', keywords: 11 },
     ],
   },
 ];

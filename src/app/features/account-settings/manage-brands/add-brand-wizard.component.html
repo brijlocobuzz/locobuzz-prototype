@@ -66,7 +66,12 @@
       <h2>{{ headingName }}</h2>
       <p>{{ headingSub }}</p>
     </div>
-    <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
+    <div class="ab-head-right">
+      <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
+      <button type="button" class="ab-head-close" (click)="close()" aria-label="Close">
+        <span class="msr">close</span>
+      </button>
+    </div>
   </header>
 
   <!-- ===== Stepper ===== -->
@@ -179,10 +184,13 @@
       <!-- Country -->
       <div class="ab-field ab-field-country">
         <label class="ab-label">Country <i>*</i></label>
+        <p class="ab-hint top">Sets your brand's region on the maps and location charts in Analytics.</p>
         <div class="ab-select-wrap">
           <button type="button" class="ab-select" [class.is-open]="countryOpen"
                   (click)="countryOpen = !countryOpen">
-            <span [class.placeholder]="!country">{{ country || 'Select country' }}</span>
+            <span [class.placeholder]="!country">
+              <img class="ab-flag" *ngIf="country" [src]="countryFlagUrl(country)" alt="" />{{ country || 'Select country' }}
+            </span>
             <span class="msr chev">expand_more</span>
           </button>
           <div class="ab-dropdown" *ngIf="countryOpen">
@@ -192,7 +200,9 @@
             </div>
             <div class="ab-dropdown-list">
               <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
-                      [class.sel]="c === country" (click)="selectCountry(c)">{{ c }}</button>
+                      [class.sel]="c === country" (click)="selectCountry(c)">
+                <img class="ab-flag" [src]="countryFlagUrl(c)" alt="" />{{ c }}
+              </button>
               <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
             </div>
           </div>
@@ -280,13 +290,28 @@
                 <input type="color" [(ngModel)]="color" hidden />
               </label>
             </div>
-            <div class="ab2-hex">
-              <span class="ab2-hex-dot" [style.background]="color"></span>
-              <span class="ab2-hex-meta">
-                <span class="ab2-hex-label">Selected color</span>
-                <span class="ab2-hex-val">{{ color | uppercase }}</span>
-              </span>
+            <div class="ab2-color-foot">
+              <div class="ab2-hex">
+                <span class="ab2-hex-dot" [style.background]="color"></span>
+                <span class="ab2-hex-meta">
+                  <span class="ab2-hex-label">Selected color</span>
+                  <span class="ab2-hex-val">{{ color | uppercase }}</span>
+                </span>
+              </div>
+
+              <button type="button" class="ab2-other-btn" [matMenuTriggerFor]="brandColorsMenu">
+                <span class="msr">palette</span> Other brand colors
+              </button>
             </div>
+            <mat-menu #brandColorsMenu="matMenu" class="ab2-colors-menu" xPosition="before">
+              <button type="button" mat-menu-item *ngFor="let b of otherBrands" (click)="pickColor(b.color)">
+                <span class="ab2-oc">
+                  <span class="ab2-oc-dot" [style.background]="b.color"></span>
+                  <span class="ab2-oc-name">{{ b.name }}</span>
+                  <span class="ab2-oc-hex">{{ b.color | uppercase }}</span>
+                </span>
+              </button>
+            </mat-menu>
           </div>
         </div>
       </div>
@@ -295,7 +320,7 @@
     <!-- ---------- Step 3 · Products & Competitors ---------- -->
     <section class="ab-step-pane ab-pane-fill" *ngIf="currentStep === 3">
       <h1 class="ab-pane-title">Products &amp; Competitors</h1>
-      <p class="ab-pane-sub">List your products and competitors to give the AI richer market context.</p>
+      <p class="ab-pane-sub">Tell us about your products and competitors so the AI understands your brand better. It helps the AI notice conversations that matter to you and gently skip the ones that don't.</p>
 
       <div class="ab-pc-grid">
         <!-- ===== Products ===== -->
@@ -304,7 +329,7 @@
             <span class="ab-pc-ic products"><span class="msr">deployed_code</span></span>
             <div class="ab-pc-head-text">
               <p class="ab-pc-title">Products &amp; Services</p>
-              <p class="ab-pc-sub">The products or services your brand offers</p>
+              <p class="ab-pc-sub">Add what you offer so the AI can spot your products when people talk about them.</p>
             </div>
             <span class="ab-pc-count">{{ products.length }}</span>
           </div>
@@ -351,7 +376,7 @@
             <span class="ab-pc-ic competitors"><span class="msr">flag</span></span>
             <div class="ab-pc-head-text">
               <p class="ab-pc-title">Competitors</p>
-              <p class="ab-pc-sub">Who you're up against</p>
+              <p class="ab-pc-sub">Add your competitors so the AI can keep their mentions separate from yours.</p>
             </div>
             <span class="ab-pc-count">{{ competitors.length + (useMappedCompetitors ? mappedCompetitors.length : 0) }}</span>
           </div>
@@ -393,6 +418,51 @@
               <button type="button" class="ab-pc-quickadd-btn" [disabled]="!competitorDraft.trim()"
                       (click)="quickAddCompetitor()">Add</button>
             </div>
+
+            <!-- competitor sets -->
+            <div class="ab-pc-sets-wrap">
+              <div class="ab-pc-sets-head">
+                <span class="ab-pc-sets-title">Competitor sets</span>
+                <button type="button" class="ab-pc-set-new" *ngIf="!buildingSet"
+                        [disabled]="!allCompetitorNames.length" (click)="startSet()">
+                  <span class="msr">add</span> New set
+                </button>
+              </div>
+              <p class="ab-pc-sets-hint">Group competitors together to compare them as one in Analytics.</p>
+
+              <!-- existing sets -->
+              <div class="ab-pc-set" *ngFor="let s of competitorSets">
+                <div class="ab-pc-set-top">
+                  <span class="ab-pc-set-name"><span class="msr">layers</span>{{ s.name }}</span>
+                  <button type="button" class="ab-pc-set-x" (click)="removeSet(s.id)" aria-label="Remove set">
+                    <span class="msr">close</span>
+                  </button>
+                </div>
+                <div class="ab-pc-set-members">
+                  <span class="ab-pc-set-mchip" *ngFor="let m of s.members">{{ m }}</span>
+                </div>
+              </div>
+
+              <!-- set builder -->
+              <div class="ab-pc-setbuilder" *ngIf="buildingSet">
+                <input class="ab-input" type="text" placeholder="Set name (e.g. Direct rivals)"
+                       maxlength="40" [(ngModel)]="setNameDraft" />
+                <p class="ab-pc-set-pick">Pick competitors for this set:</p>
+                <div class="ab-pc-selchips">
+                  <button type="button" class="ab-pc-selchip" *ngFor="let n of allCompetitorNames"
+                          [class.on]="setMemberSel.has(n)" (click)="toggleSetMember(n)">
+                    <span class="msr">{{ setMemberSel.has(n) ? 'check_circle' : 'add_circle' }}</span>{{ n }}
+                  </button>
+                </div>
+                <div class="ab-pc-set-actions">
+                  <button type="button" class="ab-pc-set-cancel" (click)="cancelSet()">Cancel</button>
+                  <button type="button" class="ab-pc-set-save"
+                          [disabled]="setNameDraft.trim().length < 2 || !setMemberSel.size" (click)="saveSet()">
+                    Save set
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -403,7 +473,7 @@
       <div class="ab-cat4-head">
         <div>
           <h1 class="ab-pane-title">Categories</h1>
-          <p class="ab-pane-sub">Pick a category group, then choose the catch-all for mentions that don't match.</p>
+          <p class="ab-pane-sub">Choose how this brand's mentions are automatically sorted into categories, and where the ones that don't fit any category should go.</p>
         </div>
       </div>
 
@@ -420,12 +490,13 @@
         <!-- LEFT · group rail -->
         <aside class="ab-cat4-rail">
           <p class="ab-cat4-rail-label">Category Group <i class="ab-req">*</i></p>
+          <p class="ab-cat4-rail-help">The ready-made set of categories your brand's mentions are auto-sorted into. Brands in the same group share these categories.</p>
           <div class="ab-cat4-groups">
             <button type="button" class="ab-cat4-group" *ngFor="let g of categoryGroups"
                     [class.sel]="categoryGroup === g.name" (click)="selectGroup(g)">
               <span class="ab-cat4-group-main">
                 <span class="ab-cat4-group-name">{{ g.name }}</span>
-                <span class="ab-cat4-group-meta">{{ g.categories }} cats · {{ groupBrands(g.name).length }} brands</span>
+                <span class="ab-cat4-group-meta">{{ catCount(g) }} cats · {{ groupBrands(g.name).length }} brands</span>
               </span>
               <span class="msr ab-cat4-group-chev">chevron_right</span>
             </button>
@@ -448,41 +519,52 @@
             <p class="ab-cat4-detail-desc">{{ selectedGroup.description }}</p>
           </div>
 
-          <!-- brands -->
-          <div class="ab-cat4-block">
-            <p class="ab-cat4-mini">Brands using this group <span class="ab-cat4-pill">{{ groupBrands(selectedGroup.name).length }}</span></p>
-            <div class="ab-cat4-brands" *ngIf="groupBrands(selectedGroup.name).length; else noB">
-              <span class="ab-cat4-bchip" *ngFor="let b of groupBrands(selectedGroup.name)" [title]="b.name">
-                <img [src]="brandLogo(b.domain)" [alt]="b.name" />{{ b.name }}
-              </span>
-            </div>
-            <ng-template #noB><p class="ab-cat4-empty">Yours will be the first brand in this group.</p></ng-template>
-          </div>
-
-          <!-- category mapping + catch-all picker -->
-          <div class="ab-cat4-block fill">
-            <p class="ab-cat4-mini">
-              Category mapping — pick the catch-all <i class="ab-req">*</i>
-              <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span>
-            </p>
-            <div class="ab-cat4-cats">
-              <button type="button" class="ab-cat4-cat" *ngFor="let c of catchAllOptions"
-                      [class.sel]="catchAll === c.name" (click)="selectCatchAll(c)" [title]="c.description">
-                <span class="ab-cat4-cat-radio"><span class="msr">check</span></span>
-                <span class="ab-cat4-cat-name">{{ c.name }}</span>
-                <span class="ab-cat4-cat-kw" [title]="c.keywords + ' keywords'">
-                  <span class="msr">sell</span>{{ c.keywords }}
+          <div class="ab-cat4-scroll">
+            <!-- brands -->
+            <div class="ab-cat4-block">
+              <p class="ab-cat4-mini">Brands using this group <span class="ab-cat4-pill">{{ groupBrands(selectedGroup.name).length }}</span></p>
+              <div class="ab-cat4-brands" *ngIf="groupBrands(selectedGroup.name).length; else noB">
+                <span class="ab-cat4-bchip" *ngFor="let b of groupBrands(selectedGroup.name)" [title]="b.name">
+                  <img [src]="brandLogo(b.domain)" [alt]="b.name" />{{ b.name }}
                 </span>
-              </button>
-
-              <div class="ab-cat4-newcat" *ngIf="addingCatchAll">
-                <input class="ab-input" type="text" placeholder="New category" maxlength="50" [(ngModel)]="catchAllDraft" />
-                <button type="button" class="ab-confirm" (click)="saveCatchAll()"><span class="msr">check</span></button>
-                <button type="button" class="ab-cancel-x" (click)="cancelAddCatchAll()"><span class="msr">close</span></button>
               </div>
-              <button type="button" class="ab-cat4-catadd" *ngIf="!addingCatchAll" (click)="startAddCatchAll()">
-                <span class="msr">add</span> Add
-              </button>
+              <ng-template #noB><p class="ab-cat4-empty">Yours will be the first brand in this group.</p></ng-template>
+            </div>
+
+            <!-- category mapping (hierarchical tree) -->
+            <div class="ab-cat4-block">
+              <div class="ab-cat4-mini-row">
+                <p class="ab-cat4-mini">Category mapping <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span></p>
+                <button type="button" class="ab-cat4-createcat" *ngIf="!addingCatRoot" (click)="startAddRootCat()">
+                  <span class="msr">add</span> Create category
+                </button>
+              </div>
+              <p class="ab-cat4-maphelp">These are the categories in this group. Incoming mentions are automatically tagged into them by their keywords.</p>
+              <p class="ab-cat4-pickhint" *ngIf="!catchAll">
+                <span class="msr">touch_app</span>
+                <span>Now choose a <b>catch-all category</b> <i class="ab-req">*</i> — the fallback for any mention that doesn't match a category above, so nothing is missed. Click a category below to set it.</span>
+              </p>
+              <p class="ab-cat4-pickhint sel" *ngIf="catchAll">
+                <span class="msr">check_circle</span>
+                <span>Catch-all: <b>{{ catchAll }}</b> — mentions that don't match any other category will be filed here. Click another category to change it.</span>
+              </p>
+
+              <div class="ab-cat4-toolbar">
+                <span class="msr">search</span>
+                <input type="text" placeholder="Search category" [(ngModel)]="categorySearch" />
+              </div>
+
+              <div class="ab-cat4-tree">
+                <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
+
+                <div class="ab-cat4-newcat" *ngIf="addingCatRoot">
+                  <input class="ab-input" type="text" placeholder="Category name" maxlength="50" [(ngModel)]="catDraft" />
+                  <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
+                  <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
+                </div>
+
+                <p class="ab-cat4-empty" *ngIf="!displayTree.length && !addingCatRoot">No categories match your search.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -494,6 +576,37 @@
           </div>
         </ng-template>
       </div>
+
+      <!-- recursive category tree node template -->
+      <ng-template #catNodes let-nodes let-level="level">
+        <div class="ab-cat4-node" *ngFor="let n of nodes">
+          <div class="ab-cat4-noderow" [style.padding-left.px]="(level - 1) * 18">
+            <button type="button" class="ab-cat4-toggle" *ngIf="n.children?.length" (click)="toggleNode(n)">
+              <span class="msr">{{ isExpanded(n) ? 'indeterminate_check_box' : 'add_box' }}</span>
+            </button>
+            <span class="ab-cat4-toggle-sp" *ngIf="!n.children?.length"></span>
+            <button type="button" class="ab-cat4-chip" [class.sel]="catchAll === n.name" (click)="selectCatchAll(n.name)">
+              {{ n.name }}
+              <span class="ab-cat4-chip-tag" *ngIf="catchAll === n.name">Catch-all</span>
+            </button>
+            <button type="button" class="ab-cat4-addchild" (click)="startAddChildCat(n)" title="Add sub-category">
+              <span class="msr">add</span>
+            </button>
+          </div>
+
+          <div class="ab-cat4-children" *ngIf="(n.children?.length && isExpanded(n)) || addCatParent === n"
+               [style.padding-left.px]="level * 18">
+            <ng-container *ngIf="n.children?.length && isExpanded(n)">
+              <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: n.children, level: level + 1 }"></ng-container>
+            </ng-container>
+            <div class="ab-cat4-newcat child" *ngIf="addCatParent === n">
+              <input class="ab-input" type="text" placeholder="Sub-category name" maxlength="50" [(ngModel)]="catDraft" />
+              <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
+              <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
+            </div>
+          </div>
+        </div>
+      </ng-template>
     </section>
 
     <!-- ---------- Step 5 · Ticket Creation ---------- -->

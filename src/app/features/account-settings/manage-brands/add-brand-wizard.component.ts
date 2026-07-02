@@ -1,9 +1,11 @@
 import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatMenuModule } from '@angular/material/menu';
 import {
-  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, BRAND_COLORS, MANAGED_BRANDS, brandLogo,
-  BrandUser, BrandProduct, BrandCompetitor, CategoryGroupInfo, TaxonomyCategory, ManagedBrand,
+  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, BRAND_COLORS, MANAGED_BRANDS, brandLogo, countryFlagUrl,
+  BrandUser, BrandProduct, BrandCompetitor, CategoryGroupInfo, CategoryNode, ManagedBrand,
+  flattenCategories,
 } from './manage-brands-data';
 
 interface WizardStep {
@@ -33,7 +35,7 @@ export interface NewBrandPayload {
 @Component({
   selector: 'app-add-brand-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatMenuModule],
   templateUrl: './add-brand-wizard.component.html',
   styleUrl: './add-brand-wizard.component.scss',
 })
@@ -65,7 +67,11 @@ export class AddBrandWizardComponent {
   readonly allUsers = BRAND_USERS;
   /** Fresh copy each time the dialog opens (inline-created groups/categories stay local). */
   readonly categoryGroups: CategoryGroupInfo[] =
-    CATEGORY_GROUPS.map(g => ({ ...g, categoryList: g.categoryList.map(c => ({ ...c })) }));
+    CATEGORY_GROUPS.map(g => ({ ...g, tree: this.cloneNodes(g.tree) }));
+
+  private cloneNodes(nodes: CategoryNode[]): CategoryNode[] {
+    return nodes.map(n => ({ name: n.name, keywords: n.keywords, children: n.children ? this.cloneNodes(n.children) : undefined }));
+  }
   readonly brandColors = BRAND_COLORS;
 
   // ---- step 1 · brand identity -------------------------------------------
@@ -102,8 +108,15 @@ export class AddBrandWizardComponent {
   catchAll = '';                                      // selected catch-all category name
   addingGroup = false;
   groupDraft = '';
-  addingCatchAll = false;
-  catchAllDraft = '';
+  // catch-all dropdown
+  catchAllOpen = false;
+  catchAllSearch = '';
+  // tree state
+  expandedNodes = new Set<CategoryNode>();
+  categorySearch = '';
+  addCatParent: CategoryNode | null = null;           // node we're adding a child to (null = root)
+  addingCatRoot = false;
+  catDraft = '';
 
   // ---- step 5 · products & competitors -----------------------------------
   products: BrandProduct[] = [{ id: 'p1', name: 'Air Max', synonyms: ['AM', 'Air-Max'] }];
@@ -114,6 +127,12 @@ export class AddBrandWizardComponent {
   addingCompetitor = false;
   competitorDraft = '';
   editingCompetitorId: string | null = null;
+
+  /** Named sets grouping selected competitors (e.g. "Direct rivals"). */
+  competitorSets: { id: string; name: string; members: string[] }[] = [];
+  buildingSet = false;
+  setNameDraft = '';
+  setMemberSel = new Set<string>();
 
   addingProduct = false;
   productDraftName = '';
@@ -305,6 +324,9 @@ export class AddBrandWizardComponent {
   //  Step 4 · categories
   // =======================================================================
   readonly brandLogo = brandLogo;
+  readonly countryFlagUrl = countryFlagUrl;
+  /** Existing brands + their colours, shown in the "other brand colors" menu. */
+  readonly otherBrands = MANAGED_BRANDS;
 
   /** Existing brands grouped by their category group — shown on each group card. */
   private readonly brandsByGroup: Record<string, ManagedBrand[]> =
@@ -326,22 +348,57 @@ export class AddBrandWizardComponent {
     return extra > 0 ? `${shown} +${extra}` : shown;
   }
 
-  /** Catch-all candidates are the selected group's categories (config is per-group). */
-  get catchAllOptions(): TaxonomyCategory[] {
-    return this.selectedGroup?.categoryList ?? [];
+  /** Total categories (all levels) in a group — shown on the group card. */
+  catCount(g: CategoryGroupInfo): number {
+    return flattenCategories(g.tree).length;
+  }
+
+  /** Flat list of every category in the selected group (catch-all candidates). */
+  get catchAllOptions(): CategoryNode[] {
+    return this.selectedGroup ? flattenCategories(this.selectedGroup.tree) : [];
+  }
+  get filteredCatchAll(): CategoryNode[] {
+    const q = this.catchAllSearch.trim().toLowerCase();
+    return q ? this.catchAllOptions.filter(c => c.name.toLowerCase().includes(q)) : this.catchAllOptions;
   }
 
   selectGroup(g: CategoryGroupInfo) {
     if (this.selectedGroup === g) return;
     this.selectedGroup = g;
     this.categoryGroup = g.name;
-    // catch-all belongs to the group, so reset it whenever the group changes
-    this.catchAll = '';
-    this.cancelAddCatchAll();
+    this.catchAll = '';                 // catch-all belongs to the group
+    this.catchAllOpen = false;
+    this.categorySearch = '';
+    this.cancelAddCat();
+    // expand every parent node by default so the tree reads like the real page
+    this.expandedNodes = new Set(flattenCategories(g.tree).filter(n => n.children?.length));
   }
 
-  selectCatchAll(c: TaxonomyCategory) {
-    this.catchAll = c.name;
+  selectCatchAll(name: string) {
+    this.catchAll = name;
+    this.catchAllOpen = false;
+    this.catchAllSearch = '';
+  }
+
+  // ---- category tree ----
+  isExpanded(n: CategoryNode): boolean { return this.expandedNodes.has(n); }
+  toggleNode(n: CategoryNode) {
+    this.expandedNodes.has(n) ? this.expandedNodes.delete(n) : this.expandedNodes.add(n);
+  }
+
+  /** Tree filtered by the search box (keeps a node if it or a descendant matches). */
+  get displayTree(): CategoryNode[] {
+    const q = this.categorySearch.trim().toLowerCase();
+    if (!q || !this.selectedGroup) return this.selectedGroup?.tree ?? [];
+    const filter = (nodes: CategoryNode[]): CategoryNode[] =>
+      nodes.reduce<CategoryNode[]>((acc, n) => {
+        const kids = n.children ? filter(n.children) : [];
+        if (n.name.toLowerCase().includes(q) || kids.length) {
+          acc.push({ ...n, children: kids.length ? kids : n.children });
+        }
+        return acc;
+      }, []);
+    return filter(this.selectedGroup.tree);
   }
 
   // ---- inline create: category group ----
@@ -354,26 +411,34 @@ export class AddBrandWizardComponent {
     const g: CategoryGroupInfo = {
       name,
       description: 'New category group — its taxonomy will be configured after the brand is created.',
-      brands: 0, categories: 0, categoryList: [],
+      brands: 0, tree: [],
     };
     this.categoryGroups.push(g);
     this.selectGroup(g);
     this.cancelAddGroup();
   }
 
-  // ---- inline create: catch-all category (within the selected group) ----
-  startAddCatchAll() { this.addingCatchAll = true; this.catchAllDraft = ''; }
-  cancelAddCatchAll() { this.addingCatchAll = false; this.catchAllDraft = ''; }
-  saveCatchAll() {
+  // ---- inline create: category node (top-level or child) ----
+  startAddRootCat() { this.addingCatRoot = true; this.addCatParent = null; this.catDraft = ''; }
+  startAddChildCat(parent: CategoryNode) {
+    this.addingCatRoot = false;
+    this.addCatParent = parent;
+    this.catDraft = '';
+    this.expandedNodes.add(parent);
+  }
+  cancelAddCat() { this.addingCatRoot = false; this.addCatParent = null; this.catDraft = ''; }
+  saveCat() {
     if (!this.selectedGroup) return;
-    const name = this.catchAllDraft.trim();
-    if (name.length < 3 || name.length > 50) return;
-    if (this.selectedGroup.categoryList.some(c => c.name.toLowerCase() === name.toLowerCase())) return;
-    const c: TaxonomyCategory = { name, description: 'New category added during brand setup.', keywords: 0 };
-    this.selectedGroup.categoryList.push(c);
-    this.selectedGroup.categories = this.selectedGroup.categoryList.length;
-    this.selectCatchAll(c);
-    this.cancelAddCatchAll();
+    const name = this.catDraft.trim();
+    if (name.length < 2 || name.length > 50) return;
+    const node: CategoryNode = { name, keywords: 0 };
+    if (this.addCatParent) {
+      this.addCatParent.children = [...(this.addCatParent.children ?? []), node];
+      this.expandedNodes.add(this.addCatParent);
+    } else {
+      this.selectedGroup.tree = [...this.selectedGroup.tree, node];
+    }
+    this.cancelAddCat();
   }
 
   // =======================================================================
@@ -458,6 +523,42 @@ export class AddBrandWizardComponent {
 
   removeCompetitor(c: BrandCompetitor) {
     this.competitors = this.competitors.filter(x => x.id !== c.id);
+    // keep sets in sync if a member was removed
+    this.competitorSets.forEach(s => (s.members = s.members.filter(m => m !== c.name)));
+    this.competitorSets = this.competitorSets.filter(s => s.members.length);
+  }
+
+  // ---- competitor sets ----
+  /** All competitor names currently available to group into a set. */
+  get allCompetitorNames(): string[] {
+    return [
+      ...(this.useMappedCompetitors ? this.mappedCompetitors : []),
+      ...this.competitors,
+    ].map(c => c.name);
+  }
+
+  startSet() {
+    this.buildingSet = true;
+    this.setNameDraft = '';
+    this.setMemberSel.clear();
+    this.addingCompetitor = false;
+  }
+  cancelSet() {
+    this.buildingSet = false;
+    this.setNameDraft = '';
+    this.setMemberSel.clear();
+  }
+  toggleSetMember(name: string) {
+    this.setMemberSel.has(name) ? this.setMemberSel.delete(name) : this.setMemberSel.add(name);
+  }
+  saveSet() {
+    const name = this.setNameDraft.trim();
+    if (name.length < 2 || !this.setMemberSel.size) return;
+    this.competitorSets.push({ id: `s${this.seq++}`, name, members: [...this.setMemberSel] });
+    this.cancelSet();
+  }
+  removeSet(id: string) {
+    this.competitorSets = this.competitorSets.filter(s => s.id !== id);
   }
 
   // =======================================================================
@@ -538,14 +639,19 @@ export class AddBrandWizardComponent {
     this.products = [];
     this.competitors = [];
     this.useMappedCompetitors = false;
+    this.competitorSets = [];
     this.cancelProduct();
     this.cancelCompetitor();
+    this.cancelSet();
     // step 4
     this.selectedGroup = null;
     this.categoryGroup = '';
     this.catchAll = '';
+    this.catchAllOpen = false;
+    this.categorySearch = '';
+    this.expandedNodes = new Set<CategoryNode>();
     this.cancelAddGroup();
-    this.cancelAddCatchAll();
+    this.cancelAddCat();
     // step 5 / 6
     this.ticketsEnabled = true;
     this.selectedUserIds = new Set<string>();
