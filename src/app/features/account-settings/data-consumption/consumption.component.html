@@ -27,21 +27,6 @@
     <span class="dc-billing">Billing cycle <strong>01 Jun 2026 - 30 Jun 2026</strong></span>
   </header>
 
-  <!-- Global at-risk banner: some services are at / over their limit -->
-  <div class="dc-banner" *ngIf="atRiskCards.length && !bannerDismissed"
-       [attr.data-tone]="hasExceeded ? 'exceeded' : 'critical'" role="alert">
-    <span class="msr">{{ hasExceeded ? 'error' : 'warning' }}</span>
-    <p class="dc-banner-text">
-      <strong>{{ atRiskCards.length }} service{{ atRiskCards.length > 1 ? 's' : '' }} need attention.</strong>
-      {{ atRiskNames }} {{ atRiskCards.length > 1 ? 'are' : 'is' }} at or over the limit —
-      the affected {{ atRiskCards.length > 1 ? 'services will' : 'service will' }} stop working until the limit is increased.
-    </p>
-    <button type="button" class="dc-banner-view" (click)="reviewCritical()">Review services</button>
-    <button type="button" class="dc-banner-x" (click)="bannerDismissed = true" aria-label="Dismiss">
-      <span class="msr">close</span>
-    </button>
-  </div>
-
   <!-- Summary / filter strip -->
   <div class="dc-summary">
     <div class="dc-chips" role="group" aria-label="Filter services by status">
@@ -61,7 +46,7 @@
               [class.active]="filter === 'low'"
               [attr.aria-pressed]="filter === 'low'"
               (click)="setFilter('low')">
-        <span class="dot"></span>{{ count('low') }} Warning
+        <span class="dot"></span>{{ count('low') }} Low
       </button>
       <button class="chip" [attr.data-status]="'good'"
               [class.active]="filter === 'good'"
@@ -70,8 +55,6 @@
         <span class="dot"></span>{{ count('good') }} Good
       </button>
     </div>
-
-    <span class="dc-summary-label">{{ cards.length }} of {{ cards.length }} services active</span>
   </div>
 
   <!-- ===== Critical / at-risk services: always 2-up big cards (auto-wrap) ===== -->

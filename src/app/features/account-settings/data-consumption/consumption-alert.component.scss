@@ -29,22 +29,20 @@
 .ca-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .ca-note, .ca-card, .ca-alloff { width: 100%; box-sizing: border-box; }
 
-/* ---- "Always on" badge (replaces the threshold toggle) ---- */
-.ca-always-on {
-  flex: none; display: inline-flex; align-items: center; gap: 5px; margin-top: 4px;
-  height: 26px; padding: 0 11px; border-radius: 999px;
-  background: #e9f7ef; color: #1f9d57; font-size: var(--font-size-12, 12px); font-weight: 600;
-}
-.ca-always-on .msr { font-size: 16px; }
-
-/* ---- Change history ---- */
+/* ---- Activity history ---- */
 .ca-history {
   position: sticky; top: 0;
+  /* Fill the visible area down to just above the footer, so the panel always
+     reaches the bottom. The timeline inside flexes and only scrolls when the
+     entries overflow this height. (~toolbar + footer + scroll padding.) */
+  height: calc(100dvh - 162px);
+  display: flex; flex-direction: column;
   background: var(--surface, #fff);
   border: 1px solid var(--border-soft, #e8eaf0); border-radius: 14px;
   overflow: hidden;
 }
 .ca-history-head {
+  flex: none;
   display: flex; align-items: flex-start; gap: 8px;
   padding: 14px 16px; border-bottom: 1px solid var(--border-soft, #eef0f4);
 }
@@ -52,7 +50,7 @@
 .ca-history-title { display: flex; flex-direction: column; gap: 2px; }
 .ca-history-title h2 { margin: 0; font-size: var(--font-size-15, 15px); font-weight: 600; color: var(--text-1, #1c1d22); }
 .ca-history-title p { margin: 0; font-size: var(--font-size-12, 12px); color: var(--text-3, #9aa1ad); }
-.ca-timeline { list-style: none; margin: 0; padding: 14px 16px; max-height: 60vh; overflow-y: auto; }
+.ca-timeline { list-style: none; margin: 0; padding: 14px 16px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .ca-tl-item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
 /* connecting line */
 .ca-tl-item::before {
@@ -64,6 +62,8 @@
   flex: none; width: 28px; height: 28px; display: grid; place-items: center; z-index: 1;
   border-radius: 50%; background: #eef0fe; color: var(--brand, #6d4af3);
 }
+/* Delivered-alert entries read distinctly from settings changes. */
+.ca-tl-dot.sent { background: #e9f7ef; color: #1f9d57; }
 .ca-tl-dot .msr { font-size: 16px; }
 .ca-tl-body { min-width: 0; }
 .ca-tl-text { margin: 3px 0 0; font-size: var(--font-size-13, 13px); line-height: 1.45; color: var(--text-1, #1c1d22); word-break: break-word; }
@@ -71,7 +71,8 @@
 
 @media (max-width: 980px) {
   .ca-layout { grid-template-columns: 1fr; }
-  .ca-history { position: static; }
+  .ca-history { position: static; height: auto; }
+  .ca-timeline { max-height: 60vh; }
 }
 
 /* ---- Whitelist note ---- */

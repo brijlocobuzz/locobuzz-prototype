@@ -86,87 +86,6 @@
 .dc-billing { font-size: var(--font-size-13, 13px); color: var(--text-3, #6b7280); }
 .dc-billing strong { color: var(--text-1, #1c1d22); font-weight: 600; }
 
-/* ---- Global at-risk banner (bold red design; content unchanged) ---- */
-.dc-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin: 16px 24px 0;
-  padding: 18px 20px;
-  border-radius: 14px;
-  border: none;
-  background: linear-gradient(180deg, #ef2338, #e11d2f);
-  box-shadow: 0 12px 30px rgba(225, 29, 47, .26);
-  color: #fff;
-}
-.dc-banner[data-tone="exceeded"] {
-  background: linear-gradient(180deg, #cf1d26, #b3141c);
-  box-shadow: 0 12px 30px rgba(179, 20, 28, .3);
-}
-/* Warning icon rendered as a rounded tile */
-.dc-banner > .msr {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .16);
-  font-size: var(--font-size-24, 24px);
-  color: #fff;
-}
-.dc-banner-text {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: var(--font-size-13, 13px);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, .92);
-}
-/* The lead sentence reads as the title line */
-.dc-banner-text strong {
-  display: block;
-  margin-bottom: 3px;
-  font-size: var(--font-size-16, 16px);
-  font-weight: 700;
-  color: #fff;
-}
-.dc-banner-view {
-  flex: none;
-  padding: 10px 18px;
-  border: none;
-  border-radius: 9px;
-  background: #fff;
-  font: inherit;
-  font-size: var(--font-size-12, 12px);
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: #d31f28;
-  cursor: pointer;
-  transition: background .12s ease;
-}
-.dc-banner-view:hover { background: #ffe9eb; }
-.dc-banner-view:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.dc-banner-x {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255, 255, 255, .85);
-  cursor: pointer;
-}
-.dc-banner-x .msr { font-size: var(--font-size-18, 18px); }
-.dc-banner-x:hover { background: rgba(255, 255, 255, .16); color: #fff; }
-.dc-banner-x:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
-
 /* ---- Summary / filter strip ---- */
 .dc-summary {
   display: flex;
@@ -175,13 +94,6 @@
   gap: 16px;
   flex-wrap: wrap;
   padding: 16px 24px 0;
-}
-.dc-summary-label {
-  font-size: var(--font-size-12, 12px);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--text-3, #9aa1ad);
-  font-weight: 600;
 }
 /* Segmented pill container holding the filter chips */
 .dc-chips {
