@@ -132,26 +132,21 @@
           <p class="ab-hint top" *ngIf="brandName.trim().length < 3">Enter a brand name above to generate a description with AI.</p>
 
           <div class="ab-ai-box" *ngIf="brandName.trim().length >= 3">
-            <p class="ab-ai-box-note">
-              <span class="msr">auto_awesome</span>
-              We use the AI Friendly Name to write your description.
-            </p>
+            <div class="ab-ai-box-note">
+              <span class="msr">lightbulb</span>
+              <p>
+                Enter the name people actually use for your brand, so the AI recognises it correctly and doesn't get confused.
+                <span class="ab-ai-eg"><b>Example:</b> the official name is “IHCL”, but most people say “Taj Hotels” — so enter <b>Taj Hotels</b>.</span>
+              </p>
+            </div>
 
-            <div class="ab-ai-box-top">
-              <div class="ab-ai-name-field">
-                <label class="ab-sublabel">AI Friendly Name <i>*</i></label>
-                <div class="ab-ainame">
-                  <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100"
-                         [disabled]="aiNameLoading" [(ngModel)]="aiFriendlyName" />
-                  <span class="ab-ainame-loading" *ngIf="aiNameLoading"><span class="ab-spinner dark"></span>Generating…</span>
-                </div>
+            <div class="ab-ai-name-field">
+              <label class="ab-sublabel">AI Friendly Name <i>*</i></label>
+              <div class="ab-ainame">
+                <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100"
+                       [disabled]="aiNameLoading" [(ngModel)]="aiFriendlyName" />
+                <span class="ab-ainame-loading" *ngIf="aiNameLoading"><span class="ab-spinner dark"></span>Generating…</span>
               </div>
-              <button type="button" class="ab-ai-btn" *ngIf="!descGenerated"
-                      [disabled]="!aiNameReady || generating" (click)="generateDescription()">
-                <span class="msr" *ngIf="!generating">auto_awesome</span>
-                <span class="ab-spinner" *ngIf="generating"></span>
-                {{ generating ? 'Generating…' : 'Generate Description' }}
-              </button>
             </div>
 
             <p class="ab-hint" *ngIf="!aiNameError && !aiNameLoading">Used internally so the AI references your brand consistently.</p>
@@ -168,6 +163,14 @@
                 <button type="button" class="ab-link" *ngIf="descGenerated" (click)="generateDescription()">Regenerate</button>
                 <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
               </div>
+            </div>
+
+            <div class="ab-ai-genrow" *ngIf="!descGenerated">
+              <button type="button" class="ab-ai-btn" [disabled]="!aiNameReady || generating" (click)="generateDescription()">
+                <span class="msr" *ngIf="!generating">auto_awesome</span>
+                <span class="ab-spinner" *ngIf="generating"></span>
+                {{ generating ? 'Generating…' : 'Generate Description' }}
+              </button>
             </div>
           </div>
         </div>

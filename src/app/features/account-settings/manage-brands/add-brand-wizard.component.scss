@@ -360,18 +360,24 @@
   background: #fafbff;
 }
 .ab-ai-box-note {
-  display: flex; align-items: center; gap: 6px;
-  margin: 0;
-  font-size: var(--font-size-12); font-weight: 600; color: var(--ab-accent);
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #dfe3ee;
 }
-.ab-ai-box-note .msr { font-size: var(--font-size-16); }
-.ab-ai-box-top { display: flex; align-items: flex-end; gap: 12px; }
-.ab-ai-name-field { flex: 0 1 340px; min-width: 0; }
+.ab-ai-box-note > .msr { font-size: var(--font-size-16); color: var(--ab-accent); flex: 0 0 auto; margin-top: 1px; }
+.ab-ai-box-note p { margin: 0; font-size: var(--font-size-12); line-height: 1.5; color: #475569; }
+.ab-ai-box-note b { color: var(--ab-dark); font-weight: 700; }
+.ab-ai-eg { display: block; margin-top: 4px; color: var(--ab-muted); }
+.ab-ai-name-field { max-width: 340px; }
 .ab-ai-name-field .ab-sublabel { margin: 0 0 6px; }
 .ab-ai-name-field .ab-ainame { max-width: none; }
-.ab-ai-box-top .ab-ai-btn { flex: 0 0 auto; height: 42px; }
 .ab-ai-box .ab-hint,
 .ab-ai-box .ab-err { margin-top: 0; }
+/* Generate Description — below the description, right-aligned, compact */
+.ab-ai-genrow { display: flex; justify-content: flex-end; }
+.ab-ai-genrow .ab-ai-btn { height: 36px; padding: 0 16px; font-size: var(--font-size-13); }
 
 .ab-spinner {
   width: 15px; height: 15px;
