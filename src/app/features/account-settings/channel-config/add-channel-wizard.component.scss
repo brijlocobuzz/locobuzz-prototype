@@ -21,7 +21,7 @@
   --wz-soft2: #f4f3ff;
 
   position: relative;
-  width: min(1070px, calc(100vw - 48px));
+  width: min(1158px, calc(100vw - 48px));
   /* fixed height so the popover doesn't resize between steps — body scrolls instead */
   height: min(685px, calc(100vh - 50px));
   display: flex; flex-direction: column;
@@ -76,7 +76,7 @@
 }
 .wz-step { display: flex; align-items: center; gap: 9px; }
 .wz-dot {
-  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
+  width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
   display: grid; place-items: center;
   font-size: var(--font-size-13); font-weight: 700;
   background: #eef1f6; color: var(--text-3);
@@ -90,6 +90,14 @@
   font-size: var(--font-size-14); font-weight: 600; color: var(--text-3);
   white-space: nowrap;
 }
+/* long flows (5+ steps): clip the final "Review & Complete" to "Review & Co…" */
+.wz-step-label.trunc {
+  max-width: 82px; overflow: hidden; text-overflow: ellipsis;
+}
+/* 5+ steps: tighten the connectors so the whole row fits without overflow.
+   ≤4 steps keep the original generous spacing (this class isn't applied). */
+.wz-stepper.compact .wz-step { gap: 7px; }
+.wz-stepper.compact .wz-conn { min-width: 6px; margin: 0 5px; }
 .wz-step.active .wz-step-label,
 .wz-step.done .wz-step-label { color: var(--text-1); }
 .wz-conn {
@@ -195,8 +203,8 @@
 .wz-choice.sel { border-color: var(--wz); box-shadow: 0 0 0 3px var(--wz-soft); }
 
 .wz-choice-ic {
-  width: 50px; height: 50px; border-radius: 15px;
-  display: grid; place-items: center; margin-bottom: 4px;
+  width: 46px; height: 46px; flex: 0 0 auto; border-radius: 14px;
+  display: grid; place-items: center;
 }
 .wz-choice.owned .wz-choice-ic { background: #e3e4fb; color: #5b61c9; }
 .wz-choice.pub   .wz-choice-ic { background: #d4efe9; color: #0d9488; }
@@ -213,7 +221,10 @@
 .wz-choice-check .msr { font-size: var(--font-size-16); }
 .wz-choice.sel .wz-choice-check { opacity: 1; transform: scale(1); }
 
+.wz-choice-head { display: flex; align-items: center; gap: 12px; }
+.wz-choice-htx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .wz-choice-name { font-size: var(--font-size-17); font-weight: 700; color: var(--text-1); }
+.wz-choice-sub { font-size: var(--font-size-13); color: var(--text-3); }
 .wz-choice-desc { font-size: var(--font-size-13); color: var(--text-2); line-height: 1.45; }
 .wz-bullets { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .wz-bullets li {
@@ -510,13 +521,31 @@
    =================================================================== */
 .wz-celebrate {
   position: relative; flex: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
   text-align: center;
-  padding: 10px;
-  min-height: 440px;
-  overflow: hidden;
+  padding: 28px 24px;
+  min-height: 0;
+  overflow-y: auto;
   animation: wz-fade .2s ease;
 }
+
+/* success · what-happens-next card */
+.wz-done-card {
+  width: 100%; max-width: 440px; margin-top: 18px; text-align: left;
+  border: 1px solid var(--border); border-radius: 16px; background: #fff; overflow: hidden;
+}
+.wz-done-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 15px; }
+.wz-done-row + .wz-done-row { border-top: 1px solid var(--border-soft); }
+.wz-done-ic {
+  width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px;
+  display: grid; place-items: center; background: var(--wz-soft); color: var(--wz-deep);
+}
+.wz-done-ic .msr { font-size: var(--font-size-19); }
+.wz-done-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wz-done-k { font-size: var(--font-size-11); font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
+.wz-done-v { font-size: var(--font-size-13); font-weight: 600; color: var(--text-1); line-height: 1.4; }
+.wz-done-acts { display: flex; gap: 10px; margin-top: 18px; width: 100%; max-width: 440px; }
+.wz-done-acts .wz-back, .wz-done-acts .wz-next { flex: 1; height: 46px; justify-content: center; }
 
 /* confetti — absolutely-positioned pieces, only transform/opacity animate */
 .wz-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -672,16 +701,22 @@
 
 /* step-aware aside: channel/mode fact card */
 .wz-facts {
-  margin-top: 20px; padding: 16px;
-  background: rgba(255, 255, 255, .65); border: 1px solid #ece9fb; border-radius: 16px;
-  display: flex; flex-direction: column; gap: 12px;
+  margin-top: 20px; padding: 4px 6px;
+  background: rgba(255, 255, 255, .7); border: 1px solid #ece9fb; border-radius: 16px;
 }
-.wz-fact { display: flex; flex-direction: column; gap: 3px; }
+.wz-fact { display: flex; align-items: flex-start; gap: 12px; padding: 12px 10px; }
+.wz-fact + .wz-fact { border-top: 1px solid #ece9fb; }
+.wz-fact-ic {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 10px;
+  display: grid; place-items: center; background: var(--wz-soft); color: var(--wz-deep);
+}
+.wz-fact-ic .msr { font-size: var(--font-size-19); }
+.wz-fact-tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .wz-fact-k {
   font-size: var(--font-size-11); font-weight: 700; letter-spacing: .4px;
-  text-transform: uppercase; color: var(--wz-deep);
+  text-transform: uppercase; color: var(--text-3);
 }
-.wz-fact-v { font-size: var(--font-size-13); color: var(--text-2); line-height: 1.45; }
+.wz-fact-v { font-size: var(--font-size-13); font-weight: 600; color: var(--text-1); line-height: 1.4; }
 
 /* ---- select pages · modern card picker ---- */
 .wz-pages-titles { margin-bottom: 2px; }
@@ -724,9 +759,40 @@
 }
 .wz-page-net svg { width: 11px; height: 11px; }
 .wz-page-net .msr { font-size: 12px; color: #fff; }
+/* linked-Instagram badge — sits just left of the Facebook badge */
+.wz-page-net.ig {
+  right: 13px; bottom: -5px;
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
 .wz-pagecard .wz-page-name { font-size: var(--font-size-15); font-weight: 700; }
 .wz-pagecard .wz-page-sub { display: inline-flex; align-items: center; gap: 5px; }
 .wz-pagecard .wz-page-sub .msr { font-size: var(--font-size-15); color: var(--text-3); }
+
+/* linked-Instagram tags under the page name */
+.wz-page-ig { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.wz-igtag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 6px; border-radius: 20px;
+  font-size: var(--font-size-12); font-weight: 600; color: #c1348a;
+  background: #fdeef7; border: 1px solid #f5cfe6;
+}
+.wz-igtag svg { width: 12px; height: 12px; fill: #c1348a; }
+.wz-igmsg {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: var(--font-size-12); font-weight: 600; color: #1f7a48;
+  background: #e7f6ee; border: 1px solid #bfe6cd;
+}
+.wz-igmsg .msr { font-size: var(--font-size-14); }
+
+/* Instagram inclusion note above the page grid */
+.wz-ig-note {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 0 0; padding: 8px 12px;
+  border-radius: 10px; background: #fdeef7; border: 1px solid #f5cfe6;
+  font-size: var(--font-size-13); color: #a12b74; font-weight: 500;
+}
+.wz-ig-note svg { width: 16px; height: 16px; flex: 0 0 auto; fill: #c1348a; }
 
 /* ---- review · connected-account preview ---- */
 .wz-hero {
