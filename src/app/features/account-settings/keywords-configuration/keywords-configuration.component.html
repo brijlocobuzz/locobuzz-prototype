@@ -1,0 +1,149 @@
+<!-- ===== Header ===== -->
+<header class="kw-header">
+  <div class="kw-head-text">
+    <div class="kw-title-row">
+      <button class="kw-back" (click)="back()" aria-label="Back"><span class="msr">arrow_back</span></button>
+      <h1>Real Time Queries</h1>
+      <span class="kw-count">{{ totalCount }}</span>
+    </div>
+    <p>Search rules that capture mentions for each brand. A query contains keywords and channel filters.</p>
+  </div>
+</header>
+
+<!-- ===== Toolbar ===== -->
+<div class="kw-toolbar">
+  <!-- brand switcher -->
+  <div class="kw-brand" [class.open]="brandOpen">
+    <button class="kw-brand-btn" (click)="brandOpen = !brandOpen">
+      <span class="kw-brand-lbl">Brands: <b>{{ brand }}</b></span>
+      <span class="msr">expand_more</span>
+    </button>
+    <div class="kw-brand-menu" *ngIf="brandOpen">
+      <button class="kw-brand-opt" *ngFor="let b of brands" [class.active]="b === brand" (click)="selectBrand(b)">
+        <span class="msr" *ngIf="b === brand">check</span>{{ b }}
+      </button>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="kw-search">
+    <span class="msr">search</span>
+    <input type="text" placeholder="Search by Group Name, Keyword"
+           [ngModel]="search" (ngModelChange)="onSearch($event)" />
+  </div>
+
+  <div class="kw-tools">
+    <!-- active / total pill -->
+    <div class="kw-stat">
+      <span class="kw-stat-cell"><span class="kw-dot"></span><b>{{ activeCount }}</b> Active</span>
+      <span class="kw-stat-sep"></span>
+      <span class="kw-stat-cell"><b>{{ totalCount }}</b> Total</span>
+    </div>
+
+    <button class="kw-icon-btn" title="Refresh"><span class="msr">refresh</span></button>
+    <button class="kw-icon-btn" title="Filter"><span class="msr">filter_alt</span></button>
+
+    <button class="kw-add" (click)="wizardOpen = true">
+      <span class="msr">add_circle</span>Add Keywords/Social Profiles
+    </button>
+  </div>
+</div>
+
+<!-- ===== Table ===== -->
+<section class="kw-panel">
+  <div class="kw-table-wrap">
+    <table class="kw-table">
+      <thead>
+        <tr>
+          <th class="c-name">Keywords Group Name</th>
+          <th class="c-query">Keywords/Keywords Query</th>
+          <th class="c-chan">Channels</th>
+          <th class="c-date">Created On</th>
+          <th class="c-historic">Collecting Since</th>
+          <th class="c-vault">Vaults</th>
+          <th class="c-status">Status</th>
+          <th class="c-act">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of displayRows">
+          <td class="c-name"><span class="kw-name">{{ row.name }}</span></td>
+
+          <!-- query pills joined by AND / OR -->
+          <td class="c-query">
+            <div class="kw-query">
+              <ng-container *ngFor="let t of row.terms; let i = index">
+                <span class="kw-pill">({{ t.text }})</span>
+                <span class="kw-op" *ngIf="i < row.terms.length - 1">{{ row.connector }}</span>
+              </ng-container>
+            </div>
+          </td>
+
+          <!-- channel chips + overflow -->
+          <td class="c-chan">
+            <div class="kw-chans" *ngIf="row.channels.length; else naCell">
+              <span class="kw-chan" [style.background]="CHANNELS[row.channels[0]].bg"
+                    [style.color]="CHANNELS[row.channels[0]].fg">
+                <svg class="kw-chan-svg" viewBox="0 0 24 24" *ngIf="channelSvg(row.channels[0]) as d">
+                  <path [attr.d]="d"></path>
+                </svg>
+                <span class="msr" *ngIf="!channelSvg(row.channels[0])">{{ CHANNELS[row.channels[0]].icon }}</span>
+                {{ CHANNELS[row.channels[0]].label }}
+              </span>
+              <span class="kw-chan-more" *ngIf="row.channels.length > 1">+{{ row.channels.length - 1 }}</span>
+            </div>
+            <ng-template #naCell><span class="kw-na">NA</span></ng-template>
+          </td>
+
+          <td class="c-date">{{ row.createdOn }}</td>
+          <td class="c-historic">
+            <span class="kw-historic" *ngIf="row.historicSince; else noHist">
+              <span class="msr">history</span>since {{ row.historicSince }} {{ row.historicSince === 1 ? 'day' : 'days' }}
+            </span>
+            <ng-template #noHist><span class="kw-na">NA</span></ng-template>
+          </td>
+          <td class="c-vault"><span class="kw-na">{{ row.vault }}</span></td>
+
+          <td class="c-status">
+            <span class="kw-status" [ngClass]="statusClass(row.status)">{{ row.status }}</span>
+          </td>
+
+          <!-- row actions -->
+          <td class="c-act">
+            <div class="kw-acts">
+              <ng-container *ngIf="row.status !== 'Approval pending'">
+                <button class="kw-act" *ngIf="row.status === 'Data Collection Pause'"
+                        title="Resume" (click)="togglePause(row)">
+                  <span class="msr play">play_circle</span>
+                </button>
+                <button class="kw-act" *ngIf="row.status !== 'Data Collection Pause'"
+                        title="Pause" (click)="togglePause(row)">
+                  <span class="msr">pause_circle</span>
+                </button>
+                <button class="kw-act" title="Edit"><span class="msr">edit</span></button>
+              </ng-container>
+              <button class="kw-act" title="Duplicate"><span class="msr">content_copy</span></button>
+              <button class="kw-act danger" *ngIf="row.status !== 'Approval pending'" title="Delete">
+                <span class="msr">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="kw-empty" *ngIf="!displayRows.length">No queries match your search.</p>
+  </div>
+
+  <app-pagination-bar *ngIf="total"
+                      [total]="total" [page]="page" [pageSize]="pageSize" noun="queries"
+                      (pageChange)="page = $event" (pageSizeChange)="pageSize = $event; page = 1">
+  </app-pagination-bar>
+</section>
+
+<!-- ===== Add Keywords / Social Profiles wizard ===== -->
+<app-add-keywords *ngIf="wizardOpen"
+                  [brand]="brand"
+                  (closed)="wizardOpen = false"
+                  (saved)="onQuerySaved($event)">
+</app-add-keywords>
