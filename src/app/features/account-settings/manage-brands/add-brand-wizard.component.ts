@@ -14,6 +14,22 @@ interface WizardStep {
   icon: string;
 }
 
+/** Full brand payload emitted when a brand is saved. */
+export interface NewBrandPayload {
+  name: string;
+  aiFriendlyName: string;
+  description: string;
+  color: string;
+  country: string;
+  ticketsEnabled: boolean;
+  categoryGroup: string;
+  catchAll: string;
+  users: { id: string; name: string; role: string }[];
+  products: { name: string; synonyms: string[] }[];
+  competitors: string[];
+  logoUrl: string | null;
+}
+
 @Component({
   selector: 'app-add-brand-wizard',
   standalone: true,
@@ -24,8 +40,8 @@ interface WizardStep {
 export class AddBrandWizardComponent {
   /** Emitted when the wizard should close (Cancel, or after a successful save). */
   @Output() closed = new EventEmitter<void>();
-  /** Emitted with a light brand summary when the user saves. */
-  @Output() saved = new EventEmitter<{ name: string; color: string; country: string; users: number }>();
+  /** Emitted with the full brand data when the user saves. */
+  @Output() saved = new EventEmitter<NewBrandPayload>();
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
@@ -33,13 +49,12 @@ export class AddBrandWizardComponent {
 
   /** Celebration screen shown after Save. */
   celebrating = false;
-  private completedOnce = false;
   /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
   readonly confetti = this.makeConfetti();
   readonly steps: WizardStep[] = [
     { num: 1, label: 'Brand identity', subtitle: 'Basics & AI context', icon: 'badge' },
     { num: 2, label: 'Logo & color',   subtitle: 'Visual identity',     icon: 'palette' },
-    { num: 3, label: 'Products',       subtitle: 'Market context',      icon: 'deployed_code' },
+    { num: 3, label: 'Products & Competitors', subtitle: 'Market context', icon: 'deployed_code' },
     { num: 4, label: 'Categories',     subtitle: 'Taxonomy mapping',    icon: 'sell' },
     { num: 5, label: 'Tickets',        subtitle: 'Ticket creation',     icon: 'confirmation_number' },
     { num: 6, label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
@@ -257,7 +272,10 @@ export class AddBrandWizardComponent {
 
   get filteredUsers(): BrandUser[] {
     const q = this.userSearch.trim().toLowerCase();
-    return q ? this.allUsers.filter(u => u.name.toLowerCase().includes(q)) : this.allUsers;
+    if (!q) return this.allUsers;
+    return this.allUsers.filter(u =>
+      u.fullName.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)
+      || u.role.toLowerCase().includes(q) || u.team.toLowerCase().includes(q));
   }
 
   get allUsersSelected(): boolean {
@@ -278,7 +296,9 @@ export class AddBrandWizardComponent {
   }
 
   userInitials(u: BrandUser): string {
-    return u.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
+    const parts = u.fullName.trim().split(/\s+/).filter(Boolean);
+    const src = parts.length >= 2 ? parts[0][0] + parts[1][0] : (parts[0] ?? u.name);
+    return src.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
   }
 
   // =======================================================================
@@ -463,17 +483,74 @@ export class AddBrandWizardComponent {
       + `categorised under “${this.categoryGroup}”, with ${tickets}.`;
   }
 
-  /** Emit the saved brand and close — guarded so it only runs once. */
-  complete() {
-    if (this.completedOnce) return;
-    this.completedOnce = true;
+  /** Commit the current brand (with everything captured) to the list. */
+  private emitCurrentBrand() {
     this.saved.emit({
       name: this.brandName.trim(),
+      aiFriendlyName: this.aiFriendlyName.trim(),
+      description: this.brandDescription.trim(),
       color: this.color,
       country: this.country,
-      users: this.selectedUserIds.size,
+      ticketsEnabled: this.ticketsEnabled,
+      categoryGroup: this.categoryGroup,
+      catchAll: this.catchAll,
+      users: this.selectedUsers.map(u => ({ id: u.id, name: u.fullName, role: u.role })),
+      products: this.products.map(p => ({ name: p.name, synonyms: [...p.synonyms] })),
+      competitors: [
+        ...(this.useMappedCompetitors ? this.mappedCompetitors : []),
+        ...this.competitors,
+      ].map(c => c.name),
+      logoUrl: this.logoDataUrl,
     });
+  }
+
+  /** Save this brand and close the dialog. */
+  complete() {
+    this.emitCurrentBrand();
     this.close();
+  }
+
+  /** Save this brand and reset the wizard to add another one. */
+  addAnother() {
+    this.emitCurrentBrand();
+    this.resetForNewBrand();
+  }
+
+  /** Wipe all step state so the wizard starts fresh for a new brand. */
+  private resetForNewBrand() {
+    this.celebrating = false;
+    this.currentStep = 1;
+    // step 1
+    this.brandName = '';
+    this.country = '';
+    this.aiFriendlyName = '';
+    this.brandDescription = '';
+    this.descMode = 'manual';
+    this.aiNameLoading = this.aiNameAttempted = this.generating = this.descGenerated = false;
+    this.aiNameError = '';
+    this.countryOpen = false;
+    this.countrySearch = '';
+    // step 2
+    this.logoDataUrl = null;
+    this.color = '#0f172a';
+    this.customColorOpen = false;
+    // step 3
+    this.products = [];
+    this.competitors = [];
+    this.useMappedCompetitors = false;
+    this.cancelProduct();
+    this.cancelCompetitor();
+    // step 4
+    this.selectedGroup = null;
+    this.categoryGroup = '';
+    this.catchAll = '';
+    this.cancelAddGroup();
+    this.cancelAddCatchAll();
+    // step 5 / 6
+    this.ticketsEnabled = true;
+    this.selectedUserIds = new Set<string>();
+    this.userSearch = '';
+    this.usersDropdownOpen = false;
   }
 
   close() {

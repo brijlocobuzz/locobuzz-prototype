@@ -8,6 +8,7 @@ import { AiHubComponent } from './features/account-settings/ai-hub/ai-hub.compon
 import { YourProfileComponent } from './features/account-settings/your-profile/your-profile.component';
 import { ManageBrandsComponent } from './features/account-settings/manage-brands/manage-brands.component';
 import { ManageUsersComponent } from './features/account-settings/manage-users/manage-users.component';
+import { KeywordsConfigurationComponent } from './features/account-settings/keywords-configuration/keywords-configuration.component';
 import { AccountPlaceholderComponent } from './features/account-settings/account-placeholder.component';
 import { ConsumptionComponent } from './features/account-settings/data-consumption/consumption.component';
 import { ConsumptionAlertComponent } from './features/account-settings/data-consumption/consumption-alert.component';
@@ -43,6 +44,7 @@ export const routes: Routes = [
       { path: 'channel-configuration', component: ChannelConfigComponent },
       { path: 'manage-brands', component: ManageBrandsComponent },
       { path: 'manage-users', component: ManageUsersComponent },
+      { path: 'keywords-configuration', component: KeywordsConfigurationComponent },
       { path: 'data-consumption/consumption', component: ConsumptionComponent },
       { path: 'data-consumption/consumption-alert', component: ConsumptionAlertComponent },
       { path: 'data-consumption/monthly', component: MonthlyConsumptionComponent },

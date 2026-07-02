@@ -22,8 +22,8 @@
       </span>
     </div>
 
-    <h2 class="wz-celebrate-title">Channel connected!</h2>
-    <p class="wz-celebrate-sub">{{ selected?.label }} is now configured and listening for mentions.</p>
+    <h2 class="wz-celebrate-title">{{ selected?.label }} is connected!</h2>
+    <p class="wz-celebrate-sub">{{ celebrationSub }}</p>
 
     <div class="wz-celebrate-pill">
       <span class="wz-mini-ic" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
@@ -35,9 +35,30 @@
       {{ selected?.label }} · {{ connectionLabel }}
     </div>
 
-    <button class="wz-next finish wz-celebrate-done" (click)="complete()">
-      <span class="msr">arrow_forward</span>Go to channel
-    </button>
+    <!-- what happens next -->
+    <div class="wz-done-card">
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">{{ isRealtime ? 'bolt' : 'schedule' }}</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Data collection</span><span class="wz-done-v">{{ reviewReadySub }}</span></span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">sync</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Mentions sync</span><span class="wz-done-v">{{ reviewSync }}</span></span>
+      </div>
+      <div class="wz-done-row">
+        <span class="wz-done-ic"><span class="msr">history</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">History on connect</span><span class="wz-done-v">{{ reviewHistory }}</span></span>
+      </div>
+      <div class="wz-done-row" *ngIf="activeMode?.dataTypes">
+        <span class="wz-done-ic"><span class="msr">database</span></span>
+        <span class="wz-done-tx"><span class="wz-done-k">Data collected</span><span class="wz-done-v">{{ activeMode?.dataTypes }}</span></span>
+      </div>
+    </div>
+
+    <div class="wz-done-acts">
+      <button class="wz-back" (click)="complete()"><span class="msr">check</span>Done</button>
+      <button class="wz-next finish" (click)="addAnother()"><span class="msr">add</span>Add another channel</button>
+    </div>
   </div>
 
   <!-- ===== two-pane shell ===== -->
@@ -45,39 +66,31 @@
 
     <!-- ---- left: the wizard ---- -->
     <div class="wz-main">
-      <!-- header -->
+      <!-- header (shows the selected channel's logo + name once picked) -->
       <header class="wz-head">
-        <ng-container *ngIf="current === 'choose'; else configuringHead">
-          <span class="wz-spark"><span class="msr">hub</span></span>
-          <div class="wz-titles">
-            <h2>Add a channel</h2>
-            <p>Plug in a platform to listen, analyze and respond — all from one place.</p>
-          </div>
-        </ng-container>
-
-        <ng-template #configuringHead>
-          <span class="wz-spark brand" [style.background]="selected?.color">
-            <svg *ngIf="brandSvg(selected?.id) as d; else headGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
-            <ng-template #headGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
-          </span>
-          <div class="wz-titles">
-            <h2>Adding {{ selected?.label }} Channel</h2>
-            <p>Follow the steps to finish setting up this channel.</p>
-          </div>
-        </ng-template>
-
+        <span class="wz-spark" [class.brand]="selected" [style.background]="selected ? selected.color : null">
+          <svg *ngIf="selected && brandSvg(selected?.id) as d; else sparkGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path [attr.d]="d"></path>
+          </svg>
+          <ng-template #sparkGlyph><span class="msr">{{ selected ? selected.icon : 'hub' }}</span></ng-template>
+        </span>
+        <div class="wz-titles">
+          <h2>{{ selected ? selected.label : copy.header }}</h2>
+          <p>{{ selected ? 'Add and configure your ' + selected.label + ' channel.' : copy.sub }}</p>
+        </div>
         <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
-      <!-- stepper -->
-      <nav class="wz-stepper">
+      <!-- stepper (compact spacing once a flow has 5+ steps so it never overflows) -->
+      <nav class="wz-stepper" [class.compact]="steps.length > 4">
         <ng-container *ngFor="let s of steps; let i = index; let last = last">
           <div class="wz-step" [class.done]="i < stepIndex" [class.active]="i === stepIndex">
             <span class="wz-dot">
               <span class="msr" *ngIf="i < stepIndex">check</span>
               <ng-container *ngIf="i >= stepIndex">{{ i + 1 }}</ng-container>
             </span>
-            <span class="wz-step-label">{{ s.label }}</span>
+            <span class="wz-step-label" [class.trunc]="s.key === 'review' && steps.length > 4"
+                  [title]="s.key === 'review' && steps.length > 4 ? s.label : null">{{ s.label }}</span>
           </div>
           <span class="wz-conn" *ngIf="!last" [class.done]="i < stepIndex" [class.next]="i === stepIndex"></span>
         </ng-container>
@@ -86,8 +99,23 @@
       <!-- body -->
       <div class="wz-body" [ngSwitch]="current">
 
+        <!-- validation / planned banner (after a channel is chosen) -->
+        <div class="wz-flag" *ngIf="spec?.flag && current !== 'choose'"
+             [class.planned]="spec?.flag === 'planned'">
+          <span class="msr">{{ spec?.flag === 'planned' ? 'schedule' : 'release_alert' }}</span>
+          <span>{{ spec?.flagText }}</span>
+        </div>
+
         <!-- 1 · choose channel -->
         <section *ngSwitchCase="'choose'" class="wz-choose">
+          <!-- <div class="wz-search">
+            <span class="msr">search</span>
+            <input type="text" [placeholder]="copy.search" [(ngModel)]="search" />
+          </div>
+
+          <div class="wz-empty" *ngIf="!filteredGroups().length">
+            <span class="msr">search_off</span> No channels match “{{ search }}”.
+          </div> -->
 
           <div class="wz-group" *ngFor="let g of filteredGroups()">
             <div class="wz-group-head">
@@ -106,6 +134,13 @@
                 </span>
                 <span class="wz-tile-text">
                   <span class="wz-tile-label">{{ c.label }}</span>
+                  <!-- <span class="wz-tile-meta">
+                    <span class="wz-tile-badge"
+                          [class.premium]="tileBadge(c) === 'Premium'"
+                          [class.soon]="tileBadge(c) === 'Coming soon'"
+                          *ngIf="tileBadge(c)">{{ tileBadge(c) }}</span>
+                    <span class="wz-tile-sub" *ngIf="tileSubRest(c)">{{ tileSubRest(c) }}</span>
+                  </span> -->
                 </span>
                 <span class="wz-tile-check"><span class="msr">check_circle</span></span>
               </button>
@@ -113,45 +148,90 @@
           </div>
         </section>
 
-        <!-- 2 · connection type (X / FB Groups) -->
+        <!-- 2 · connection type (Owned vs Public) -->
         <section *ngSwitchCase="'connection'" class="wz-center">
-          <h3 class="wz-q">How do you want to connect {{ selected?.label }}?</h3>
-          <p class="wz-sub">Choose owned to engage from your account, or public to listen only.</p>
+          <h3 class="wz-q">{{ spec?.connectionQuestion }}</h3>
+          <p class="wz-sub">{{ copy.connectionSub }}</p>
 
           <div class="wz-choice-grid">
-            <button class="wz-choice owned" [class.sel]="connectionType === 'owned'" (click)="connectionType = 'owned'">
-              <span class="wz-choice-ic"><span class="msr">lock</span></span>
+            <button class="wz-choice" *ngFor="let m of spec?.modes"
+                    [class.owned]="m.key === 'owned'" [class.pub]="m.key === 'public'"
+                    [class.sel]="connectionType === m.key" (click)="connectionType = m.key">
               <span class="wz-choice-check"><span class="msr">check</span></span>
-              <span class="wz-choice-name">Owned account</span>
-              <span class="wz-choice-desc">Authenticate with your own account to listen and reply.</span>
-              <ul class="wz-bullets">
-                <li><span class="msr">check</span>Full engagement</li>
-                <li><span class="msr">check</span>Post &amp; reply</li>
-                <li><span class="msr">check</span>Private metrics</li>
-              </ul>
-            </button>
+              <span class="wz-choice-head">
+                <span class="wz-choice-ic" [class.pub]="m.key === 'public'">
+                  <span class="msr">{{ m.key === 'public' ? 'public' : 'lock' }}</span>
+                </span>
+                <span class="wz-choice-htx">
+                  <span class="wz-choice-name">{{ m.key === 'owned' ? 'Owned' : 'Public' }}</span>
+                  <span class="wz-choice-sub">{{ m.cardHeading }}</span>
+                </span>
+              </span>
 
-            <button class="wz-choice pub" [class.sel]="connectionType === 'public'" (click)="connectionType = 'public'">
-              <span class="wz-choice-ic"><span class="msr">public</span></span>
-              <span class="wz-choice-check"><span class="msr">check</span></span>
-              <span class="wz-choice-name">Public source</span>
-              <span class="wz-choice-desc">Track a public profile or URL. Listening only, no replies.</span>
               <ul class="wz-bullets">
-                <li><span class="msr">check</span>No login required</li>
-                <li><span class="msr">check</span>Listening only</li>
-                <li><span class="msr">check</span>Anonymous mentions</li>
+                <li *ngFor="let b of m.get"><span class="msr">check</span>{{ b }}</li>
               </ul>
+              <ul class="wz-bullets dont" *ngIf="m.dontGet.length">
+                <li *ngFor="let b of m.dontGet"><span class="msr">remove</span>{{ b }}</li>
+              </ul>
+
+              <span class="wz-choice-pick"><span class="msr">arrow_right_alt</span>{{ m.pickIf }}</span>
             </button>
           </div>
 
-          <div class="wz-switch-note">
+          <!-- <div class="wz-switch-note">
             <span class="msr">verified_user</span>
             You can switch between modes later from Channel Configuration. Public sources don’t require credentials.
-          </div>
+          </div> -->
         </section>
 
-        <!-- 3a · authenticate (OAuth) -->
+        <!-- 3a · authenticate (OAuth / key) -->
         <section *ngSwitchCase="'authenticate'" class="wz-auth">
+
+        <!-- X (Twitter) owned: connect API v1.1 and/or v2 independently -->
+        <ng-container *ngIf="isXVersionAuth; else normalAuth">
+          <div class="wz-xhead">
+            <h3 class="wz-q">Connect both X APIs</h3>
+            <p class="wz-sub">X splits access across two APIs — they’re <b>complementary, not the same</b>. v2 powers
+              listening, search &amp; analytics; v1.1 powers DMs, media &amp; real-time webhooks. <b>Both are required</b>
+              for full X coverage.</p>
+            <span class="wz-xreco"><span class="msr">check_circle</span>Both APIs are required to add X</span>
+          </div>
+
+          <div class="wz-xgrid">
+            <div class="wz-xcard" *ngFor="let v of xVersions" [class.ok]="xDone(v.id)">
+              <div class="wz-xcard-top">
+                <span class="wz-xbadge"><span class="msr">api</span>{{ v.badge }}</span>
+                <span class="wz-xstate" *ngIf="xDone(v.id)"><span class="msr">check_circle</span>Connected</span>
+              </div>
+              <span class="wz-xtitle">{{ v.title }}</span>
+              <span class="wz-xsub">{{ v.sub }}</span>
+              <ul class="wz-bullets">
+                <li *ngFor="let c of v.caps"><span class="msr">check</span>{{ c }}</li>
+              </ul>
+
+              <button class="wz-xbtn" [class.ok]="xDone(v.id)"
+                      [disabled]="xLoading(v.id) || xDone(v.id)" (click)="startXAuth(v.id)">
+                <span *ngIf="!xDone(v.id) && !xLoading(v.id)" class="wz-xbtn-in">
+                  <svg *ngIf="brandSvg('twitter') as d" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path [attr.d]="d"></path></svg>
+                  Login with X · {{ v.tag }}
+                </span>
+                <span *ngIf="xLoading(v.id)" class="wz-authbtn-loading"><span class="wz-spinner"></span>Authenticating…</span>
+                <span *ngIf="xDone(v.id)" class="wz-authbtn-ok"><span class="msr">check</span>{{ v.tag }} connected</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="wz-xnote" *ngIf="xConnectedCount < 2">
+            <span class="msr">info</span>
+            <span *ngIf="xConnectedCount === 0">Both APIs are required to continue — connect <b>v1.1</b> and <b>v2</b>.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v2')">Now connect <b>API v2</b> too — it powers tweet &amp; &#64;mention listening, keyword search and analytics that v1.1 can’t provide.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v1')">Now connect <b>API v1.1</b> too — it powers DMs, media uploads and real-time webhooks that v2 can’t provide.</span>
+          </div>
+        </ng-container>
+
+        <!-- default single OAuth / key auth -->
+        <ng-template #normalAuth>
           <!-- connecting card -->
           <div class="wz-conn-card" [class.ok]="authDone">
             <span class="wz-conn-av" [style.background]="selected?.color">
@@ -162,180 +242,397 @@
             </span>
             <div class="wz-conn-text">
               <span class="wz-conn-eyebrow">{{ authDone ? 'Connected' : 'Connecting' }}</span>
-              <span class="wz-conn-name">{{ selected?.label }}</span>
+              <span class="wz-conn-name">{{ activeMode?.cardHeading }}</span>
             </div>
             <span class="wz-conn-badge" [class.ok]="authDone">
               <span class="msr">{{ authDone ? 'check' : 'sync' }}</span>{{ authDone ? 'Connected' : 'Pending' }}
             </span>
           </div>
 
+          <!-- capabilities (single-mode channels teach here) -->
+          <!-- <div class="wz-caps" *ngIf="showCaps && activeMode as m">
+            <div class="wz-caps-col">
+              <span class="wz-caps-h"><span class="msr">check_circle</span>What we’ll collect</span>
+              <ul><li *ngFor="let b of m.get">{{ b }}</li></ul>
+            </div>
+            <div class="wz-caps-col dont" *ngIf="m.dontGet.length">
+              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What we won’t collect</span>
+              <ul><li *ngFor="let b of m.dontGet">{{ b }}</li></ul>
+            </div>
+          </div> -->
+
           <!-- access list -->
-          <div class="wz-access">
-            <h4>What we’ll request access to</h4>
-            <ul>
-              <li><span class="msr">check</span>Read public posts, mentions and comments</li>
-              <li><span class="msr">check</span>Read engagement metrics (likes, reach, impressions)</li>
-              <li><span class="msr">check</span>Reply on your behalf — only when you click send</li>
+          <div class="wz-access" *ngIf="activeMode as m">
+            <h4>{{ m.accessHeading || "What we'll request access to" }}</h4>
+            <ul *ngIf="m.access?.length">
+              <li *ngFor="let a of m.access"><span class="msr">check</span>{{ a }}</li>
             </ul>
             <div class="wz-note">
-              <span class="msr">shield</span>
-              You’ll be redirected to {{ selected?.label }} to confirm. We never see or store your password.
+              <span class="msr">shield</span>{{ authNote }}
             </div>
           </div>
 
           <!-- big auth button -->
           <button class="wz-authbtn" [class.ok]="authDone" [disabled]="authLoading || authDone"
                   (click)="startAuth()">
-            <span *ngIf="!authDone && !authLoading">Login with {{ selected?.label }}</span>
+            <span *ngIf="!authDone && !authLoading">{{ authButtonLabel }}</span>
             <span *ngIf="authLoading" class="wz-authbtn-loading"><span class="wz-spinner"></span>Authenticating…</span>
             <span *ngIf="authDone" class="wz-authbtn-ok"><span class="msr">check</span>Authenticated</span>
           </button>
+        </ng-template>
         </section>
 
-        <!-- 3b · public handle -->
-        <section *ngSwitchCase="'public'" class="wz-center">
-          <span class="wz-brand" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+        <!-- 3b · public source -->
+        <section *ngSwitchCase="'public'" class="wz-center" [class.ecom]="isEcommerce">
+          <span class="wz-brand" *ngIf="!isEcommerce" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
             <svg *ngIf="brandSvg(selected?.id) as d; else pubGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path [attr.d]="d"></path>
             </svg>
             <ng-template #pubGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
           </span>
-          <h3 class="wz-q">Add a public {{ selected?.label }} source</h3>
-          <p class="wz-sub">You’ll be able to listen but not engage with users. All mentions will come in as anonymous.</p>
+          <h3 class="wz-q" [class.hasbrand]="isEcommerce">
+            <span class="wz-qbrand" *ngIf="isEcommerce" [style.background]="selected?.color">
+              <svg *ngIf="brandSvg(selected?.id) as d; else qGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
+              <ng-template #qGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+            </span>{{ activeMode?.cardHeading }}
+          </h3>
+          <p class="wz-sub" *ngIf="!isEcommerce">{{ activeMode?.pickIf }}</p>
 
-          <div class="wz-field">
-            <label>{{ pubHelp.label }}</label>
-            <div class="wz-url">
-              <span class="msr">link</span>
-              <input type="text" [placeholder]="pubHelp.placeholder" [(ngModel)]="publicHandle" />
+          <!-- capabilities (single-mode channels teach here; hidden for e-commerce — shown in the aside) -->
+          <div class="wz-caps" *ngIf="showCaps && !isEcommerce && activeMode as m">
+            <div class="wz-caps-col">
+              <span class="wz-caps-h"><span class="msr">check_circle</span>What we’ll collect</span>
+              <ul><li *ngFor="let b of m.get">{{ b }}</li></ul>
             </div>
-            <span class="wz-hint">Ex. <code>{{ pubHelp.example }}</code></span>
+            <div class="wz-caps-col dont" *ngIf="m.dontGet.length">
+              <span class="wz-caps-h"><span class="msr">do_not_disturb_on</span>What we won’t collect</span>
+              <ul><li *ngFor="let b of m.dontGet">{{ b }}</li></ul>
+            </div>
           </div>
 
-          <!-- how-to-find-it guide -->
-          <div class="wz-guide">
-            <span class="wz-guide-ic"><span class="msr">help</span></span>
-            <div class="wz-guide-body">
-              <b>{{ pubHelp.title }}</b>
-              <ul>
-                <li *ngFor="let s of pubHelp.steps">{{ s }}</li>
-              </ul>
+          <!-- generic single-URL / handle field (non e-commerce) -->
+          <ng-container *ngIf="!isEcommerce">
+            <div class="wz-field" *ngIf="activeMode?.field as f">
+              <label>{{ f.label }}</label>
+              <div class="wz-url">
+                <span class="msr">link</span>
+                <input type="text" [placeholder]="f.placeholder" [(ngModel)]="publicHandle" />
+              </div>
+              <span class="wz-hint">Ex. <code>{{ f.placeholder }}</code></span>
             </div>
+
+            <!-- how-to-find-it guide -->
+            <div class="wz-guide" *ngIf="activeMode?.field as f">
+              <span class="wz-guide-ic"><span class="msr">help</span></span>
+              <div class="wz-guide-body">
+                <b>Where do I find this?</b>
+                <p>{{ f.guide }}</p>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- ================= E-COMMERCE: add products by URL / CSV / search ================= -->
+          <div class="wz-ecom" *ngIf="isEcommerce">
+            <div class="wz-ecom-tabs">
+              <button [class.on]="ecomTab === 'url'" (click)="ecomTab = 'url'"><span class="msr">link</span>Add by URL</button>
+              <button [class.on]="ecomTab === 'search'" (click)="ecomTab = 'search'"><span class="msr">search</span>Add by search</button>
+            </div>
+
+            <!-- ===== URL tab ===== -->
+            <div class="wz-ecom-pane" *ngIf="ecomTab === 'url'">
+
+              <!-- section 1: add one at a time -->
+              <div class="wz-addsec">
+                <div class="wz-addsec-h">
+                  <span class="wz-addsec-ic"><span class="msr">add_link</span></span>
+                  <span class="wz-addsec-tx"><b>Add products one by one</b>
+                    <small>Paste a product URL and press Add</small></span>
+                </div>
+                <div class="wz-url-add">
+                  <div class="wz-url">
+                    <span class="msr">link</span>
+                    <input type="text" [placeholder]="activeMode?.field?.placeholder"
+                           [(ngModel)]="urlDraft" (keyup.enter)="addUrl()" />
+                  </div>
+                  <button class="wz-url-plus" [disabled]="!isValidUrl(urlDraft)" (click)="addUrl()">
+                    <span class="msr">add</span>Add
+                  </button>
+                </div>
+                <span class="wz-hint">Ex. <code>{{ activeMode?.field?.placeholder }}</code></span>
+
+                <!-- how to find the url -->
+                <div class="wz-guide" *ngIf="activeMode?.field?.guide as g">
+                  <span class="wz-guide-ic"><span class="msr">help</span></span>
+                  <div class="wz-guide-body">
+                    <b>How to find the {{ selected?.label }} URL</b>
+                    <p>{{ g }}</p>
+                  </div>
+                </div>
+
+                <!-- added url list -->
+                <div class="wz-url-list" *ngIf="urlList.length">
+                  <div class="wz-url-listhead"><span class="msr">playlist_add_check</span>Added URLs<span class="wz-sum-count">{{ urlList.length }}</span></div>
+                  <div class="wz-url-item" *ngFor="let u of urlList; let i = index" [class.editing]="editIndex === i">
+                    <span class="wz-url-num">{{ i + 1 }}</span>
+                    <span class="wz-url-txt" *ngIf="editIndex !== i" [title]="u">{{ u }}</span>
+                    <input class="wz-url-edit" *ngIf="editIndex === i" [(ngModel)]="editDraft"
+                           (keyup.enter)="saveEditUrl()" (keyup.escape)="cancelEditUrl()" />
+                    <button class="wz-url-act" *ngIf="editIndex !== i" (click)="startEditUrl(i)" title="Edit"><span class="msr">edit</span></button>
+                    <button class="wz-url-act ok" *ngIf="editIndex === i" (click)="saveEditUrl()" title="Save"><span class="msr">check</span></button>
+                    <button class="wz-url-act danger" (click)="removeUrl(i)" title="Remove"><span class="msr">delete</span></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- divider -->
+              <div class="wz-or"><span>OR</span></div>
+
+              <!-- section 2: bulk CSV — compact single row -->
+              <div class="wz-csvbar" *ngIf="!csvRows.length">
+                <span class="wz-csvbar-ic"><span class="msr">upload_file</span></span>
+                <span class="wz-csvbar-tx">
+                  <b>Bulk upload CSV</b>
+                  <small>Add many products at once — one product URL per row. Grab the sample for the exact format.</small>
+                </span>
+                <div class="wz-csvbar-acts">
+                  <button class="wz-csv-sample" (click)="downloadSample()"><span class="msr">download</span>Sample</button>
+                  <label class="wz-csv-browse"><span class="msr">folder_open</span>Browse file
+                    <input type="file" accept=".csv" hidden (change)="onCsv($event)" /></label>
+                </div>
+              </div>
+
+              <!-- preview -->
+              <div class="wz-csv-prev" *ngIf="csvRows.length">
+                  <div class="wz-csv-prev-head">
+                    <span class="wz-csv-prev-name"><span class="msr">description</span>{{ csvName }}
+                      <span class="wz-sum-count">{{ csvRows.length }}</span> rows</span>
+                    <button class="wz-csv-remove" (click)="clearCsv()"><span class="msr">close</span>Remove</button>
+                  </div>
+                  <div class="wz-csv-table">
+                    <table>
+                      <thead><tr><th *ngFor="let c of csvCols">{{ c }}</th></tr></thead>
+                      <tbody>
+                        <tr *ngFor="let r of csvRows.slice(0, 6)"><td *ngFor="let cell of r">{{ cell }}</td></tr>
+                      </tbody>
+                    </table>
+                    <div class="wz-csv-more" *ngIf="csvRows.length > 6">+ {{ csvRows.length - 6 }} more rows</div>
+                  </div>
+                </div>
+            </div>
+
+            <!-- ===== Search tab ===== -->
+            <div class="wz-ecom-pane search" *ngIf="ecomTab === 'search'">
+              <div class="wz-prod-search">
+                <span class="wz-prod-search-ic"><span class="msr">search</span></span>
+                <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="doSearch()"
+                       placeholder="Search {{ selected?.label }} — try “iPhone 17”, “boAt”, “boAt watch”" />
+                <button class="wz-prod-search-x" *ngIf="searchQuery" (click)="clearSearch()" title="Clear"><span class="msr">close</span></button>
+                <button class="wz-prod-search-go" [disabled]="!searchQuery.trim()" (click)="doSearch()">
+                  <span class="msr">search</span>Search
+                </button>
+              </div>
+
+              <!-- hint before searching -->
+              <div class="wz-search-tip" *ngIf="!hasSearched && !searchLoading">
+                <span class="msr">tips_and_updates</span>
+                Type a <b>product</b> (iPhone 17), a <b>brand</b> (boAt), or <b>brand + type</b> (boAt watch), then press <b>Search</b>.
+              </div>
+
+              <!-- loading skeleton -->
+              <div class="wz-prod-list" *ngIf="searchLoading">
+                <div class="wz-prod-head loading"><span class="wz-spinner sm"></span>Fetching results from {{ selected?.label }}…</div>
+                <div class="wz-prod skel" *ngFor="let s of [0,1,2,3]">
+                  <span class="wz-prod-img sk"></span>
+                  <span class="wz-prod-info">
+                    <span class="sk-line w55"></span>
+                    <span class="sk-line w35"></span>
+                    <span class="sk-chips"><span class="sk-chip"></span><span class="sk-chip"></span><span class="sk-chip"></span></span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- empty -->
+              <div class="wz-empty" *ngIf="hasSearched && !searchLoading && !searchResults.length">
+                <span class="msr">search_off</span> No products match “{{ searchQuery }}”.
+              </div>
+
+              <!-- results -->
+              <div class="wz-prod-list" *ngIf="!searchLoading && searchResults.length">
+                <div class="wz-prod-head">Top {{ searchResults.length }} match<span *ngIf="searchResults.length!==1">es</span> on {{ selected?.label }}</div>
+                <button class="wz-prod" *ngFor="let p of searchResults"
+                        [class.sel]="isProdSelected(p.id)" (click)="toggleProduct(p.id)">
+                  <span class="wz-check" [class.on]="isProdSelected(p.id)"><span class="msr" *ngIf="isProdSelected(p.id)">check</span></span>
+                  <span class="wz-prod-img" [style.background]="p.color + '1a'">{{ p.emoji }}</span>
+                  <span class="wz-prod-info">
+                    <span class="wz-prod-name">{{ p.title }}</span>
+                    <span class="wz-prod-meta">{{ p.brand }} · {{ p.category }}
+                      <span class="wz-prod-rating"><span class="msr">star</span>{{ p.rating }} <em>({{ p.ratingCount }})</em></span>
+                    </span>
+                    <span class="wz-prod-attrs">
+                      <span class="wz-prod-chip" *ngFor="let a of p.attrs">{{ a }}</span>
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- running total -->
+            
           </div>
         </section>
 
-        <!-- 3d · store URL (no auth — e.g. E-Commerce) -->
-        <section *ngSwitchCase="'url'" class="wz-center">
-          <span class="wz-brand" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
-            <svg *ngIf="brandSvg(selected?.id) as d; else urlGlyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path [attr.d]="d"></path>
-            </svg>
-            <ng-template #urlGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
-          </span>
-          <h3 class="wz-q">Add your {{ selected?.label }} page URL</h3>
-          <p class="wz-sub">No login needed. Paste the public web address of the product or store page you
-            want to track — we’ll monitor its reviews, ratings &amp; Q&amp;A automatically.</p>
-
-          <div class="wz-field">
-            <label>Store / product page URL</label>
-            <div class="wz-url">
-              <span class="msr">link</span>
-              <input type="url" inputmode="url" placeholder="https://www.example.com/product/12345"
-                     [(ngModel)]="storeUrl" />
-            </div>
-            <span class="wz-hint">Example: <code>https://www.amazon.in/dp/B0CXXXX</code> &nbsp;·&nbsp;
-              <code>https://yourstore.myshopify.com/products/abc</code></span>
-          </div>
-
-          <!-- guidance -->
-          <div class="wz-guide">
-            <span class="wz-guide-ic"><span class="msr">info</span></span>
-            <div class="wz-guide-body">
-              <b>Which URL should I add?</b>
-              <ul>
-                <li>Use the <b>full public page link</b> — it must start with <code>https://</code>.</li>
-                <li>Point to the <b>product, store or seller page</b>, not your seller dashboard or account settings.</li>
-                <li>Make sure the page is <b>publicly visible</b> (opens without a login).</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <!-- 3c · select pages -->
+        <!-- 3c · select pages / accounts / locations -->
         <section *ngSwitchCase="'pages'" class="wz-pages">
-          <div class="wz-pages-head">
-            <div>
-              <h3 class="wz-q left">Select pages to connect</h3>
-              <p class="wz-sub left">Choose one or more pages from your {{ selected?.label }} account.</p>
-            </div>
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">{{ selectHeading }}</h3>
+            <p class="wz-sub left">Pick the {{ pagesNoun }} you want Locobuzz to listen to — each one becomes its
+              own profile with its own mentions, status and replies. You can change this anytime.</p>
+            <p class="wz-ig-note left" *ngIf="selected?.id === 'facebook'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>
+              Pages with a linked Instagram account also bring in Instagram posts, comments &amp; messages — no separate connection needed.
+            </p>
+          </div>
+
+          <!-- selection summary bar -->
+          <div class="wz-pages-bar">
+            <span class="wz-pages-count">
+              <span class="msr">{{ selectedPages.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              <b>{{ selectedPages.size }}</b>&nbsp;of {{ pages.length }} {{ pagesNoun }} selected
+            </span>
             <button class="wz-selectall" (click)="toggleAllPages()">
+              <span class="msr">{{ allPagesSelected ? 'remove_done' : 'done_all' }}</span>
               {{ allPagesSelected ? 'Clear all' : 'Select all' }}
             </button>
           </div>
 
-          <div class="wz-page-list">
-            <button class="wz-page" *ngFor="let p of pages"
-                    [class.sel]="selectedPages.has(p.id)" (click)="togglePage(p.id)">
+          <!-- page cards -->
+          <div class="wz-page-grid">
+            <button class="wz-pagecard" *ngFor="let p of pages"
+                    [class.sel]="selectedPages.has(p.id)" (click)="togglePage(p.id)"
+                    [style.--ch]="selected?.color">
               <span class="wz-check" [class.on]="selectedPages.has(p.id)">
                 <span class="msr" *ngIf="selectedPages.has(p.id)">check</span>
               </span>
-              <span class="wz-page-av" [style.background]="p.color">{{ p.initials }}</span>
+              <span class="wz-page-av lg" [style.background]="p.color">
+                {{ p.initials }}
+                <span class="wz-page-net" [style.background]="selected?.color">
+                  <svg *ngIf="brandSvg(selected?.id) as d" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
+                  <span class="msr" *ngIf="!brandSvg(selected?.id)">{{ selected?.icon }}</span>
+                </span>
+                <!-- linked Instagram account (Meta grants IG access via the same Page) -->
+                <span class="wz-page-net ig" *ngIf="p.igHandle && selected?.id === 'facebook'" title="Linked Instagram account">
+                  <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>
+                </span>
+              </span>
               <span class="wz-page-who">
                 <span class="wz-page-name">{{ p.name }}</span>
-                <span class="wz-page-sub">{{ p.followers }}</span>
+                <span class="wz-page-sub"><span class="msr">group</span>{{ p.followers }}</span>
+                <span class="wz-page-ig" *ngIf="p.igHandle && selected?.id === 'facebook'">
+                  <span class="wz-igtag"><svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>{{ p.igHandle }}</span>
+                  <span class="wz-igmsg" *ngIf="p.igMessages"><span class="msr">chat</span>Messages</span>
+                </span>
               </span>
             </button>
           </div>
         </section>
 
-        <!-- 4 · review & finish -->
+        <!-- 4 · review & finish — connected-account preview -->
         <section *ngSwitchCase="'review'" class="wz-review">
-          <!-- channel ready card -->
-          <div class="wz-rev-card">
-            <span class="wz-rev-av" [style.background]="selected?.color">
-              <svg *ngIf="brandSvg(selected?.id) as d; else revGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
-                <path [attr.d]="d"></path>
-              </svg>
-              <ng-template #revGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
-            </span>
-            <div class="wz-rev-text">
-              <span class="wz-rev-name">{{ selected?.label }}</span>
-              <span class="wz-rev-sub">Ready to go — we’ll start syncing data within a minute.</span>
-            </div>
-            <span class="wz-rev-badge"><span class="led"></span>Active</span>
-          </div>
 
-          <!-- detail grid -->
-          <div class="wz-rev-grid">
-            <div class="wz-rev-cell">
-              <span class="wz-rev-k">ACCOUNT</span>
-              <span class="wz-rev-v mono">{{ reviewAccount }}</span>
+          <!-- hero: the connected account -->
+          <div class="wz-hero" [style.background]="'linear-gradient(180deg,' + tint(selected?.color) + ',#fff 78%)'"
+               [style.--ch]="selected?.color">
+            <div class="wz-hero-main">
+              <span class="wz-hero-av" [style.background]="selected?.color">
+                <svg *ngIf="brandSvg(selected?.id) as d; else heroGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
+                <ng-template #heroGlyph><span class="msr">{{ selected?.icon }}</span></ng-template>
+              </span>
+              <div class="wz-hero-id">
+                <span class="wz-hero-name">{{ selected?.label }}</span>
+                <span class="wz-hero-handle">{{ reviewAccount }}</span>
+              </div>
+              <span class="wz-hero-status"><span class="led"></span>Active</span>
             </div>
-            <div class="wz-rev-cell">
-              <span class="wz-rev-k">PERMISSIONS</span>
-              <span class="wz-rev-v">{{ reviewPermissions }}</span>
+
+            <div class="wz-hero-tags">
+              <span class="wz-modepill" [class.pub]="activeMode?.key === 'public'">
+                <span class="msr">{{ activeMode?.key === 'public' ? 'public' : 'lock' }}</span>{{ connectionLabel }}
+              </span>
+              <span class="wz-modepill sync"><span class="msr">bolt</span>{{ reviewSync }}</span>
             </div>
-            <div class="wz-rev-cell">
-              <span class="wz-rev-k">SYNC FREQUENCY</span>
-              <span class="wz-rev-v">Real-time</span>
-            </div>
-            <div class="wz-rev-cell">
-              <span class="wz-rev-k">DATA RETENTION</span>
-              <span class="wz-rev-v">12 months</span>
-            </div>
-            <div class="wz-rev-cell wide" *ngIf="selectedPageList.length">
-              <span class="wz-rev-k">PAGES</span>
-              <span class="wz-rev-v chips">
-                <span class="wz-pill" *ngFor="let p of selectedPageList">{{ p.name }}</span>
+
+            <!-- X (Twitter): which APIs are live -->
+            <div class="wz-hero-apis" *ngIf="isXVersionAuth">
+              <span class="wz-apichip" *ngFor="let v of xVersions" [class.on]="xDone(v.id)">
+                <span class="msr">{{ xDone(v.id) ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                <b>API {{ v.tag }}</b>
+                <span class="wz-apichip-st">{{ xDone(v.id) ? 'Active' : 'Not connected' }}</span>
               </span>
             </div>
           </div>
 
-          <!-- tip -->
-          <div class="wz-tip">
-            <span class="msr">lightbulb</span>
-            Tip: You can add more channels anytime from <b>Channel Configuration</b>.
+          <!-- what we collect (the focus: which data this channel brings in) -->
+          <div class="wz-collect" *ngIf="dataTypeList.length">
+            <span class="wz-collect-h"><span class="msr">database</span>What we’ll collect from {{ selected?.label }}</span>
+            <div class="wz-chiprow">
+              <span class="wz-typechip" *ngFor="let t of dataTypeList"
+                    [style.color]="selected?.color"
+                    [style.background]="tint(selected?.color)"
+                    [style.borderColor]="selected?.color + '33'">{{ t }}</span>
+            </div>
           </div>
+
+          <!-- connected pages / accounts / locations -->
+          <div class="wz-collect" *ngIf="selectedPageList.length">
+            <span class="wz-collect-h">
+              <span class="msr">{{ pagesNoun === 'locations' ? 'place' : 'description' }}</span>
+              {{ pagesNoun | titlecase }} connected
+              <span class="wz-sum-count">{{ selectedPageList.length }}</span>
+            </span>
+            <div class="wz-chiprow">
+              <span class="wz-chip2" *ngFor="let p of selectedPageList">
+                <span class="wz-chip2-av" [style.background]="p.color">{{ p.initials }}</span>{{ p.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- E-Commerce: the exact products/sources added -->
+          <div class="wz-collect" *ngIf="isEcommerce && ecomSources.length">
+            <span class="wz-collect-h"><span class="msr">shopping_bag</span>Products to track
+              <span class="wz-sum-count">{{ ecomSources.length }}</span></span>
+            <div class="wz-srclist">
+              <div class="wz-srcrow" *ngFor="let s of ecomSources.slice(0, 8)">
+                <span class="wz-src-ic"><span class="msr">{{ s.icon }}</span></span>
+                <span class="wz-src-tx">
+                  <span class="wz-src-label" [title]="s.label">{{ s.label }}</span>
+                  <span class="wz-src-sub">{{ s.sub }}</span>
+                </span>
+              </div>
+              <div class="wz-src-more" *ngIf="ecomSources.length > 8">+ {{ ecomSources.length - 8 }} more</div>
+            </div>
+          </div>
+
+          <!-- compact meta strip -->
+          <div class="wz-metastrip">
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">key</span>Permissions</span>
+              <span class="wz-meta-v">{{ reviewPermissions }}</span>
+            </div>
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">sync</span>Mentions sync</span>
+              <span class="wz-meta-v">{{ reviewSync }}</span>
+            </div>
+            <div class="wz-meta-cell">
+              <span class="wz-meta-k"><span class="msr">history</span>History on connect</span>
+              <span class="wz-meta-v">{{ reviewHistory }}</span>
+            </div>
+          </div>
+
+          <!-- footnote -->
+          <!-- <div class="wz-note-line">
+            <span class="msr">verified_user</span>
+            <span>Retention follows <b>your data-retention policy</b> — add, pause or remove channels anytime from <b>Channel Configuration</b>.</span>
+          </div> -->
         </section>
 
       </div>
@@ -356,66 +653,189 @@
       </footer>
     </div>
 
-    <!-- ---- right: aside — "why connect" on step 1, step-specific help after ---- -->
-    <aside class="wz-aside">
-      <!-- step 1: why connect (marketing) -->
-      <ng-container *ngIf="current === 'choose'">
-        <span class="wz-aside-eyebrow">Why connect?</span>
-        <h3 class="wz-aside-title">One workspace for every conversation.</h3>
-        <p class="wz-aside-lead">Channels you connect feed directly into your unified inbox, analytics and AI assistants.</p>
+    <!-- ---- right: step-aware aside (re-renders per step → reveal animation re-runs) ---- -->
+    <aside class="wz-aside" [ngSwitch]="current">
 
-        <div class="wz-feat">
-          <span class="wz-feat-ic"><span class="msr">trending_up</span></span>
-          <div class="wz-feat-text">
-            <b>Unified insights</b>
-            <span>See mentions, reach and sentiment from every channel in one feed.</span>
+      <!-- choose: generic value props until a channel is picked, then a live preview
+           (keyed by channel id so the reveal re-runs on every selection change) -->
+      <ng-container *ngSwitchCase="'choose'">
+        <ng-container *ngIf="specList.length; else chooseIntro">
+          <ng-container *ngFor="let sp of specList; trackBy: trackSpec">
+            <span class="wz-aside-eyebrow">{{ sp.tier }} channel</span>
+            <h3 class="wz-aside-title">{{ sp.label }}</h3>
+            <div class="wz-mode-chips">
+              <span class="wz-mode-chip" *ngFor="let m of sp.modes">
+                <span class="msr">{{ m.key === 'owned' ? 'lock' : 'public' }}</span>{{ m.key === 'owned' ? 'Owned' : 'Public' }}
+              </span>
+            </div>
+            <p class="wz-aside-lead">{{ sp.modes[0].pickIf }}</p>
+
+            <div class="wz-safe">
+              <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
+              <ul>
+                <li *ngFor="let b of sp.modes[0].get.slice(0, 4)"><span class="msr">check</span>{{ b }}</li>
+              </ul>
+            </div>
+
+            <div class="wz-facts">
+              <div class="wz-fact">
+                <span class="wz-fact-ic"><span class="msr">sync</span></span>
+                <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ sp.modes[0].sync }}</span></span>
+              </div>
+              <div class="wz-fact">
+                <span class="wz-fact-ic"><span class="msr">history</span></span>
+                <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ sp.modes[0].history }}</span></span>
+              </div>
+            </div>
+
+            <div class="wz-flag" *ngIf="sp.flag" [class.planned]="sp.flag === 'planned'">
+              <span class="msr">{{ sp.flag === 'planned' ? 'schedule' : 'release_alert' }}</span>
+              <span>{{ sp.flagText }}</span>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <ng-template #chooseIntro>
+          <span class="wz-aside-eyebrow">{{ totalChannels }} channels · one inbox</span>
+          <h3 class="wz-aside-title">Listen everywhere your customers talk.</h3>
+          <p class="wz-aside-lead">Select a channel on the left — this panel then shows exactly what it collects, how often it syncs, and what you’ll be able to do.</p>
+          <div class="wz-feat">
+            <span class="wz-feat-ic"><span class="msr">ads_click</span></span>
+            <div class="wz-feat-text"><b>1 · Pick a channel</b><span>Social, reviews, messaging, commerce &amp; more — grouped on the left.</span></div>
           </div>
+          <div class="wz-feat">
+            <span class="wz-feat-ic"><span class="msr">hub</span></span>
+            <div class="wz-feat-text"><b>2 · Connect owned or public</b><span>Authenticate to engage &amp; reply, or track a public source to just listen.</span></div>
+          </div>
+          <div class="wz-feat">
+            <span class="wz-feat-ic"><span class="msr">inbox</span></span>
+            <div class="wz-feat-text"><b>3 · Mentions flow in</b><span>Everything lands in your unified inbox with AI replies &amp; sentiment.</span></div>
+          </div>
+          <div class="wz-safe">
+            <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; validated</span>
+            <ul>
+              <li><span class="msr">check</span>OAuth 2.0 — we never see your password</li>
+              <li><span class="msr">check</span>Read-only by default, granular scopes</li>
+              <li><span class="msr">check</span>Revoke access anytime in settings</li>
+              <li><span class="msr">check</span>SOC 2 Type II · GDPR compliant</li>
+            </ul>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <!-- connection type: a decision helper that mirrors the two cards on the left -->
+      <ng-container *ngSwitchCase="'connection'">
+        <span class="wz-aside-eyebrow">Which mode fits?</span>
+        <h3 class="wz-aside-title">Owned to engage, Public to watch.</h3>
+        <p class="wz-aside-lead">Same channel, two jobs. Pick by whether {{ selected?.label }} is yours to manage.</p>
+        <div class="wz-feat" *ngIf="modeFor('owned') as o">
+          <span class="wz-feat-ic"><span class="msr">lock</span></span>
+          <div class="wz-feat-text"><b>Choose Owned if it’s yours</b><span>{{ o.pickIf }}</span></div>
+        </div>
+        <div class="wz-feat" *ngIf="modeFor('public') as p">
+          <span class="wz-feat-ic"><span class="msr">public</span></span>
+          <div class="wz-feat-text"><b>Choose Public to monitor</b><span>{{ p.pickIf }}</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">swap_horiz</span>You’re not locked in</span>
+          <p>Add the other mode later from Channel Configuration — many brands run both: Owned for their pages, Public for competitors.</p>
+        </div>
+      </ng-container>
+
+      <!-- authenticate: reassure on security, then preview the outcome -->
+      <ng-container *ngSwitchCase="'authenticate'">
+        <span class="wz-aside-eyebrow">Secure connection</span>
+        <h3 class="wz-aside-title">Your credentials stay with {{ selected?.label }}.</h3>
+        <p class="wz-aside-lead">{{ authNote }}</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">shield</span></span>
+          <div class="wz-feat-text"><b>You stay in control</b><span>Read-only by default, granular scopes, revoke anytime.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">bolt</span></span>
+          <div class="wz-feat-text"><b>Then we start collecting</b><span>{{ reviewReadySub }}</span></div>
+        </div>
+        <div class="wz-facts" *ngIf="activeMode as m">
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">sync</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">history</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">database</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Data collected</span><span class="wz-fact-v">{{ m.dataTypes }}</span></span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- public source: what listen-only gets you, and what it won't -->
+      <ng-container *ngSwitchCase="'public'">
+        <span class="wz-aside-eyebrow">Public listening</span>
+        <h3 class="wz-aside-title">Track {{ selected?.label }} without logging in.</h3>
+        <p class="wz-aside-lead">We collect public mentions as they appear — no credentials needed.</p>
+        <div class="wz-safe" *ngIf="activeMode as m">
+          <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
+          <ul>
+            <li *ngFor="let b of m.get.slice(0, 3)"><span class="msr">check</span>{{ b }}</li>
+          </ul>
+        </div>
+        <div class="wz-safe tip" *ngIf="activeMode?.dontGet?.length">
+          <span class="wz-safe-head"><span class="msr">info</span>Keep in mind</span>
+          <p>{{ activeMode?.dontGet?.[0] }}</p>
+        </div>
+        <div class="wz-facts" *ngIf="activeMode as m">
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">sync</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
+          </div>
+          <div class="wz-fact">
+            <span class="wz-fact-ic"><span class="msr">history</span></span>
+            <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- select pages / accounts / locations -->
+      <ng-container *ngSwitchCase="'pages'">
+        <span class="wz-aside-eyebrow">Almost there</span>
+        <h3 class="wz-aside-title">Pick the {{ pagesNoun }} to listen to.</h3>
+        <p class="wz-aside-lead">Each one you select becomes its own profile in the channel grid — with its own mentions, status and replies.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">checklist</span></span>
+          <div class="wz-feat-text"><b>Connect several at once</b><span>Select all the {{ pagesNoun }} you manage in one go.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">tune</span></span>
+          <div class="wz-feat-text"><b>Change anytime</b><span>Pause or remove any {{ pagesNoun }} later from Channel Configuration.</span></div>
+        </div>
+      </ng-container>
+
+      <!-- review: what happens next + the one caveat to remember -->
+      <ng-container *ngSwitchCase="'review'">
+        <span class="wz-aside-eyebrow">You’re all set</span>
+        <h3 class="wz-aside-title">{{ selected?.label }} is ready to go.</h3>
+        <p class="wz-aside-lead">Here’s what happens the moment you complete setup.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">{{ isRealtime ? 'bolt' : 'schedule' }}</span></span>
+          <div class="wz-feat-text"><b>Collection starts</b><span>{{ reviewReadySub }}</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">inbox</span></span>
+          <div class="wz-feat-text"><b>Mentions reach your inbox</b><span>New {{ selected?.label }} {{ isRealtime ? 'conversations' : 'mentions' }} flow into your unified inbox.</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">auto_awesome</span></span>
-          <div class="wz-feat-text">
-            <b>AI-powered replies</b>
-            <span>Draft on-brand responses in seconds, tuned to each platform.</span>
-          </div>
+          <div class="wz-feat-text"><b>AI gets to work</b><span>Sentiment, themes and on-brand reply drafts, ready in seconds.</span></div>
         </div>
-        <div class="wz-feat">
-          <span class="wz-feat-ic"><span class="msr">timer</span></span>
-          <div class="wz-feat-text">
-            <b>Save 6+ hours weekly</b>
-            <span>Cut switching between tabs — engage from a single inbox.</span>
-          </div>
-        </div>
-
-        <div class="wz-safe">
-          <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; validated</span>
-          <ul>
-            <li><span class="msr">check</span>OAuth 2.0 — we never see your password</li>
-            <li><span class="msr">check</span>Read-only by default, granular scopes</li>
-            <li><span class="msr">check</span>Revoke access anytime in settings</li>
-            <li><span class="msr">check</span>SOC 2 Type II · GDPR compliant</li>
-          </ul>
+        <div class="wz-safe tip" *ngIf="activeMode?.dontGet?.length">
+          <span class="wz-safe-head"><span class="msr">info</span>One thing to remember</span>
+          <p>{{ activeMode?.dontGet?.[0] }}</p>
         </div>
       </ng-container>
 
-      <!-- later steps: contextual help for the current step -->
-      <ng-container *ngIf="current !== 'choose'">
-        <span class="wz-aside-eyebrow">{{ asideHelp.eyebrow }}</span>
-        <h3 class="wz-aside-title">{{ asideHelp.title }}</h3>
-        <p class="wz-aside-lead" *ngIf="asideHelp.lead">{{ asideHelp.lead }}</p>
-
-        <div class="wz-feat" *ngFor="let f of asideHelp.points">
-          <span class="wz-feat-ic"><span class="msr">{{ f.icon }}</span></span>
-          <div class="wz-feat-text">
-            <b>{{ f.title }}</b>
-            <span>{{ f.text }}</span>
-          </div>
-        </div>
-
-        <div class="wz-safe tip" *ngIf="asideHelp.tip">
-          <span class="wz-safe-head"><span class="msr">lightbulb</span>Good to know</span>
-          <p>{{ asideHelp.tip }}</p>
-        </div>
-      </ng-container>
     </aside>
 
   </div>

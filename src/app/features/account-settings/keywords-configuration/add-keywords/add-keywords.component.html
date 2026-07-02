@@ -1,0 +1,482 @@
+<div class="wz-backdrop" (click)="close()"></div>
+
+<div class="wz-modal" role="dialog" aria-modal="true">
+
+  <!-- ===== celebration (after Launch) ===== -->
+  <div class="wz-celebrate" *ngIf="celebrating">
+    <span class="wz-confetti">
+      <i *ngFor="let p of confetti" [class.round]="p.round"
+         [style.left.%]="p.left" [style.background]="p.color"
+         [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.duration"
+         [style.--drift.px]="p.drift" [style.--rot.deg]="p.rotate"></i>
+    </span>
+    <div class="wz-burst">
+      <span class="wz-ring"></span><span class="wz-ring r2"></span>
+      <span class="wz-badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="wz-badge-circle" cx="26" cy="26" r="24"></circle>
+          <path class="wz-badge-check" d="M16 27 l7 7 l14 -15"></path>
+        </svg>
+      </span>
+    </div>
+    <h2 class="wz-celebrate-title">Listener created!</h2>
+    <p class="wz-celebrate-sub">{{ name || 'Your listener' }} is set up and heading for approval.</p>
+    <div class="wz-celebrate-pill">
+      <span class="msr">graphic_eq</span>{{ name || 'New listener' }} · {{ bothModes ? 'Real-Time + Historic' : historicOn ? 'Historic' : 'Real-Time' }}
+    </div>
+    <button class="wz-next finish wz-celebrate-done" (click)="complete()"><span class="msr">arrow_forward</span>View queries</button>
+  </div>
+
+  <!-- ===== two-pane shell ===== -->
+  <div class="wz-shell" *ngIf="!celebrating">
+
+    <!-- ---- left: the wizard ---- -->
+    <div class="wz-main">
+      <header class="wz-head">
+        <span class="wz-spark"><span class="msr">graphic_eq</span></span>
+        <div class="wz-titles">
+          <h2>{{ name || 'New listener' }}</h2>
+          <p>{{ bothModes ? 'Real-Time + Historic' : historicOn ? 'Historic' : 'Real-Time' }} Keywords · keyword configuration</p>
+        </div>
+        <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
+      </header>
+
+      <!-- stepper -->
+      <nav class="wz-stepper">
+        <ng-container *ngFor="let s of steps; let last = last">
+          <div class="wz-step" [class.done]="step > s.n" [class.active]="step === s.n" (click)="goStep(s.n)">
+            <span class="wz-dot">
+              <span class="msr" *ngIf="step > s.n">check</span>
+              <span class="msr" *ngIf="step <= s.n">{{ s.icon }}</span>
+            </span>
+            <span class="wz-step-label">{{ s.label }}</span>
+          </div>
+          <span class="wz-conn" *ngIf="!last" [class.done]="step > s.n" [class.next]="step === s.n"></span>
+        </ng-container>
+      </nav>
+
+      <!-- body -->
+      <div class="wz-body" [ngSwitch]="stepLabel(step)">
+
+        <!-- ===== STEP · NAME ===== -->
+        <section *ngSwitchCase="'Name'" class="ak-step">
+          <h3 class="wz-q left">Let's name your listener</h3>
+          <p class="wz-sub left">Choose a short, friendly name, then tell us how you'd like it to listen — live, back-filled from the past, or both.</p>
+
+          <div class="wz-field">
+            <label>Listener name</label>
+            <input type="text" [(ngModel)]="name" [maxlength]="NAME_MAX" placeholder="e.g. Nike Global" />
+            <div class="ak-field-foot">
+              <span>Team-visible. You can change it anytime.</span>
+              <span [class.warn]="name.length > 25">{{ name.length }}/{{ NAME_MAX }}</span>
+            </div>
+          </div>
+
+          <p class="ak-sec-label">How would you like it to listen?<span class="ak-sec-hint">Choose one or both</span></p>
+          <div class="wz-choice-grid">
+            <button type="button" class="wz-choice" *ngFor="let m of listenModes"
+                    [ngClass]="m.key === 'realtime' ? 'rt' : 'hs'"
+                    [class.sel]="m.key === 'realtime' ? realtimeOn : historicOn"
+                    (click)="toggleListenMode(m.key)">
+              <span class="wz-choice-check"><span class="msr">check</span></span>
+              <span class="wz-choice-ic"><span class="msr">{{ m.icon }}</span></span>
+              <span class="wz-choice-name">{{ m.label }}</span>
+              <span class="wz-choice-desc">{{ m.desc }}</span>
+            </button>
+          </div>
+          <p class="ak-mode-note" *ngIf="bothModes"><span class="msr">bolt</span>Great choice — we'll back-fill the past <b>and</b> keep listening live afterwards.</p>
+          <p class="ak-mode-note warn" *ngIf="!modeValid"><span class="msr">info</span>Please choose at least one listening type so we can continue.</p>
+        </section>
+
+        <!-- ===== STEP · CHANNELS ===== -->
+        <section *ngSwitchCase="'Channels'" class="ak-step ak-chanstep">
+          <h3 class="wz-q left">Where would you like us to listen?</h3>
+          <p class="wz-sub left">Choose one or more channels, and we'll tailor the rest of the setup to your selection.</p>
+
+          <div class="ak-ch2">
+            <!-- LEFT · search + scrollable single-column channel list -->
+            <div class="ak-ch2-left">
+              <div class="wz-search">
+                <span class="msr">search</span>
+                <input type="text" [(ngModel)]="channelSearch" placeholder="Search channels…" />
+                <button class="ak-search-x" *ngIf="channelSearch" (click)="channelSearch = ''"><span class="msr">close</span></button>
+              </div>
+
+              <div class="ak-ch2-list">
+                <button class="ak-cc" *ngFor="let c of filteredChannels"
+                        [class.on]="selected.has(c.id)" (click)="toggleChannel(c.id)" (mouseenter)="setInfo(c)">
+                  <span class="ak-cc-ic" [style.background]="c.color">
+                    <svg *ngIf="channelSvg(c) as d; else ccGlyph" viewBox="0 0 24 24" fill="#fff"><path [attr.d]="d"></path></svg>
+                    <ng-template #ccGlyph>
+                      <span class="msr" *ngIf="c.icon">{{ c.icon }}</span>
+                      <span class="ak-tile-letter" *ngIf="!c.icon && c.letter">{{ c.letter }}</span>
+                    </ng-template>
+                  </span>
+                  <span class="ak-cc-txt">
+                    <span class="ak-cc-name">{{ c.label }}<span class="ak-prem" *ngIf="c.premium">Premium</span></span>
+                    <span class="ak-cc-desc">{{ c.desc }}</span>
+                  </span>
+                  <span class="ak-cc-radio" [class.on]="selected.has(c.id)"><span class="msr">check</span></span>
+                </button>
+                <p class="ak-ch2-noresult" *ngIf="!filteredChannels.length">No channels match "{{ channelSearch }}".</p>
+              </div>
+            </div>
+
+            <!-- RIGHT · options & vaults for the selected channels -->
+            <aside class="ak-ch2-detail">
+              <p class="ak-opts-cap"><span class="msr">tune</span>Options &amp; vaults</p>
+
+              <div class="ak-ch2-opts" *ngIf="selectedChannels.length; else noSel">
+                <div class="ak-ch2-opt" *ngFor="let c of selectedChannels">
+                  <div class="ak-ch2-opt-head">
+                    <span class="ak-opt-ic" [style.background]="c.color">
+                      <svg *ngIf="channelSvg(c) as d" viewBox="0 0 24 24" fill="#fff"><path [attr.d]="d"></path></svg>
+                      <span class="msr" *ngIf="!c.svg && c.icon">{{ c.icon }}</span>
+                      <span class="ak-tile-letter" *ngIf="!c.svg && !c.icon && c.letter">{{ c.letter }}</span>
+                    </span>
+                    <div class="ak-ch2-opt-txt">
+                      <p class="ak-ch2-opt-name">{{ c.label }}</p>
+                      <p class="ak-ch2-opt-note">{{ c.note }}</p>
+                    </div>
+                  </div>
+                  <div class="ak-opt-controls" *ngIf="c.inner?.length">
+                    <button class="ak-inner-pill" *ngFor="let opt of c.inner"
+                            [class.on]="isInnerOn(c.id, opt.id)" (click)="toggleInner(c.id, opt.id, $event)">
+                      <span class="msr">{{ opt.icon }}</span>{{ opt.label }}
+                    </button>
+                  </div>
+                  <div class="ak-opt-vault" *ngIf="c.hasVault">
+                    <span class="ak-optrow-vlbl">Vault</span>
+                    <button class="ak-vault-opt" *ngFor="let v of fbVaults" [class.on]="fbVault === v" (click)="selectVault(v, $event)">{{ v }}</button>
+                  </div>
+                  <p class="ak-ch2-opt-none" *ngIf="!(c.inner && c.inner.length) && !c.hasVault">No extra options — we'll listen with your query.</p>
+                </div>
+              </div>
+
+              <ng-template #noSel>
+                <div class="ak-ch-empty">
+                  <span class="msr">ads_click</span>
+                  <p>Choose a channel to begin.</p>
+                  <p class="ak-ch-empty-s">Options like retweets, comments and Facebook vaults appear here.</p>
+                </div>
+              </ng-template>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ===== STEP · QUERY ===== -->
+        <section *ngSwitchCase="'Query'" class="ak-step">
+          <h3 class="wz-q left">What would you like us to listen for?</h3>
+          <p class="wz-sub left">Build your query in plain language — we'll only show the options your selected channels support.</p>
+          <ng-container *ngTemplateOutlet="queryTpl"></ng-container>
+        </section>
+
+        <!-- ===== STEP · TIME WINDOW ===== -->
+        <section *ngSwitchCase="'Time window'" class="ak-step">
+          <h3 class="wz-q left">How far back would you like to go?</h3>
+          <p class="wz-sub left">Historic listening back-fills past mentions. Longer windows bring in more results and use a few more credits.</p>
+          <ng-container *ngTemplateOutlet="historicTpl"></ng-container>
+        </section>
+
+        <!-- ===== STEP · REVIEW ===== -->
+        <section *ngSwitchCase="'Review'" class="ak-step wz-review">
+          <div class="wz-hero">
+            <div class="wz-hero-main">
+              <span class="wz-hero-av"><span class="msr">graphic_eq</span></span>
+              <div class="wz-hero-id">
+                <span class="wz-hero-name">{{ name || 'Untitled listener' }}</span>
+                <span class="wz-hero-handle">~{{ reachLabel.replace('~','') }} mentions / day</span>
+              </div>
+              <span class="wz-hero-status"><span class="led"></span>Approval pending</span>
+            </div>
+            <div class="wz-hero-tags">
+              <span class="wz-modepill" *ngIf="realtimeOn"><span class="msr">sensors</span>Real-Time</span>
+              <span class="wz-modepill sync" *ngIf="historicOn"><span class="msr">history</span>Historic · {{ preset.label }}</span>
+            </div>
+          </div>
+
+          <div class="wz-collect">
+            <span class="wz-collect-h"><span class="msr">hub</span>Channels <span class="wz-sum-count">{{ selectedChannels.length }}</span></span>
+            <div class="wz-chiprow">
+              <span class="ak-rev-chan" *ngFor="let c of selectedChannels">
+                <span class="ak-rev-ic" [style.background]="c.color">
+                  <svg *ngIf="channelSvg(c) as d" viewBox="0 0 24 24" fill="#fff"><path [attr.d]="d"></path></svg>
+                  <span class="msr" *ngIf="!c.svg && c.icon">{{ c.icon }}</span>
+                  <span class="ak-tile-letter" *ngIf="!c.svg && !c.icon && c.letter">{{ c.letter }}</span>
+                </span>{{ c.label }}
+              </span>
+            </div>
+          </div>
+
+          <div class="wz-collect">
+            <span class="wz-collect-h"><span class="msr">manage_search</span>Compiled query <span class="wz-sum-count">{{ queryLength }}/{{ MAX_QUERY }}</span></span>
+            <code class="ak-rev-code">{{ compiledQuery || '—' }}</code>
+          </div>
+
+          <div class="wz-metastrip">
+            <div class="wz-meta-cell"><span class="wz-meta-k"><span class="msr">sensors</span>Listening type</span>
+              <span class="wz-meta-v">{{ bothModes ? 'Real-Time + Historic' : historicOn ? 'Historic' : 'Real-Time' }}</span></div>
+            <div class="wz-meta-cell" *ngIf="historicOn"><span class="wz-meta-k"><span class="msr">history</span>Back-fill window</span>
+              <span class="wz-meta-v">{{ preset.label }}</span></div>
+            <div class="wz-meta-cell" *ngIf="historicOn"><span class="wz-meta-k"><span class="msr">paid</span>Est. credits</span>
+              <span class="wz-meta-v">{{ cost | number }}</span></div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- footer -->
+      <footer class="wz-foot">
+        <span class="wz-meta">Step {{ step }} of {{ reviewStep }} · {{ stepLabel(step) }}</span>
+        <div class="wz-foot-btns">
+          <button class="wz-back" *ngIf="step > 1" (click)="back()"><span class="msr">arrow_back</span>Back</button>
+          <button class="wz-next" [class.finish]="step === reviewStep" [disabled]="!stepValid(step)"
+                  (click)="step === reviewStep ? launch() : next()">
+            <span class="msr" *ngIf="step === reviewStep">rocket_launch</span>
+            {{ step === reviewStep ? 'Launch listener' : 'Continue' }}
+            <span class="msr" *ngIf="step !== reviewStep">arrow_forward</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ---- right: step-aware helper ---- -->
+    <aside class="wz-aside" [ngSwitch]="stepLabel(step)">
+
+      <!-- NAME -->
+      <ng-container *ngSwitchCase="'Name'">
+        <span class="wz-aside-eyebrow">Step 1 · Setup</span>
+        <h3 class="wz-aside-title">A clear name, and how it listens.</h3>
+        <p class="wz-aside-lead">Give the listener a name your team will recognise, then choose Real-Time, Historic, or both.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">sensors</span></span>
+          <div class="wz-feat-text"><b>Real-Time</b><span>Captures mentions the moment they're posted — continuously, going forward.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">history</span></span>
+          <div class="wz-feat-text"><b>Historic</b><span>Back-fills past mentions over a window you choose. Uses credits.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">bolt</span>Why pick both?</span>
+          <p>Back-fill history to see the past, and keep listening live so nothing new is missed.</p>
+        </div>
+      </ng-container>
+
+      <!-- CHANNELS — capability reference from the Locobuzz doc -->
+      <ng-container *ngSwitchCase="'Channels'">
+        <ng-container *ngFor="let c of infoList; trackBy: trackInfo">
+          <span class="wz-aside-eyebrow">{{ c.premium ? 'Premium source' : 'Channel' }} · capabilities</span>
+          <h3 class="wz-aside-title">{{ c.label }}</h3>
+          <p class="wz-aside-lead">{{ c.note }}</p>
+          <div class="wz-facts">
+            <div class="wz-fact"><span class="wz-fact-k">Fetch frequency</span><span class="wz-fact-v">{{ c.freq }}</span></div>
+            <div class="wz-fact"><span class="wz-fact-k">Historic back-fill</span><span class="wz-fact-v">{{ c.historic }}</span></div>
+            <div class="wz-fact"><span class="wz-fact-k">Respond</span><span class="wz-fact-v">{{ c.respond }}</span></div>
+          </div>
+          <div class="wz-safe">
+            <span class="wz-safe-head"><span class="msr">check_circle</span>What we capture</span>
+            <ul><li *ngFor="let cap of c.capture"><span class="msr">check</span>{{ cap }}</li></ul>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- QUERY -->
+      <ng-container *ngSwitchCase="'Query'">
+        <span class="wz-aside-eyebrow">Step 3 · Query</span>
+        <h3 class="wz-aside-title">Say it in plain words.</h3>
+        <p class="wz-aside-lead">Add keywords, then mark each one as Any, Require or Exclude. The colours show how they combine.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic ak-i-any"><span class="msr">join_full</span></span>
+          <div class="wz-feat-text"><b>Any</b><span>A mention needs at least one of these keywords.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic ak-i-all"><span class="msr">join_inner</span></span>
+          <div class="wz-feat-text"><b>Require</b><span>Every mention must also include these words.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic ak-i-not"><span class="msr">block</span></span>
+          <div class="wz-feat-text"><b>Exclude</b><span>Skip any mention that contains these words.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">touch_app</span>Quick tip</span>
+          <p>Click any keyword chip to change how it's matched — no need to remove and re-add it.</p>
+        </div>
+      </ng-container>
+
+      <!-- TIME WINDOW — historic reference from the doc -->
+      <ng-container *ngSwitchCase="'Time window'">
+        <span class="wz-aside-eyebrow">Historic back-fill</span>
+        <h3 class="wz-aside-title">Reach into the past.</h3>
+        <p class="wz-aside-lead">We back-fill past mentions for your selected channels — availability differs per channel.</p>
+        <div class="wz-facts">
+          <div class="wz-fact"><span class="wz-fact-k">Twitter · Facebook</span><span class="wz-fact-v">Real-time back-fill for keyword history.</span></div>
+          <div class="wz-fact"><span class="wz-fact-k">Instagram</span><span class="wz-fact-v">Keyword back-fill 4x/day.</span></div>
+          <div class="wz-fact"><span class="wz-fact-k">YouTube</span><span class="wz-fact-v">Real-time back-fill, up to 1 year.</span></div>
+          <div class="wz-fact"><span class="wz-fact-k">News · Blogs · Forums</span><span class="wz-fact-v">Up to the last 30 days (3x/day).</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">paid</span>About credits</span>
+          <p>Longer windows return more mentions and use more credits. You can review the estimate before you launch.</p>
+        </div>
+      </ng-container>
+
+      <!-- REVIEW -->
+      <ng-container *ngSwitchCase="'Review'">
+        <span class="wz-aside-eyebrow">You're all set</span>
+        <h3 class="wz-aside-title">{{ name || 'Your listener' }} is ready.</h3>
+        <p class="wz-aside-lead">Here's what happens the moment you launch.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">verified</span></span>
+          <div class="wz-feat-text"><b>Goes for approval</b><span>New listeners are reviewed before they start collecting.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">inbox</span></span>
+          <div class="wz-feat-text"><b>Mentions flow in</b><span>Matching mentions land in your unified inbox once live.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">auto_awesome</span></span>
+          <div class="wz-feat-text"><b>AI gets to work</b><span>Sentiment, themes and on-brand reply drafts, ready in seconds.</span></div>
+        </div>
+      </ng-container>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Reusable templates                                            -->
+<!-- ============================================================= -->
+
+<!-- ---- query builder ---- -->
+<ng-template #queryTpl>
+  <div class="ak-notes">
+    <span class="ak-note-pill" *ngFor="let c of selectedChannels"><span class="msr">info</span>{{ c.note }}</span>
+    <span class="ak-note-pill empty" *ngIf="!selectedChannels.length"><span class="msr">info</span>Please choose a channel first — the builder adapts to each one.</span>
+  </div>
+
+  <div class="ak-toggle-card">
+    <div class="ak-toggle-txt">
+      <p class="ak-toggle-h">Write your own query</p>
+      <p class="ak-toggle-s">Prefer to write it yourself? You can paste a raw boolean query instead of using the builder.</p>
+    </div>
+    <button class="ak-switch" [class.on]="rawMode" (click)="rawMode = !rawMode" role="switch" [attr.aria-checked]="rawMode"><span class="ak-switch-knob"></span></button>
+  </div>
+
+  <ng-container *ngIf="rawMode">
+    <div class="ak-raw">
+      <p class="ak-box-h">Raw query</p>
+      <textarea [(ngModel)]="rawQuery" rows="4" placeholder="(nike OR adidas) AND running NOT (jobs OR hiring)"></textarea>
+    </div>
+    <ng-container *ngTemplateOutlet="geoTpl"></ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="!rawMode && hasPantip">
+    <div class="ak-box ak-pantip">
+      <p class="ak-box-h">Pantip Tags, Rooms &amp; Clubs</p>
+      <p class="ak-box-s">Pantip uses its own taxonomy — just add the tags you'd like us to follow.</p>
+      <div class="ak-chips">
+        <span class="ak-chip pantip" *ngFor="let t of pantipTags"><span class="msr">tag</span>{{ t }}<button (click)="removeChip(pantipTags, t)"><span class="msr">close</span></button></span>
+      </div>
+      <input class="ak-chip-input" [(ngModel)]="pantipDraft" (keydown.enter)="addPantip(); $event.preventDefault()" (blur)="addPantip()" placeholder="e.g. Nike, Running, ห้องสยามสแควร์" />
+    </div>
+    <p class="ak-fine">Note: some of your channels (like Instagram or TikTok) only match any keyword — we'll apply just the "match any" list to them.</p>
+  </ng-container>
+
+  <ng-container *ngIf="!rawMode && !hasPantip">
+    <div class="ak-qb">
+      <div class="ak-nl" *ngIf="matchAny.length; else nlEmpty">
+        <span class="msr">auto_awesome</span>
+        <p>
+          Show mentions that include
+          <ng-container *ngFor="let t of matchAny; let last = last"><b class="nl any">{{ t }}</b><ng-container *ngIf="!last"> or </ng-container></ng-container><ng-container *ngIf="matchAll.length && !onlyOrChannels">, that also mention <ng-container *ngFor="let t of matchAll; let last = last"><b class="nl all">{{ t }}</b><ng-container *ngIf="!last"> and </ng-container></ng-container></ng-container><ng-container *ngIf="exclude.length && !onlyOrChannels">, but never <ng-container *ngFor="let t of exclude; let last = last"><b class="nl not">{{ t }}</b><ng-container *ngIf="!last"> or </ng-container></ng-container></ng-container>.
+        </p>
+      </div>
+      <ng-template #nlEmpty><div class="ak-nl muted"><span class="msr">lightbulb</span><p>To get started, add a keyword or brand you'd like to track.</p></div></ng-template>
+
+      <div class="ak-smart">
+        <div class="ak-smart-bar">
+          <span class="ak-smart-lbl">Add as</span>
+          <div class="ak-roles">
+            <button type="button" class="ak-role any" [class.on]="addRole === 'any'" (click)="addRole = 'any'"><span class="ak-role-dot"></span>Any</button>
+            <button type="button" class="ak-role all" *ngIf="!onlyOrChannels" [class.on]="addRole === 'all'" (click)="addRole = 'all'"><span class="ak-role-dot"></span>Require</button>
+            <button type="button" class="ak-role not" *ngIf="!onlyOrChannels" [class.on]="addRole === 'not'" (click)="addRole = 'not'"><span class="ak-role-dot"></span>Exclude</button>
+          </div>
+        </div>
+        <div class="ak-smart-field" [ngClass]="addRole">
+          <span class="ak-token" [ngClass]="t.role" *ngFor="let t of tokens" (click)="cycleToken(t.role, t.text)" [title]="onlyOrChannels ? '' : 'Click to change how this word is matched'">
+            <span class="ak-token-dot"></span>{{ t.text }}
+            <button type="button" (click)="removeToken(t.role, t.text); $event.stopPropagation()" aria-label="Remove"><span class="msr">close</span></button>
+          </span>
+          <input [(ngModel)]="queryDraft" (keydown.enter)="addToken(); $event.preventDefault()" (blur)="addToken()" [placeholder]="tokens.length ? 'Type a keyword, press Enter…' : 'e.g. nike, adidas…'" />
+        </div>
+        <div class="ak-legend">
+          <span class="ak-legend-item any"><span class="ak-role-dot"></span>Any</span>
+          <span class="ak-legend-item all" *ngIf="!onlyOrChannels"><span class="ak-role-dot"></span>Require</span>
+          <span class="ak-legend-item not" *ngIf="!onlyOrChannels"><span class="ak-role-dot"></span>Exclude</span>
+          <span class="ak-legend-hint" *ngIf="!onlyOrChannels"><span class="msr">touch_app</span>Click a keyword to change its type</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngTemplateOutlet="geoTpl"></ng-container>
+  </ng-container>
+</ng-template>
+
+<!-- ---- countries + languages ---- -->
+<ng-template #geoTpl>
+  <div class="ak-geo" *ngIf="showGeo">
+    <div class="ak-box geo">
+      <p class="ak-box-h"><span class="msr">public</span>Countries</p>
+      <div class="ak-chips">
+        <span class="ak-chip plain" *ngFor="let c of countries">{{ c }}<button (click)="removeChip(countries, c)"><span class="msr">close</span></button></span>
+      </div>
+      <div class="ak-chip-search">
+        <span class="msr">search</span>
+        <input [(ngModel)]="countryDraft" list="ak-countries" (keydown.enter)="addCountry(); $event.preventDefault()" (blur)="addCountry()" placeholder="Add countries…" />
+        <datalist id="ak-countries"><option *ngFor="let c of countryPool" [value]="c"></option></datalist>
+      </div>
+    </div>
+    <div class="ak-box geo">
+      <p class="ak-box-h"><span class="msr">translate</span>Languages</p>
+      <div class="ak-chips">
+        <span class="ak-chip plain" *ngFor="let l of languages">{{ l }}<button (click)="removeChip(languages, l)"><span class="msr">close</span></button></span>
+      </div>
+      <div class="ak-chip-search">
+        <span class="msr">search</span>
+        <input [(ngModel)]="languageDraft" list="ak-langs" (keydown.enter)="addLanguage(); $event.preventDefault()" (blur)="addLanguage()" placeholder="Add languages…" />
+        <datalist id="ak-langs"><option *ngFor="let l of languagePool" [value]="l"></option></datalist>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- ---- historic time window ---- -->
+<ng-template #historicTpl>
+  <div class="ak-presets">
+    <label class="ak-preset" *ngFor="let p of historicPresets" [class.on]="historicPreset === p.key">
+      <input type="radio" name="hist-preset" [value]="p.key" [(ngModel)]="historicPreset" />
+      <span class="ak-preset-radio"></span>
+      <span class="ak-preset-txt">
+        <span class="ak-preset-lbl">{{ p.label }}</span>
+        <span class="ak-preset-sub">{{ p.key === 'custom' ? 'Choose a start and end date' : (p.cost | number) + ' credits estimated' }}</span>
+      </span>
+    </label>
+  </div>
+
+  <div class="ak-dates" *ngIf="historicPreset === 'custom'">
+    <label><span>From</span><input type="date" value="2025-05-01" /></label>
+    <label><span>To</span><input type="date" value="2025-06-01" /></label>
+  </div>
+
+  <div class="ak-keep-note" [class.on]="bothModes">
+    <span class="msr">{{ bothModes ? 'bolt' : 'info' }}</span>
+    <span class="ak-keep-txt" *ngIf="bothModes">
+      <span class="ak-keep-h">You also picked Real-Time.</span>
+      <span class="ak-keep-s">We'll keep collecting new mentions live once the back-fill completes.</span>
+    </span>
+    <span class="ak-keep-txt" *ngIf="!bothModes">
+      <span class="ak-keep-h">Historic back-fill only.</span>
+      <span class="ak-keep-s">Would you like it to keep listening afterwards? You can add <b>Real-Time</b> back in Step 1.</span>
+    </span>
+  </div>
+</ng-template>

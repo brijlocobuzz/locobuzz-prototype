@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
@@ -38,12 +38,29 @@ export class ChannelConfigComponent {
 
   /** Switch the profiles panel to another channel (resets transient view state). */
   selectChannel(c: Channel) {
-    if (c === this.activeChannel) return;
+    if (c === this.activeChannel && !this.expiredMode) return;
+    this.expiredMode = false;
     this.activeChannel = c;
     this.clearSelection();
     this.closeDetail();
     this.activeViewId = 'all';
     this.page = 1;
+  }
+
+  /* ===================================================================
+     Account-wide "Token Expired" roll-up — cross-channel list, grouped
+     by channel, opened from the pill in the channels-panel header.
+     =================================================================== */
+  expiredMode = false;
+  expiredGroups: ExpiredGroup[] = EXPIRED_PROFILES;
+  /** Total token-expired profiles across every channel (drives the pill badge). */
+  get totalExpiredAll(): number {
+    return this.expiredGroups.reduce((n, g) => n + g.profiles.length, 0);
+  }
+  toggleExpiredList() {
+    this.expiredMode = !this.expiredMode;
+    this.clearSelection();
+    this.closeDetail();
   }
 
   /** Light tint of a brand colour for soft backgrounds. */
@@ -167,6 +184,44 @@ export class ChannelConfigComponent {
     this.savedViews = this.savedViews.filter(v => v.id !== id);
     if (this.activeViewId === id) this.activeViewId = 'all';
     this.page = 1;
+  }
+
+  /* ===================================================================
+     Group view — group the profiles by a fixed-value attribute
+     =================================================================== */
+  /** Active grouping field (null = flat list). Only fixed-value fields are groupable. */
+  groupBy: string | null = 'Account Type';
+  groupMenuOpen = false;
+  /** Attributes that have a fixed set of values, so grouping makes sense. */
+  readonly groupableFields = ['Account Type', 'Status'];
+
+  toggleGroupMenu() { this.groupMenuOpen = !this.groupMenuOpen; }
+  setGroupBy(field: string | null) {
+    this.groupBy = field;
+    this.groupMenuOpen = false;
+    this.page = 1;
+  }
+  /** The value of the grouping attribute for a single profile. */
+  private groupValue(p: ChannelProfile, field: string): string {
+    switch (field) {
+      case 'Account Type': return p.status;
+      case 'Status': return p.alert ? 'Token Expired' : 'Active';
+      default: return '';
+    }
+  }
+  /** Display order of group buckets — Status leads with Token Expired. */
+  private groupOrder(field: string): string[] {
+    if (field === 'Status') return ['Token Expired', 'Active'];
+    return this.valueOptions(field);
+  }
+  /** Profiles bucketed by the active grouping attribute. */
+  get groupedProfiles(): { key: string; rows: ChannelProfile[] }[] {
+    if (!this.groupBy) return [];
+    const rows = this.filteredProfiles;
+    const order = this.groupOrder(this.groupBy);
+    return order
+      .map(key => ({ key, rows: rows.filter(p => this.groupValue(p, this.groupBy!) === key) }))
+      .filter(g => g.rows.length);
   }
 
   /* ---- pagination ---- */

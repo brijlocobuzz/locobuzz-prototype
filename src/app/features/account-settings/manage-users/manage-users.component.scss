@@ -370,6 +370,77 @@
 .t-owner { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-13); color: var(--text-3); }
 .t-owner .msr { font-size: var(--font-size-14); }
 .t-role { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; color: var(--text-2); background: #eef1f6; }
+.t-lastlogin { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-13); color: var(--text-3); white-space: nowrap; }
+.t-lastlogin .msr { font-size: var(--font-size-15); color: var(--text-3); }
+
+/* status toggle switch (mirrors Manage Brands' tickets-creation toggle) */
+.tk-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: none; background: transparent; cursor: pointer; padding: 0; font: inherit;
+}
+.tk-track {
+  position: relative; flex: 0 0 auto;
+  width: 34px; height: 18px;
+  border-radius: 999px; background: #cbd5e1;
+  transition: background .18s ease;
+}
+.tk-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .3);
+  transition: transform .18s ease;
+}
+.tk-toggle.on .tk-track { background: #16b364; }
+.tk-toggle.on .tk-knob { transform: translateX(16px); }
+.tk-lbl { font-size: var(--font-size-12); font-weight: 700; color: var(--text-3); min-width: 42px; text-align: left; }
+.tk-toggle.on .tk-lbl { color: #12a45a; }
+
+/* confirmation prompt (activate / deactivate) */
+.cf-scrim {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(15, 23, 42, .45);
+  backdrop-filter: blur(2px);
+  animation: cf-fade .15s ease;
+}
+.cf-modal {
+  position: fixed; z-index: 1201;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(400px, calc(100vw - 40px));
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .35);
+  padding: 24px;
+  text-align: center;
+  animation: cf-pop .2s cubic-bezier(.2, .9, .3, 1.1);
+}
+@keyframes cf-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cf-pop { from { opacity: 0; transform: translate(-50%, -46%) scale(.96); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.cf-ic {
+  width: 52px; height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--brand-soft); color: var(--brand);
+}
+.cf-ic.danger { background: #fee2e2; color: #dc2626; }
+.cf-ic .msr { font-size: 28px; }
+.cf-title { margin: 0; font-size: var(--font-size-18); font-weight: 700; color: var(--text-1); }
+.cf-msg { margin: 8px 0 0; font-size: var(--font-size-14); line-height: 1.5; color: var(--text-2); }
+.cf-actions { display: flex; gap: 10px; margin-top: 22px; }
+.cf-btn {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit; font-size: var(--font-size-14); font-weight: 700;
+  color: var(--text-2); cursor: pointer;
+  transition: background .15s ease;
+}
+.cf-btn:hover { background: #f1f5f9; }
+.cf-btn.primary { border: none; background: var(--brand); color: #fff; }
+.cf-btn.primary:hover { filter: brightness(1.05); }
+.cf-btn.primary.danger { background: #dc2626; }
 
 /* avatar / logo stacks */
 .stack { display: inline-flex; align-items: center; }
@@ -393,6 +464,7 @@
 
 /* ===== SSO-enabled column ===== */
 .col-sso { width: 130px; }
+.col-lastlogin { width: 130px; }
 .sso-on { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; color: #16794c; background: #e7f6ee; }
 .sso-on .msr { font-size: var(--font-size-16); }
 .sso-invite { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: var(--font-size-12); font-weight: 600; cursor: pointer; color: var(--brand, #4f46e5); background: #eef0fe; border: 1px solid #dcdffb; transition: background .15s, color .15s; }

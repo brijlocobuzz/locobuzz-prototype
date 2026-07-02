@@ -16,6 +16,18 @@ export interface ViewCondition {
 }
 export interface SavedView { id: string; label: string; filter: ViewCondition; }
 
+/** A confirmation prompt shown before a consequential change (same model as Manage Brands). */
+export interface ConfirmPrompt {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  danger: boolean;
+  action: () => void;
+}
+
+/** Varied sample "days since last login" values, cycled across the mock users. */
+const SAMPLE_LAST_LOGIN = [1, 3, 6, 11, 0, 21, 34, 58, 92, 140, 210, 365, 520, 2, 45];
+
 @Component({
   selector: 'app-manage-users',
   standalone: true,
@@ -28,6 +40,8 @@ export class ManageUsersComponent {
     ...u,
     // Mock: roughly every other active user already has SSO sign-in enabled.
     ssoEnabled: u.ssoEnabled ?? (u.active && i % 2 === 0),
+    // Mock: cycle a spread of last-login recencies across the users.
+    lastLoginDays: u.lastLoginDays ?? SAMPLE_LAST_LOGIN[i % SAMPLE_LAST_LOGIN.length],
   }));
 
   search = '';
@@ -50,6 +64,19 @@ export class ManageUsersComponent {
 
   fullName(u: ManagedUser): string { return `${u.firstName} ${u.lastName}`; }
   initials(u: ManagedUser): string { return (u.firstName[0] + u.lastName[0]).toUpperCase(); }
+
+  /** Human relative "last login" label — e.g. "5 days ago", "1 month ago". */
+  lastLogin(u: ManagedUser): string {
+    const d = u.lastLoginDays;
+    if (d == null) return '—';
+    if (d <= 0) return 'Today';
+    if (d === 1) return '1 day ago';
+    if (d < 30) return `${d} days ago`;
+    const months = Math.floor(d / 30);
+    if (months < 12) return months === 1 ? '1 month ago' : `${months} months ago`;
+    const years = Math.floor(d / 365);
+    return years === 1 ? '1 year ago' : `${years} years ago`;
+  }
   brandInitials(name: string): string { return name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase(); }
 
   /** Real brand-logo SVG path for a channel id. */
@@ -65,6 +92,28 @@ export class ManageUsersComponent {
   setActive(u: ManagedUser, on: boolean, ev: Event) {
     ev.stopPropagation();
     u.active = on;
+  }
+
+  // ---- confirm prompt (activate / deactivate a user) ----------------------
+  confirm: ConfirmPrompt | null = null;
+
+  private ask(p: ConfirmPrompt) { this.confirm = p; }
+  onConfirm() { this.confirm?.action(); this.confirm = null; }
+  onCancelConfirm() { this.confirm = null; }
+
+  /** Ask before flipping a user's active status. */
+  requestToggleActive(u: ManagedUser, ev: Event) {
+    ev.stopPropagation();
+    const next = !u.active;
+    this.ask({
+      title: next ? 'Activate this user?' : 'Deactivate this user?',
+      message: next
+        ? `${this.fullName(u)} will regain access and can sign in to their account again.`
+        : `${this.fullName(u)} will lose access immediately and won't be able to sign in until reactivated.`,
+      confirmLabel: next ? 'Activate' : 'Deactivate',
+      danger: !next,
+      action: () => (u.active = next),
+    });
   }
 
   /** Invite a user to sign in via SSO — flips them to SSO-enabled. */

@@ -9,7 +9,7 @@
   <div class="spacer"></div>
 
   <!-- compact pill -> full detail on hover -->
-  <div class="stat green" style="--pct:68">
+  <!-- <div class="stat green" style="--pct:68">
     <span class="ring"><i></i></span>
     <span class="stat-cap">Social <b>68%</b></span>
 
@@ -51,7 +51,7 @@
         <div class="sp-box"><span class="sp-box-lbl">USAGE</span><span class="sp-box-val">70%</span></div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Channel</button>
 </header>
@@ -64,8 +64,18 @@
   <!-- Channels panel -->
   <aside class="cc-channels">
     <div class="ch-head">
-      <h3>Channels</h3>
-      <span class="ch-sub">6 of 29 configured</span>
+      <div class="ch-head-l">
+        <h3>Channels</h3>
+        <span class="ch-sub">6 of 29 configured</span>
+      </div>
+      <button class="ch-expired-pill" *ngIf="totalExpiredAll" [class.on]="expiredMode"
+              (click)="toggleExpiredList()"
+              title="View every token-expired profile across all channels">
+        <span class="cep-pulse"></span>
+        <span class="msr">error</span>
+        <span class="cep-txt">Token Expired</span>
+        <span class="cep-count">{{ totalExpiredAll }}</span>
+      </button>
     </div>
 
     <div class="ch-list">
@@ -96,18 +106,47 @@
   <!-- Profiles -->
   <section class="cc-profiles">
     <div class="pf-head">
-      <span class="pf-title">
+      <span class="pf-title" *ngIf="!expiredMode">
         <span class="pf-fb" [style.background]="activeChannel.color">
           <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg>
           <span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span>
         </span>
         {{ activeChannel.label }} profiles ({{ profiles.length }})
       </span>
-      <div class="pf-tools">
+
+      <span class="pf-title expired-title" *ngIf="expiredMode">
+        <span class="pf-fb danger"><span class="msr">error</span></span>
+        Token Expired — all channels ({{ totalExpiredAll }})
+        <button class="pf-back" (click)="toggleExpiredList()" title="Back to channel profiles">
+          <span class="msr">close</span>Exit
+        </button>
+      </span>
+
+      <div class="pf-tools" *ngIf="!expiredMode">
         <div class="style-toggle" *ngIf="viewMode === 'card'">
           <button [class.active]="cardStyle === 'classic'" (click)="cardStyle = 'classic'">Classic</button>
           <button [class.active]="cardStyle === 'vibrant'" (click)="cardStyle = 'vibrant'">Vibrant</button>
         </div>
+
+        <!-- Group by (fixed-value attributes only) -->
+        <div class="pf-group-wrap">
+          <button class="pf-group-btn" [class.on]="groupBy" (click)="toggleGroupMenu()" title="Group profiles">
+            <span class="msr">splitscreen</span>
+            <span class="pf-group-lbl">{{ groupBy ? 'Grouped: ' + groupBy : 'Group' }}</span>
+            <span class="msr chev">expand_more</span>
+          </button>
+          <div class="pf-group-menu" *ngIf="groupMenuOpen">
+            <div class="pf-group-menu-h">Group by</div>
+            <button class="pf-group-opt" [class.sel]="!groupBy" (click)="setGroupBy(null)">
+              <span class="msr">check</span>None
+            </button>
+            <button class="pf-group-opt" *ngFor="let f of groupableFields"
+                    [class.sel]="groupBy === f" (click)="setGroupBy(f)">
+              <span class="msr">check</span>{{ f }}
+            </button>
+          </div>
+        </div>
+
         <div class="view-toggle">
           <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"><span class="msr">view_list</span></button>
           <button [class.active]="viewMode === 'card'" (click)="viewMode = 'card'"><span class="msr">grid_view</span></button>
@@ -120,7 +159,7 @@
     </div>
 
     <!-- ================= VIEW TABS + CUSTOM-VIEW BUILDER ================= -->
-    <div class="pf-tabs">
+    <div class="pf-tabs" *ngIf="!expiredMode">
       <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">
         All profiles <span class="pf-tab-count">{{ profiles.length }}</span>
       </button>
@@ -198,29 +237,88 @@
     </div>
 
     <!-- ================= LIST / DATA-GRID VIEW ================= -->
-    <div class="pf-table-wrap" *ngIf="viewMode === 'list'">
-      <table class="pf-table">
-        <thead>
-          <tr>
-            <th class="col-check pin">
-              <span class="cbx" [class.checked]="allSelected" (click)="toggleAll()">
-                <span class="msr">check</span>
-              </span>
-            </th>
-            <th class="col-name pin sortable" (click)="sortBy('profile')">
-              <span class="th-in">Profile <span class="msr sort-ic" [class.on]="sortKey==='profile'">{{ sortIcon('profile') }}</span></span>
-            </th>
-            <th class="sortable" (click)="sortBy('mentions')">
-              <span class="th-in">Mentions types being collected<span class="msr sort-ic" [class.on]="sortKey==='mentions'">{{ sortIcon('mentions') }}</span></span>
-            </th>
-            <th class="sortable" (click)="sortBy('status')">
-              <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
-            </th>
-            <th class="col-act">Action</th>
-          </tr>
-        </thead>
+    <div class="pf-table-wrap" *ngIf="viewMode === 'list' || expiredMode">
+      <!-- shared header row -->
+      <ng-template #headRow>
+        <tr>
+          <th class="col-check pin">
+            <span class="cbx" [class.checked]="allSelected" (click)="toggleAll()">
+              <span class="msr">check</span>
+            </span>
+          </th>
+          <th class="col-name pin sortable" (click)="sortBy('profile')">
+            <span class="th-in">Profile <span class="msr sort-ic" [class.on]="sortKey==='profile'">{{ sortIcon('profile') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('mentions')">
+            <span class="th-in">Mentions types being collected<span class="msr sort-ic" [class.on]="sortKey==='mentions'">{{ sortIcon('mentions') }}</span></span>
+          </th>
+          <th class="sortable" (click)="sortBy('status')">
+            <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
+          </th>
+          <th class="col-act">Action</th>
+        </tr>
+      </ng-template>
+
+      <!-- flat table -->
+      <table class="pf-table" *ngIf="!groupBy && !expiredMode">
+        <thead><ng-container *ngTemplateOutlet="headRow"></ng-container></thead>
         <tbody>
-          <tr *ngFor="let p of displayProfiles" [class.selected]="selected.has(p.name)" [class.expired]="p.alert">
+          <ng-container *ngFor="let p of displayProfiles">
+            <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: p }"></ng-container>
+          </ng-container>
+        </tbody>
+      </table>
+
+      <!-- cross-channel token-expired roll-up, grouped by channel -->
+      <ng-container *ngIf="expiredMode">
+        <div class="pf-group-block" *ngFor="let grp of expiredGroups">
+          <div class="pf-group-hd tone-danger">
+            <span class="gr-chip" [style.background]="grp.color">
+              <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(grp.channelId)"><path [attr.d]="brandSvg(grp.channelId)"></path></svg>
+              <span class="msr" *ngIf="!brandSvg(grp.channelId)">{{ grp.icon }}</span>
+            </span>
+            <span class="gr-key">{{ grp.label }}</span>
+            <span class="gr-meta">token expired</span>
+            <span class="gr-count">{{ grp.profiles.length }}</span>
+          </div>
+          <table class="pf-table">
+            <thead><ng-container *ngTemplateOutlet="headRow"></ng-container></thead>
+            <tbody>
+              <ng-container *ngFor="let p of grp.profiles">
+                <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: p, ch: grp }"></ng-container>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- grouped: a clear heading OUTSIDE the table, table repeated per group -->
+      <ng-container *ngIf="groupBy && !expiredMode">
+        <div class="pf-group-block" *ngFor="let grp of groupedProfiles">
+          <div class="pf-group-hd"
+               [class.tone-ok]="grp.key === 'Active'"
+               [class.tone-danger]="grp.key === 'Token Expired'"
+               [class.tone-owned]="grp.key === 'Owned'"
+               [class.tone-public]="grp.key === 'Public'">
+            <span class="gr-dot"></span>
+            <span class="gr-key">{{ grp.key }}</span>
+            <span class="gr-meta">by {{ groupBy }}</span>
+            <span class="gr-count">{{ grp.rows.length }}</span>
+          </div>
+          <table class="pf-table">
+            <thead><ng-container *ngTemplateOutlet="headRow"></ng-container></thead>
+            <tbody>
+              <ng-container *ngFor="let p of grp.rows">
+                <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: p }"></ng-container>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- row template shared by flat + grouped rendering (ch = per-row channel; defaults to activeChannel) -->
+      <ng-template #rowTpl let-p let-ch="ch">
+          <tr [class.selected]="selected.has(p.name)" [class.expired]="p.alert">
             <!-- select -->
             <td class="col-check pin">
               <span class="cbx" [class.checked]="selected.has(p.name)" (click)="toggleRow(p.name)">
@@ -233,7 +331,7 @@
               <div class="t-profile">
                 <span class="t-avatar" [style.background]="p.avatarColor">
                   {{ p.initials }}
-                  <span class="t-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
+                  <span class="t-net" [style.background]="(ch || activeChannel).color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"><path [attr.d]="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"></path></svg><span class="msr" *ngIf="!brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)">{{ (ch || activeChannel).icon }}</span></span>
                 </span>
                 <span class="t-who">
                   <span class="t-name">{{ p.name }}  <span class="t-own" [class.public]="p.status === 'Public'">
@@ -284,8 +382,7 @@
               </div>
             </td>
           </tr>
-        </tbody>
-      </table>
+      </ng-template>
     </div>
 
     <!-- bulk bar — pinned to panel bottom, shown only when rows are selected -->
@@ -368,8 +465,36 @@
     </aside>
 
     <!-- ================= CARD GRID VIEW ================= -->
-    <div class="pf-grid" *ngIf="viewMode === 'card'">
-      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" [class.expired]="p.alert" *ngFor="let p of displayProfiles">
+    <!-- flat -->
+    <div class="pf-grid" *ngIf="viewMode === 'card' && !groupBy && !expiredMode">
+      <ng-container *ngFor="let p of displayProfiles">
+        <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: p }"></ng-container>
+      </ng-container>
+    </div>
+    <!-- grouped by a fixed-value attribute -->
+    <div class="pf-grouped" *ngIf="viewMode === 'card' && groupBy && !expiredMode">
+      <div class="pf-group-block" *ngFor="let grp of groupedProfiles">
+        <div class="pf-group-hd"
+             [class.tone-ok]="grp.key === 'Active'"
+             [class.tone-danger]="grp.key === 'Token Expired'"
+             [class.tone-owned]="grp.key === 'Owned'"
+             [class.tone-public]="grp.key === 'Public'">
+          <span class="gr-dot"></span>
+          <span class="gr-key">{{ grp.key }}</span>
+          <span class="gr-meta">by {{ groupBy }}</span>
+          <span class="gr-count">{{ grp.rows.length }}</span>
+        </div>
+        <div class="pf-grid">
+          <ng-container *ngFor="let p of grp.rows">
+            <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: p }"></ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- card template shared by flat + grouped rendering -->
+    <ng-template #cardTpl let-p>
+      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" [class.expired]="p.alert">
         <!-- <span class="card-accent"
               [style.background]="'linear-gradient(90deg,' + activeChannel.color + ',' + activeChannel.color + '99)'"></span> -->
 
@@ -429,10 +554,10 @@
           <button class="ca-btn"><span class="msr">pause</span>Pause</button>
         </div>
       </article>
-    </div>
+    </ng-template>
 
     <!-- ================= PAGINATION ================= -->
-    <app-pagination-bar *ngIf="totalProfiles"
+    <app-pagination-bar *ngIf="totalProfiles && !groupBy && !expiredMode"
                         [total]="totalProfiles" [page]="page" [pageSize]="pageSize" noun="profiles"
                         (pageChange)="page = $event" (pageSizeChange)="pageSize = $event; page = 1">
     </app-pagination-bar>
