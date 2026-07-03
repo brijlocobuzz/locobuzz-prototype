@@ -67,6 +67,10 @@
       <p>{{ headingSub }}</p>
     </div>
     <div class="ab-head-right">
+      <div class="ab-usermode" role="tablist" aria-label="Account preview">
+        <button type="button" [class.on]="userMode === 'existing'" (click)="setUserMode('existing')">Existing user</button>
+        <button type="button" [class.on]="userMode === 'new'" (click)="setUserMode('new')">New user</button>
+      </div>
       <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
       <button type="button" class="ab-head-close" (click)="close()" aria-label="Close">
         <span class="msr">close</span>
@@ -311,18 +315,19 @@
                   <span class="ab2-oc-hex">{{ b.color | uppercase }}</span>
                 </span>
               </button>
+              <div class="ab2-oc-empty" *ngIf="!otherBrands.length">No other brands yet — yours will be the first.</div>
             </mat-menu>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ---------- Step 3 · Products & Competitors ---------- -->
+    <!-- ---------- Step 3 · Products ---------- -->
     <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('products')">
-      <h1 class="ab-pane-title">Products &amp; Competitors</h1>
-      <p class="ab-pane-sub">Tell us about your products and competitors so the AI understands your brand better. It helps the AI notice conversations that matter to you and gently skip the ones that don't.</p>
+      <h1 class="ab-pane-title">Products</h1>
+      <p class="ab-pane-sub">Tell us what this brand offers so the AI understands it better — it helps the AI notice conversations about your products and gently skip the ones that don't matter.</p>
 
-      <div class="ab-pc-grid">
+      <div class="ab-pc-grid one">
         <!-- ===== Products ===== -->
         <div class="ab-pc-col">
           <div class="ab-pc-head">
@@ -369,7 +374,15 @@
             <span class="msr">add</span> Add product
           </button>
         </div>
+      </div>
+    </section>
 
+    <!-- ---------- Step 4 · Competitors ---------- -->
+    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('competitors')">
+      <h1 class="ab-pane-title">Competitors</h1>
+      <p class="ab-pane-sub">Add your competitors so the AI can keep their mentions separate from yours, and group them into sets to compare them together in Analytics.</p>
+
+      <div class="ab-pc-grid one">
         <!-- ===== Competitors ===== -->
         <div class="ab-pc-col">
           <div class="ab-pc-head">
@@ -535,9 +548,16 @@
             <div class="ab-cat4-block">
               <div class="ab-cat4-mini-row">
                 <p class="ab-cat4-mini">Category mapping <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span></p>
-                <button type="button" class="ab-cat4-createcat" *ngIf="!addingCatRoot" (click)="startAddRootCat()">
-                  <span class="msr">add</span> Create category
-                </button>
+                <div class="ab-cat4-mini-actions">
+                  <button type="button" class="ab-cat4-suggest" [disabled]="suggestingCats" (click)="suggestCategories()">
+                    <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
+                    <span class="ab-spinner dark" *ngIf="suggestingCats"></span>
+                    {{ suggestingCats ? 'Suggesting…' : 'Suggest with AI' }}
+                  </button>
+                  <button type="button" class="ab-cat4-createcat" *ngIf="!addingCatRoot" (click)="startAddRootCat()">
+                    <span class="msr">add</span> Create category
+                  </button>
+                </div>
               </div>
               <p class="ab-cat4-maphelp">These are the categories in this group. Incoming mentions are automatically tagged into them by their keywords.</p>
               <p class="ab-cat4-pickhint" *ngIf="!catchAll">
@@ -563,7 +583,17 @@
                   <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
                 </div>
 
-                <p class="ab-cat4-empty" *ngIf="!displayTree.length && !addingCatRoot">No categories match your search.</p>
+                <p class="ab-cat4-empty" *ngIf="!displayTree.length && !addingCatRoot && categorySearch.trim()">No categories match your search.</p>
+                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !addingCatRoot && !categorySearch.trim()">
+                  <span class="msr">account_tree</span>
+                  <p>No categories yet</p>
+                  <span>Not sure where to start? Let AI suggest a starter taxonomy, or create your own.</span>
+                  <button type="button" class="ab-cat4-suggest lg" [disabled]="suggestingCats" (click)="suggestCategories()">
+                    <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
+                    <span class="ab-spinner" *ngIf="suggestingCats"></span>
+                    {{ suggestingCats ? 'Suggesting categories…' : 'Suggest categories with AI' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -657,7 +687,19 @@
       <h1 class="ab-pane-title">Assign Users</h1>
       <p class="ab-pane-sub">Choose who can access and work on this brand.</p>
 
-      <div class="ab-field">
+      <!-- no users on the account yet -->
+      <div class="ab-nousers" *ngIf="!allUsers.length">
+        <span class="ab-nousers-ic"><span class="msr">group_off</span></span>
+        <div class="ab-nousers-text">
+          <p class="ab-nousers-title">No team members to assign yet</p>
+          <p class="ab-nousers-sub">
+            Your account doesn't have any users besides you. You'll have access to this brand as the admin — invite team members
+            later from <b>Manage Users</b>, then come back to assign them here. You can go ahead and create the brand now.
+          </p>
+        </div>
+      </div>
+
+      <div class="ab-field" *ngIf="allUsers.length">
         <div class="ab-label-row">
           <label class="ab-label">Assign Users <i>*</i></label>
         </div>
@@ -703,6 +745,7 @@
       </div>
 
       <!-- selected users — basic info, fills the space below -->
+      <ng-container *ngIf="allUsers.length">
       <div class="ab-assigned" *ngIf="selectedUsers.length; else noAssigned">
         <div class="ab-assigned-head">
           <span class="ab-assigned-title">Assigned users</span>
@@ -728,6 +771,7 @@
           <span>Search above and select the users who can access this brand.</span>
         </div>
       </ng-template>
+      </ng-container>
     </section>
   </div>
 

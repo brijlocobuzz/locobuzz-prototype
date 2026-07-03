@@ -120,16 +120,14 @@
           <label class="au-label">Username <i>*</i></label>
           <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username" />
         </div>
-        <div class="au-field">
-          <div class="au-label-row">
-            <label class="au-label">Email <i>*</i></label>
-            <!-- prototype-only: simulate an SSO org being configured -->
-            <button type="button" class="au-proto-sso" [class.on]="ssoEnabled" (click)="ssoEnabled = !ssoEnabled"
-                    title="Prototype toggle — simulate SSO on/off">
-              <span class="au-proto-track"><span class="au-proto-knob"></span></span>
-              SSO {{ ssoEnabled ? 'On' : 'Off' }}
-            </button>
-          </div>
+        <div class="au-field au-field-sso">
+          <label class="au-label">Email <i>*</i></label>
+          <!-- prototype-only: simulate an SSO org being configured (floats over the label row) -->
+          <button type="button" class="au-proto-sso" [class.on]="ssoEnabled" (click)="ssoEnabled = !ssoEnabled"
+                  title="Prototype toggle — simulate SSO on/off">
+            <span class="au-proto-track"><span class="au-proto-knob"></span></span>
+            SSO {{ ssoEnabled ? 'On' : 'Off' }}
+          </button>
           <input class="au-input" type="email"
                  [placeholder]="ssoEnabled ? 'name@' + ssoDomain : 'name@brand.com'" [(ngModel)]="email" />
           <p class="au-hint" *ngIf="ssoEnabled && !emailSsoMismatch">
@@ -566,10 +564,24 @@
         </div>
       </div>
 
-      <!-- notify other users -->
+      <!-- notifications -->
       <div class="au-field">
-        <label class="au-label">Notify other users</label>
-        <p class="au-hint top">Selected users get an email letting them know this account was created.</p>
+        <label class="au-label">Notifications</label>
+        <p class="au-hint top">Choose who gets an email letting them know this account was created.</p>
+
+        <!-- notify team members (only when a team is selected) -->
+        <label class="au-notify-team" *ngIf="selectedTeam">
+          <input type="checkbox" [(ngModel)]="notifyTeamMembers" />
+          <span class="au-check-box"><span class="msr">check</span></span>
+          <span class="au-notify-team-text">
+            <span class="au-notify-team-title">Notify the {{ selectedTeam.name }} team</span>
+            <span class="au-notify-team-sub">All {{ selectedTeam.members }} members of this team get an email.</span>
+          </span>
+          <span class="au-notify-team-ic"><span class="msr">groups</span></span>
+        </label>
+
+        <!-- notify other users (may or may not be on the team) -->
+        <p class="au-subfield-label">Notify other users</p>
         <div class="au-multi">
           <div class="au-pill-input" (click)="notifyDropdownOpen = true">
             <span class="au-pill" *ngFor="let e of selectedNotifyEmails">
@@ -669,7 +681,7 @@
           <div class="au-pr-grid">
             <div class="au-pr-item"><span class="au-pr-k">Team</span><span class="au-pr-v">{{ selectedTeam?.name || 'Not assigned' }}</span></div>
             <div class="au-pr-item" *ngIf="selectedTeam"><span class="au-pr-k">Team lead</span><span class="au-pr-v">{{ selectedTeam.lead }}</span></div>
-            <div class="au-pr-item"><span class="au-pr-k">Notifies</span><span class="au-pr-v">{{ selectedNotifyEmails.size }} {{ selectedNotifyEmails.size === 1 ? 'user' : 'users' }}</span></div>
+            <div class="au-pr-item"><span class="au-pr-k">Notifies</span><span class="au-pr-v">{{ notifySummary }}</span></div>
           </div>
         </div>
 

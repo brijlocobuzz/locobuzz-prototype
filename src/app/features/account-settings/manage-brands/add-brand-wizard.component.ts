@@ -8,7 +8,7 @@ import {
   flattenCategories,
 } from './manage-brands-data';
 
-type StepKey = 'identity' | 'logo' | 'products' | 'categories' | 'tickets' | 'users';
+type StepKey = 'identity' | 'logo' | 'products' | 'competitors' | 'categories' | 'tickets' | 'users';
 
 interface WizardStep {
   key: StepKey;
@@ -56,6 +56,13 @@ export class AddBrandWizardComponent {
    */
   planHasTicketing = true;
 
+  /**
+   * Preview mode. An **existing** account has data (sample products, competitors,
+   * other brands, users, category taxonomies); a **new** account starts blank, so the
+   * wizard shows empty states throughout.
+   */
+  userMode: 'existing' | 'new' = 'existing';
+
   /** Celebration screen shown after Save. */
   celebrating = false;
   /** Pre-computed confetti pieces — CSS animates them, no JS loop. */
@@ -65,8 +72,9 @@ export class AddBrandWizardComponent {
   private readonly allSteps: WizardStep[] = [
     { key: 'identity', label: 'Brand identity', subtitle: 'Basics & AI context', icon: 'badge' },
     { key: 'logo',     label: 'Logo & color',   subtitle: 'Visual identity',     icon: 'palette' },
-    { key: 'products', label: 'Products & Competitors', subtitle: 'Market context', icon: 'deployed_code' },
-    { key: 'categories', label: 'Categories',   subtitle: 'Taxonomy mapping',    icon: 'sell' },
+    { key: 'products',    label: 'Products',    subtitle: 'What you offer',     icon: 'deployed_code' },
+    { key: 'competitors', label: 'Competitors', subtitle: 'Market rivals',       icon: 'flag' },
+    { key: 'categories',  label: 'Categories',  subtitle: 'Taxonomy mapping',    icon: 'sell' },
     { key: 'tickets',  label: 'Tickets',        subtitle: 'Ticket creation',     icon: 'confirmation_number' },
     { key: 'users',    label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
   ];
@@ -81,10 +89,18 @@ export class AddBrandWizardComponent {
 
   // ---- reference data ----------------------------------------------------
   readonly countries = COUNTRIES;
-  readonly allUsers = BRAND_USERS;
-  /** Fresh copy each time the dialog opens (inline-created groups/categories stay local). */
-  readonly categoryGroups: CategoryGroupInfo[] =
+  /** Users an existing account can assign; a new account has none yet. */
+  get allUsers(): BrandUser[] { return this.userMode === 'new' ? [] : BRAND_USERS; }
+
+  /** Existing account's taxonomies vs a new account's single blank Default group. */
+  private readonly existingGroups: CategoryGroupInfo[] =
     CATEGORY_GROUPS.map(g => ({ ...g, tree: this.cloneNodes(g.tree) }));
+  private readonly newGroups: CategoryGroupInfo[] = [
+    { name: 'Default', description: 'Your starting taxonomy — add the categories you need.', brands: 0, tree: [] },
+  ];
+  get categoryGroups(): CategoryGroupInfo[] {
+    return this.userMode === 'new' ? this.newGroups : this.existingGroups;
+  }
 
   private cloneNodes(nodes: CategoryNode[]): CategoryNode[] {
     return nodes.map(n => ({ name: n.name, keywords: n.keywords, children: n.children ? this.cloneNodes(n.children) : undefined }));
@@ -189,9 +205,10 @@ export class AddBrandWizardComponent {
       }
       case 'logo': return !!this.logoDataUrl;
       case 'products': return true;                   // optional
+      case 'competitors': return true;                // optional
       case 'categories': return !!this.categoryGroup && !!this.catchAll;
       case 'tickets': return true;                    // toggle always valid
-      case 'users': return this.selectedUserIds.size > 0;
+      case 'users': return this.selectedUserIds.size > 0 || this.allUsers.length === 0;
       default: return false;
     }
   }
@@ -347,8 +364,8 @@ export class AddBrandWizardComponent {
   // =======================================================================
   readonly brandLogo = brandLogo;
   readonly countryFlagUrl = countryFlagUrl;
-  /** Existing brands + their colours, shown in the "other brand colors" menu. */
-  readonly otherBrands = MANAGED_BRANDS;
+  /** Existing brands + their colours for the "other brand colors" menu (none for a new account). */
+  get otherBrands(): ManagedBrand[] { return this.userMode === 'new' ? [] : MANAGED_BRANDS; }
 
   /** Existing brands grouped by their category group — shown on each group card. */
   private readonly brandsByGroup: Record<string, ManagedBrand[]> =
@@ -359,7 +376,7 @@ export class AddBrandWizardComponent {
     }, {} as Record<string, ManagedBrand[]>);
 
   groupBrands(name: string): ManagedBrand[] {
-    return this.brandsByGroup[name] ?? [];
+    return this.userMode === 'new' ? [] : (this.brandsByGroup[name] ?? []);
   }
 
   /** "Amazon, Nike +2" — a few names plus an overflow count. */
@@ -461,6 +478,50 @@ export class AddBrandWizardComponent {
       this.selectedGroup.tree = [...this.selectedGroup.tree, node];
     }
     this.cancelAddCat();
+  }
+
+  // ---- AI category suggestions ----
+  suggestingCats = false;
+
+  /** A sensible starter taxonomy the AI "proposes" (keywords filled in later). */
+  private buildSuggestedTree(): CategoryNode[] {
+    return [
+      { name: 'Complaint', keywords: 0, children: [
+        { name: 'Product Issue', keywords: 0 },
+        { name: 'Service Issue', keywords: 0 },
+        { name: 'Delivery', keywords: 0 },
+      ] },
+      { name: 'Query', keywords: 0, children: [
+        { name: 'Product Query', keywords: 0 },
+        { name: 'Pricing', keywords: 0 },
+      ] },
+      { name: 'Feedback', keywords: 0, children: [
+        { name: 'Praise', keywords: 0 },
+        { name: 'Suggestion', keywords: 0 },
+      ] },
+      { name: 'General', keywords: 0 },
+    ];
+  }
+
+  /** Ask the AI to suggest a starter set of categories, then add the new ones. */
+  suggestCategories() {
+    if (!this.selectedGroup || this.suggestingCats) return;
+    this.suggestingCats = true;
+    setTimeout(() => {
+      const group = this.selectedGroup;
+      if (group) {
+        const existing = new Set(flattenCategories(group.tree).map(n => n.name.toLowerCase()));
+        const fresh = this.buildSuggestedTree().filter(n => !existing.has(n.name.toLowerCase()));
+        group.tree = [...group.tree, ...fresh];
+        // expand the newly added parents so the suggestions are visible
+        fresh.forEach(n => { if (n.children?.length) this.expandedNodes.add(n); });
+        // help the user along: default the catch-all to "General" if none chosen
+        if (!this.catchAll && flattenCategories(group.tree).some(n => n.name === 'General')) {
+          this.catchAll = 'General';
+        }
+      }
+      this.suggestingCats = false;
+    }, 1400);
   }
 
   // =======================================================================
@@ -641,6 +702,42 @@ export class AddBrandWizardComponent {
   }
 
   /** Wipe all step state so the wizard starts fresh for a new brand. */
+  /** Switch between the "existing account" (with data) and "new account" (blank) preview. */
+  setUserMode(mode: 'existing' | 'new') {
+    if (this.userMode === mode) return;
+    this.userMode = mode;
+
+    // sample vs blank product/competitor data
+    if (mode === 'new') {
+      this.products = [];
+      this.competitors = [];
+      this.mappedCompetitors = [];
+      this.useMappedCompetitors = false;
+    } else {
+      this.products = [{ id: 'p1', name: 'Air Max', synonyms: ['AM', 'Air-Max'] }];
+      this.competitors = [{ id: 'c1', name: 'Adidas' }];
+      this.mappedCompetitors = [{ id: 'm1', name: 'Puma' }, { id: 'm2', name: 'Reebok' }];
+    }
+    this.competitorSets = [];
+    this.cancelProduct();
+    this.cancelCompetitor();
+    this.cancelSet();
+
+    // category selection depends on the (now different) group list
+    this.selectedGroup = null;
+    this.categoryGroup = '';
+    this.catchAll = '';
+    this.expandedNodes = new Set<CategoryNode>();
+    this.suggestingCats = false;
+    this.cancelAddGroup();
+    this.cancelAddCat();
+
+    // assigned users
+    this.selectedUserIds = new Set<string>();
+    this.usersDropdownOpen = false;
+    this.userSearch = '';
+  }
+
   private resetForNewBrand() {
     this.celebrating = false;
     this.currentStep = 1;
@@ -673,6 +770,7 @@ export class AddBrandWizardComponent {
     this.catchAllOpen = false;
     this.categorySearch = '';
     this.expandedNodes = new Set<CategoryNode>();
+    this.suggestingCats = false;
     this.cancelAddGroup();
     this.cancelAddCat();
     // step 5 / 6

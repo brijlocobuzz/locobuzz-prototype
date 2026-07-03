@@ -208,7 +208,11 @@
 .au-warn-tx { min-width: 0; }
 .au-warn b { font-weight: 700; white-space: nowrap; }
 
-/* prototype-only SSO simulate toggle (in the Email field label row) */
+/* email field carries the floating SSO toggle so its label height matches Username */
+.au-field-sso { position: relative; }
+.au-field-sso .au-proto-sso { position: absolute; top: -2px; right: 0; }
+
+/* prototype-only SSO simulate toggle (floats at the top-right of the Email field) */
 .au-proto-sso {
   display: inline-flex;
   align-items: center;
@@ -995,6 +999,44 @@
 }
 .au-welcome-ic .msr { font-size: var(--font-size-20); }
 .au-welcome-card > input:checked ~ .au-welcome-ic { background: var(--au-accent); color: #fff; }
+
+/* notify-team checkbox card + "other users" sub-label (step 5) */
+.au-notify-team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--au-line);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s ease;
+}
+.au-notify-team:hover { border-color: #c7d2fe; }
+.au-notify-team > input { position: absolute; opacity: 0; pointer-events: none; }
+.au-notify-team .au-check-box { flex: 0 0 auto; }
+.au-notify-team > input:checked + .au-check-box { background: var(--au-accent); border-color: var(--au-accent); }
+.au-notify-team > input:checked + .au-check-box .msr { opacity: 1; }
+.au-notify-team-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.au-notify-team-title { font-size: var(--font-size-14); font-weight: 700; color: var(--au-dark); }
+.au-notify-team-sub { margin-top: 2px; font-size: var(--font-size-13); color: var(--au-muted); }
+.au-notify-team-ic {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--au-accent-soft);
+  color: var(--au-accent);
+}
+.au-notify-team-ic .msr { font-size: var(--font-size-20); }
+.au-notify-team > input:checked ~ .au-notify-team-ic { background: var(--au-accent); color: #fff; }
+.au-subfield-label {
+  margin: 14px 0 8px;
+  font-size: var(--font-size-13);
+  font-weight: 700;
+  color: var(--au-dark);
+}
 
 /* ===================== Review — profile layout (step 6) ===================== */
 .au-pr {

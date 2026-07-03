@@ -104,6 +104,8 @@ export class AddUserWizardComponent {
   perBrandSignatures = false;
   signature = '';
   brandSignatures: Record<string, string> = {};
+  /** Email everyone on the selected team about the new account. */
+  notifyTeamMembers = false;
   selectedNotifyEmails = new Set<string>();
   notifyDropdownOpen = false;
   notifySearch = '';
@@ -463,6 +465,16 @@ export class AddUserWizardComponent {
     return this.selectedGroups.reduce((n, g) => n + this.groupEnabled(g), 0);
   }
 
+  /** Human summary of who gets notified — team + individual recipients. */
+  get notifySummary(): string {
+    const parts: string[] = [];
+    if (this.notifyTeamMembers && this.selectedTeam) parts.push(`${this.selectedTeam.name} team`);
+    if (this.selectedNotifyEmails.size) {
+      parts.push(`${this.selectedNotifyEmails.size} ${this.selectedNotifyEmails.size === 1 ? 'user' : 'users'}`);
+    }
+    return parts.length ? parts.join(' + ') : 'No one';
+  }
+
   // =======================================================================
   //  Save / cancel
   // =======================================================================
@@ -530,6 +542,7 @@ export class AddUserWizardComponent {
     this.selectedTeam = null;
     this.teamOpen = false;
     this.teamSearch = '';
+    this.notifyTeamMembers = false;
     this.selectedNotifyEmails.clear();
     this.notifyDropdownOpen = false;
     this.notifySearch = '';
