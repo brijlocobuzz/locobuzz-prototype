@@ -251,15 +251,27 @@
                 <span class="ab2-chip ghost"><span class="msr">forum</span>Mentions</span>
               </div>
 
-              <!-- mini analytics chart — shows how the brand color appears in charts -->
+              <!-- mini trend chart — shows how the brand color appears in analytics -->
               <div class="ab2-chart">
                 <div class="ab2-chart-head">
-                  <span class="ab2-chart-title">Mentions this week</span>
-                  <span class="ab2-chart-legend"><span class="ab2-chart-dot"></span>{{ brandName || 'Your brand' }}</span>
+                  <span class="ab2-chart-id">
+                    <span class="ab2-chart-dot"></span>
+                    <span class="ab2-chart-title">{{ brandName || 'Your brand' }}</span>
+                  </span>
                 </div>
-                <div class="ab2-bars">
-                  <span class="ab2-bar" *ngFor="let h of previewBars" [style.height.%]="h"></span>
-                </div>
+                <svg class="ab2-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="ab2-spark-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" [attr.stop-color]="color" stop-opacity="0.32" />
+                      <stop offset="1" [attr.stop-color]="color" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path [attr.d]="previewArea" fill="url(#ab2-spark-grad)" />
+                  <path [attr.d]="previewLine" fill="none" [attr.stroke]="color" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                  <circle [attr.cx]="previewLast.x" [attr.cy]="previewLast.y" r="2.6" fill="#fff"
+                          [attr.stroke]="color" stroke-width="2" vector-effect="non-scaling-stroke" />
+                </svg>
                 <div class="ab2-chart-x">
                   <span *ngFor="let d of previewDays">{{ d }}</span>
                 </div>

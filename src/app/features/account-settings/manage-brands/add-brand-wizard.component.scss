@@ -1344,19 +1344,15 @@
   background: #fff;
 }
 .ab2-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.ab2-chart-title { font-size: var(--font-size-12); font-weight: 700; color: var(--ab-dark); }
-.ab2-chart-legend { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-11); color: var(--ab-muted); }
-.ab2-chart-dot { width: 9px; height: 9px; border-radius: 3px; background: var(--bc, #0f172a); transition: background .3s ease; }
-.ab2-bars { display: flex; align-items: flex-end; gap: 8px; height: 68px; }
-.ab2-bar {
-  flex: 1;
-  min-height: 4px;
-  border-radius: 5px 5px 2px 2px;
-  background: linear-gradient(180deg, var(--bc, #0f172a), color-mix(in srgb, var(--bc, #0f172a) 55%, #fff));
-  transition: background .3s ease, height .35s cubic-bezier(.2, .8, .3, 1);
+.ab2-chart-id { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.ab2-chart-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; background: var(--bc, #0f172a); transition: background .3s ease; }
+.ab2-chart-title {
+  font-size: var(--font-size-13); font-weight: 700; color: var(--ab-dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.ab2-bar:last-child { background: linear-gradient(180deg, var(--bc, #0f172a), color-mix(in srgb, var(--bc, #0f172a) 78%, #000)); }
-.ab2-chart-x { display: flex; gap: 8px; margin-top: 6px; }
+.ab2-chart-sub { font-size: var(--font-size-11); color: var(--ab-muted); flex: 0 0 auto; }
+.ab2-spark { display: block; width: 100%; height: 64px; overflow: visible; }
+.ab2-chart-x { display: flex; gap: 8px; margin-top: 4px; }
 .ab2-chart-x span { flex: 1; text-align: center; font-size: var(--font-size-10); color: var(--ab-muted); }
 .ab2-preview-cap {
   margin: 0;

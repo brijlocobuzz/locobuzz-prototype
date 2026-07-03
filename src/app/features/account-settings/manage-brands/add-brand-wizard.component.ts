@@ -137,8 +137,28 @@ export class AddBrandWizardComponent {
   color = '#0f172a';
   customColorOpen = false;
   // sample data for the brand-color chart preview
-  readonly previewBars = [42, 68, 54, 83, 61, 92, 74];
+  readonly previewBars = [38, 60, 47, 72, 55, 88, 96];
   readonly previewDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  /** Points for the preview sparkline, mapped into a 100×40 viewBox. */
+  private get previewPoints(): { x: number; y: number }[] {
+    const w = 100, h = 40, pad = 4, max = 100, n = this.previewBars.length;
+    return this.previewBars.map((v, i) => ({
+      x: +(pad + (i * (w - 2 * pad)) / (n - 1)).toFixed(1),
+      y: +(h - pad - (v / max) * (h - 2 * pad)).toFixed(1),
+    }));
+  }
+  get previewLine(): string {
+    return this.previewPoints.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
+  }
+  get previewArea(): string {
+    const pts = this.previewPoints;
+    return `M${pts[0].x} 40 ` + pts.map(p => `L${p.x} ${p.y}`).join(' ') + ` L${pts[pts.length - 1].x} 40 Z`;
+  }
+  get previewLast(): { x: number; y: number } {
+    const pts = this.previewPoints;
+    return pts[pts.length - 1];
+  }
 
   // ---- step 3 · team & tickets -------------------------------------------
   selectedUserIds = new Set<string>();
