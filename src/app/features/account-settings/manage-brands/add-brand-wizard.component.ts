@@ -110,7 +110,8 @@ export class AddBrandWizardComponent {
   // ---- step 1 · brand identity -------------------------------------------
   brandName = '';
   country = '';
-  aiFriendlyName = '';
+  aiFriendlyName = '';            // recognised brand name (optional)
+  showRecognisedName = false;     // revealed via the "Add recognised name" button
   brandDescription = '';
   countryOpen = false;
   countrySearch = '';
@@ -128,6 +129,9 @@ export class AddBrandWizardComponent {
   logoDataUrl: string | null = null;
   color = '#0f172a';
   customColorOpen = false;
+  // sample data for the brand-color chart preview
+  readonly previewBars = [42, 68, 54, 83, 61, 92, 74];
+  readonly previewDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   // ---- step 3 · team & tickets -------------------------------------------
   selectedUserIds = new Set<string>();
@@ -245,45 +249,26 @@ export class AddBrandWizardComponent {
     this.countrySearch = '';
   }
 
-  /** AI friendly name is available (generated or typed) and not mid-fetch. */
-  get aiNameReady(): boolean {
-    return !!this.aiFriendlyName.trim() && !this.aiNameLoading;
-  }
-
-  /** Switch the description-authoring tab; entering the AI tab kicks off name generation. */
+  /** Switch the description-authoring tab; the AI tab auto-generates on entry. */
   setDescMode(mode: 'manual' | 'ai') {
     this.descMode = mode;
-    if (mode === 'ai' && !this.aiNameAttempted && !this.aiFriendlyName.trim()
-        && !this.aiNameLoading && this.brandName.trim().length >= 3) {
-      this.generateAiName();
+    if (mode === 'ai' && !this.descGenerated && !this.generating && this.brandName.trim().length >= 3) {
+      this.generateDescription();
     }
   }
 
-  /** Try to fetch/generate the AI friendly name from the brand name. */
-  generateAiName() {
-    if (this.brandName.trim().length < 3 || this.aiNameLoading) return;
-    this.aiNameAttempted = true;
-    this.aiNameLoading = true;
-    this.aiNameError = '';
-    setTimeout(() => {
-      this.aiNameLoading = false;
-      // Simulated round-trip — occasionally fails so the manual fallback is reachable.
-      if (Math.random() < 0.3) {
-        this.aiFriendlyName = '';
-        this.aiNameError = 'Couldn’t generate AI friendly name. Please enter the AI friendly name.';
-      } else {
-        this.aiFriendlyName = this.brandName.trim();
-      }
-    }, 1200);
-  }
+  /** Reveal / clear the optional recognised-brand-name field. */
+  addRecognisedName() { this.showRecognisedName = true; }
+  removeRecognisedName() { this.showRecognisedName = false; this.aiFriendlyName = ''; }
 
-  /** Generate the brand description from the AI friendly name. */
+  /** Generate the brand description — uses the recognised name if given, else the brand name. */
   generateDescription() {
-    if (!this.aiFriendlyName.trim() || this.generating) return;
+    if (this.brandName.trim().length < 3 || this.generating) return;
     this.generating = true;
+    const name = this.aiFriendlyName.trim() || this.brandName.trim();
     setTimeout(() => {
       this.brandDescription =
-        `${this.aiFriendlyName.trim()} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
+        `${name} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
           .slice(0, 200);
       this.descGenerated = true;
       this.generating = false;
@@ -745,6 +730,7 @@ export class AddBrandWizardComponent {
     this.brandName = '';
     this.country = '';
     this.aiFriendlyName = '';
+    this.showRecognisedName = false;
     this.brandDescription = '';
     this.descMode = 'manual';
     this.aiNameLoading = this.aiNameAttempted = this.generating = this.descGenerated = false;

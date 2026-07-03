@@ -79,8 +79,8 @@ export class ManageBrandsComponent {
   }
 
   /** How many user avatars / channel logos to show inline before the "+N" chip. */
-  readonly maxUsers = 6;
-  readonly maxChannels = 6;
+  readonly maxUsers = 4;
+  readonly maxChannels = 4;
 
   private readonly usersPool: BrandMember[] = BRAND_USERS.map(u => ({ id: u.id, name: u.name, role: u.role }));
 
