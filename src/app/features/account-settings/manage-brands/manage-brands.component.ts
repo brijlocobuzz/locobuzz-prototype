@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
-import { MANAGED_BRANDS, brandLogo, ManagedBrand, BrandMember } from './manage-brands-data';
+import { MANAGED_BRANDS, brandLogo, ManagedBrand, BrandMember, BRAND_USERS } from './manage-brands-data';
 import { BRAND_ICONS } from '../channel-data';
 import { AddBrandWizardComponent, NewBrandPayload } from './add-brand-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
@@ -76,6 +76,27 @@ export class ManageBrandsComponent {
   /** Two-letter initials for a user avatar. */
   userInitials(u: BrandMember): string {
     return u.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2).toUpperCase();
+  }
+
+  /** How many user avatars / channel logos to show inline before the "+N" chip. */
+  readonly maxUsers = 6;
+  readonly maxChannels = 6;
+
+  private readonly usersPool: BrandMember[] = BRAND_USERS.map(u => ({ id: u.id, name: u.name, role: u.role }));
+
+  /** Avatars for the grid — the brand's preview users padded from the pool up to maxUsers. */
+  userAvatars(b: ManagedBrand): BrandMember[] {
+    const shown = [...(b.userPreview || [])];
+    const target = Math.min(this.maxUsers, b.users);
+    for (const p of this.usersPool) {
+      if (shown.length >= target) break;
+      if (!shown.some(s => s.id === p.id)) shown.push(p);
+    }
+    return shown.slice(0, target);
+  }
+
+  channelLogos(b: ManagedBrand): string[] {
+    return (b.channelIds || []).slice(0, this.maxChannels);
   }
 
   /* ===================================================================

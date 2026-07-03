@@ -140,22 +140,22 @@
             </div>
           </td>
 
-          <!-- users: first 2 square avatars + count -->
+          <!-- users: square avatars + count -->
           <td>
             <div class="stack">
-              <span class="stack-av" *ngFor="let u of (b.userPreview || []).slice(0, 2)"
+              <span class="stack-av" *ngFor="let u of userAvatars(b)"
                     [style.background]="b.color + '1a'" [style.color]="b.color" [title]="u.name + ' · ' + u.role">{{ userInitials(u) }}</span>
-              <span class="stack-more" *ngIf="b.users > 2">+{{ b.users - 2 }}</span>
+              <span class="stack-more" *ngIf="b.users > maxUsers">+{{ b.users - maxUsers }}</span>
             </div>
           </td>
 
-          <!-- channels: first 2 colour-tile logos + count -->
+          <!-- channels: colour-tile logos + count -->
           <td>
             <div class="stack">
-              <span class="stack-logo" *ngFor="let c of (b.channelIds || []).slice(0, 2)" [style.background]="channelColor(c)" [title]="c">
+              <span class="stack-logo" *ngFor="let c of channelLogos(b)" [style.background]="channelColor(c)" [title]="c">
                 <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c)"><path [attr.d]="brandSvg(c)"></path></svg>
               </span>
-              <span class="stack-more" *ngIf="b.channels > 2">+{{ b.channels - 2 }}</span>
+              <span class="stack-more" *ngIf="b.channels > channelLogos(b).length">+{{ b.channels - channelLogos(b).length }}</span>
             </div>
           </td>
 
