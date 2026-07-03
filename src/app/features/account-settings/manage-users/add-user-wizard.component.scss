@@ -194,6 +194,58 @@
 .au-textarea::placeholder { color: #94a3b8; }
 .au-hint { margin: 8px 0 0; font-size: var(--font-size-13); color: var(--au-muted); }
 .au-hint.top { margin: -2px 0 14px; }
+.au-hint b { color: var(--au-dark); font-weight: 700; }
+.au-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--font-size-13);
+  color: #b45309;
+  line-height: 1.4;
+}
+.au-warn .msr { font-size: var(--font-size-16); flex: 0 0 auto; margin-top: 1px; }
+.au-warn-tx { min-width: 0; }
+.au-warn b { font-weight: 700; white-space: nowrap; }
+
+/* prototype-only SSO simulate toggle (in the Email field label row) */
+.au-proto-sso {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: var(--au-muted);
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.au-proto-sso:hover { border-color: #c7d2fe; }
+.au-proto-sso.on { color: var(--au-accent); border-color: var(--au-accent); }
+.au-proto-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 26px; height: 15px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background .18s ease;
+}
+.au-proto-knob {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .3);
+  transition: transform .18s ease;
+}
+.au-proto-sso.on .au-proto-track { background: var(--au-accent); }
+.au-proto-sso.on .au-proto-knob { transform: translateX(11px); }
 
 /* ===================== Profile (step 1) ===================== */
 /* Photo banner spans the full width at the top; all fields sit in clean

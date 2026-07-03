@@ -121,8 +121,24 @@
           <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username" />
         </div>
         <div class="au-field">
-          <label class="au-label">Email <i>*</i></label>
-          <input class="au-input" type="email" placeholder="name@brand.com" [(ngModel)]="email" />
+          <div class="au-label-row">
+            <label class="au-label">Email <i>*</i></label>
+            <!-- prototype-only: simulate an SSO org being configured -->
+            <button type="button" class="au-proto-sso" [class.on]="ssoEnabled" (click)="ssoEnabled = !ssoEnabled"
+                    title="Prototype toggle — simulate SSO on/off">
+              <span class="au-proto-track"><span class="au-proto-knob"></span></span>
+              SSO {{ ssoEnabled ? 'On' : 'Off' }}
+            </button>
+          </div>
+          <input class="au-input" type="email"
+                 [placeholder]="ssoEnabled ? 'name@' + ssoDomain : 'name@brand.com'" [(ngModel)]="email" />
+          <p class="au-hint" *ngIf="ssoEnabled && !emailSsoMismatch">
+            Use an <b>&#64;{{ ssoDomain }}</b> email so this user can sign in with SSO.
+          </p>
+          <p class="au-warn" *ngIf="emailSsoMismatch">
+            <span class="msr">warning</span>
+            <span class="au-warn-tx">This email isn't on <b>&#64;{{ ssoDomain }}</b> — the user won't be able to sign in with SSO.</span>
+          </p>
         </div>
       </div>
 
@@ -400,8 +416,8 @@
           <button type="button" class="au-link" (click)="clearSignatures()">Clear all</button>
         </div>
 
-        <!-- per-brand toggle -->
-        <div class="au-seg-toggle">
+        <!-- per-brand toggle — only when more than one brand is assigned -->
+        <div class="au-seg-toggle" *ngIf="canPerBrand">
           <button type="button" [class.on]="!perBrandSignatures" (click)="perBrandSignatures && onTogglePerBrand()">
             <span class="msr">badge</span> One common signature across all brands
           </button>
@@ -414,7 +430,7 @@
           <!-- editor -->
           <div class="au-sig-editor">
             <!-- common -->
-            <ng-container *ngIf="!perBrandSignatures">
+            <ng-container *ngIf="!usePerBrand">
               <div class="au-sig-input-wrap">
                 <textarea class="au-textarea" rows="3" maxlength="30"
                           placeholder="e.g. — Team Locobuzz" [(ngModel)]="signature"></textarea>
@@ -431,8 +447,8 @@
             </ng-container>
 
             <!-- per-brand -->
-            <ng-container *ngIf="perBrandSignatures">
-              <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in the Brands &amp; team step to add per-brand signatures.</p>
+            <ng-container *ngIf="usePerBrand">
+              <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in the Brands step to add per-brand signatures.</p>
               <div class="au-sig-brand-list">
                 <div class="au-sig-row" *ngFor="let b of selectedBrands">
                   <span class="au-sig-brand">

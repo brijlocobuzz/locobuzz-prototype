@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -29,6 +29,11 @@ export class AddUserWizardComponent {
   @Output() saved = new EventEmitter<{
     firstName: string; lastName: string; username: string; email: string; role: string; brands: number;
   }>();
+
+  /** Prototype toggle (inside the dialog) — simulates an SSO org being configured. */
+  ssoEnabled = false;
+  /** The configured SSO sign-in domain (e.g. "locobuzz.net"). */
+  @Input() ssoDomain = 'locobuzz.net';
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
@@ -199,6 +204,13 @@ export class AddUserWizardComponent {
     return /^[aeiou]/i.test(this.role?.label ?? '') ? 'an' : 'a';
   }
 
+  /** True when SSO is on and the entered email isn't on the SSO sign-in domain. */
+  get emailSsoMismatch(): boolean {
+    const email = this.email.trim().toLowerCase();
+    if (!this.ssoEnabled || !this.ssoDomain || !email) return false;
+    return !email.endsWith('@' + this.ssoDomain.toLowerCase());
+  }
+
   /** True for roles that may be promoted to admin. */
   get showSupervisorAdmin(): boolean {
     return !!this.role && (this.role.id === 3 || this.role.id === 7);
@@ -365,6 +377,12 @@ export class AddUserWizardComponent {
     if (this.perBrandSignatures) this.reconcileBrandSignatures();
   }
 
+  /** Per-brand signatures only make sense with more than one assigned brand. */
+  get canPerBrand(): boolean { return this.selectedBrands.length > 1; }
+
+  /** Effective per-brand mode — forced off when only a single brand is assigned. */
+  get usePerBrand(): boolean { return this.perBrandSignatures && this.canPerBrand; }
+
   /** Keep the per-brand signature map in sync with the assigned-brand set. */
   private reconcileBrandSignatures() {
     const next: Record<string, string> = {};
@@ -382,7 +400,7 @@ export class AddUserWizardComponent {
 
   /** The signature shown in the live preview (common, or the first brand's). */
   get previewSignature(): string {
-    if (this.perBrandSignatures) {
+    if (this.usePerBrand) {
       const first = this.selectedBrands[0];
       return first ? (this.brandSignatures[first.id] ?? '') : '';
     }
@@ -391,7 +409,7 @@ export class AddUserWizardComponent {
 
   /** Brand name shown beside the preview author when in per-brand mode. */
   get previewBrand(): string {
-    return this.perBrandSignatures && this.selectedBrands[0] ? this.selectedBrands[0].name : '';
+    return this.usePerBrand && this.selectedBrands[0] ? this.selectedBrands[0].name : '';
   }
 
   /** Replace the common signature with a token (e.g. the user's name). */
