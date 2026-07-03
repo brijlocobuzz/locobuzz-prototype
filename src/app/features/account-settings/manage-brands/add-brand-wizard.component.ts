@@ -79,10 +79,17 @@ export class AddBrandWizardComponent {
     { key: 'users',    label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
   ];
 
-  /** The visible steps for this plan, numbered sequentially (computed once). */
-  readonly steps: (WizardStep & { num: number })[] = this.allSteps
-    .filter(s => s.key !== 'tickets' || this.planHasTicketing)
-    .map((s, i) => ({ ...s, num: i + 1 }));
+  /**
+   * The visible steps, numbered sequentially. The Tickets step is hidden on plans
+   * without ticketing; the Categories step is skipped for a brand-new account
+   * (its group is auto-set to Default), so it appears only for existing accounts.
+   */
+  get steps(): (WizardStep & { num: number })[] {
+    return this.allSteps
+      .filter(s => s.key !== 'tickets' || this.planHasTicketing)
+      .filter(s => s.key !== 'categories' || this.userMode !== 'new')
+      .map((s, i) => ({ ...s, num: i + 1 }));
+  }
   get totalSteps(): number { return this.steps.length; }
   get currentKey(): StepKey { return this.steps[this.currentStep - 1]?.key ?? 'identity'; }
   isStep(key: StepKey): boolean { return this.currentKey === key; }
@@ -210,7 +217,8 @@ export class AddBrandWizardComponent {
       case 'logo': return !!this.logoDataUrl;
       case 'products': return true;                   // optional
       case 'competitors': return true;                // optional
-      case 'categories': return !!this.categoryGroup && !!this.catchAll;
+      // new accounts skip this step — the Default group is assigned automatically
+      case 'categories': return this.userMode === 'new' || (!!this.categoryGroup && !!this.catchAll);
       case 'tickets': return true;                    // toggle always valid
       case 'users': return this.selectedUserIds.size > 0 || this.allUsers.length === 0;
       default: return false;
@@ -708,9 +716,10 @@ export class AddBrandWizardComponent {
     this.cancelCompetitor();
     this.cancelSet();
 
-    // category selection depends on the (now different) group list
-    this.selectedGroup = null;
-    this.categoryGroup = '';
+    // category selection depends on the (now different) group list.
+    // a new account skips the Categories step, so auto-assign the Default group.
+    this.selectedGroup = mode === 'new' ? this.newGroups[0] : null;
+    this.categoryGroup = mode === 'new' ? 'Default' : '';
     this.catchAll = '';
     this.expandedNodes = new Set<CategoryNode>();
     this.suggestingCats = false;
@@ -721,6 +730,9 @@ export class AddBrandWizardComponent {
     this.selectedUserIds = new Set<string>();
     this.usersDropdownOpen = false;
     this.userSearch = '';
+
+    // the step list changed length — keep the current step in range
+    if (this.currentStep > this.totalSteps) this.currentStep = this.totalSteps;
   }
 
   private resetForNewBrand() {
