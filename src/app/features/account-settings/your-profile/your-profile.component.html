@@ -1,155 +1,126 @@
-<div class="yp">
-  <!-- ===== Page header ===== -->
-  <!-- <header class="yp-top">
-    <div class="yp-top-text">
-      <h1>My Profile</h1>
-      <p>Manage your personal details, assigned brands and role permissions.</p>
-    </div>
-    <div class="role-switch" role="tablist" aria-label="View as role">
-      <button type="button" [class.active]="role === 'admin'" (click)="setRole('admin')">Admin</button>
-      <button type="button" [class.active]="role === 'agent'" (click)="setRole('agent')">Agent</button>
-    </div>
-  </header> -->
-
-  <!-- ===== Profile card ===== -->
-  <section class="yp-card profile-card">
-    <div class="profile-head">
-      <div class="avatar-wrap">
-        <img alt="Profile" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=180&q=80" />
-        <button type="button" class="avatar-cam" aria-label="Change photo"><span class="msr">photo_camera</span></button>
-      </div>
-      <div class="profile-who">
-        <h2>{{ fullName }}</h2>
-        <p>{{ role === 'admin' ? 'Admin' : 'Agent' }} · {{ email }}</p>
-      </div>
-      <button type="button" class="edit-btn" (click)="editProfile = !editProfile">
-        <span class="msr">edit</span>{{ editProfile ? 'Done' : 'Edit' }}
-      </button>
+<div class="yp2">
+  <!-- ===== Profile hero ===== -->
+  <section class="yp2-hero">
+    <div class="yp2-avatar" [style.background]="'linear-gradient(135deg,#6d5efc,#8b5cf6)'">
+      {{ initials }}
+      <span class="yp2-status" [class.off]="status !== 'Active'"><span class="dot"></span>{{ status | uppercase }}</span>
     </div>
 
+    <div class="yp2-id">
+      <div class="yp2-name-row">
+        <h1>{{ fullName }}</h1>
+        <span class="yp2-role"><span class="msr">shield_person</span>{{ roleLabel }}</span>
+      </div>
+      <p class="yp2-handle">&#64;{{ username }}</p>
+      <div class="yp2-meta">
+        <span class="yp2-mi"><span class="msr">person</span>Gender:<b>{{ gender | titlecase }}</b></span>
+        <span class="yp2-mi"><span class="msr">mail</span>Email:<b>{{ email }}</b></span>
+        <span class="yp2-mi"><span class="msr">call</span>Phone:<b>{{ phone || 'Not entered' }}</b></span>
+      </div>
+    </div>
+
+    <button type="button" class="yp2-edit" (click)="editProfile = !editProfile">
+      <span class="msr">edit</span>{{ editProfile ? 'Close editor' : 'Edit Profile' }}
+    </button>
+  </section>
+
+  <!-- ===== Edit form (revealed on Edit Profile) ===== -->
+  <section class="yp-card profile-card" *ngIf="editProfile">
     <div class="profile-form">
-      <label class="field">
-        <span>First Name</span>
-        <input type="text" [(ngModel)]="firstName" [readonly]="!editProfile" />
-      </label>
-      <label class="field">
-        <span>Last Name</span>
-        <input type="text" [(ngModel)]="lastName" [readonly]="!editProfile" />
-      </label>
-      <label class="field">
-        <span>Email</span>
-        <input type="email" [(ngModel)]="email" [readonly]="!editProfile" />
-      </label>
-
+      <label class="field"><span>First Name</span><input type="text" [(ngModel)]="firstName" /></label>
+      <label class="field"><span>Last Name</span><input type="text" [(ngModel)]="lastName" /></label>
+      <label class="field"><span>Email</span><input type="email" [(ngModel)]="email" /></label>
       <fieldset class="field gender">
         <span>Gender</span>
         <div class="radios">
-          <label><input type="radio" name="gender" value="male" [(ngModel)]="gender" [disabled]="!editProfile" /> Male</label>
-          <label><input type="radio" name="gender" value="female" [(ngModel)]="gender" [disabled]="!editProfile" /> Female</label>
-          <label><input type="radio" name="gender" value="other" [(ngModel)]="gender" [disabled]="!editProfile" /> Other</label>
+          <label><input type="radio" name="gender" value="male" [(ngModel)]="gender" /> Male</label>
+          <label><input type="radio" name="gender" value="female" [(ngModel)]="gender" /> Female</label>
+          <label><input type="radio" name="gender" value="other" [(ngModel)]="gender" /> Other</label>
         </div>
       </fieldset>
-
-      <label class="field">
-        <span>Date of Birth</span>
-        <input type="text" [(ngModel)]="dob" placeholder="DD/MM/YYYY" [readonly]="!editProfile" />
-      </label>
-
+      <label class="field"><span>Date of Birth</span><input type="text" [(ngModel)]="dob" placeholder="DD/MM/YYYY" /></label>
       <label class="field">
         <span>Phone Number</span>
         <div class="phone">
-          <select [(ngModel)]="countryCode" [disabled]="!editProfile" aria-label="Country code">
-            <option>IND +91</option>
-            <option>UAE +971</option>
-          </select>
-          <input type="tel" [(ngModel)]="phone" placeholder="Enter phone number" [readonly]="!editProfile" />
+          <select [(ngModel)]="countryCode" aria-label="Country code"><option>IND +91</option><option>UAE +971</option></select>
+          <input type="tel" [(ngModel)]="phone" placeholder="Enter phone number" />
         </div>
       </label>
     </div>
-
     <div class="mfa-row">
       <span class="mfa-ic"><span class="msr">shield</span></span>
-      <div class="mfa-text">
-        <strong>Multi-factor authentication</strong>
-        <small>Add an extra layer of security.</small>
-      </div>
-      <button type="button" class="toggle" [class.on]="mfaOn" (click)="mfaOn = !mfaOn"
-              [attr.aria-pressed]="mfaOn" aria-label="Toggle multi-factor authentication">
-        <span></span>
-      </button>
+      <div class="mfa-text"><strong>Multi-factor authentication</strong><small>Add an extra layer of security.</small></div>
+      <button type="button" class="toggle" [class.on]="mfaOn" (click)="mfaOn = !mfaOn" [attr.aria-pressed]="mfaOn"><span></span></button>
     </div>
   </section>
 
-  <!-- ===== Assigned Brands ===== -->
-  <section class="yp-card brands-card">
-    <div class="card-head">
-      <div>
-        <h2>Assigned Brands</h2>
-        <p>{{ assignedBrands.length }} brands assigned to your account.</p>
-      </div>
-      <button type="button" class="edit-btn" (click)="openBrandsModal()">
-        <span class="msr">edit</span>Edit
-      </button>
-    </div>
-    <div class="brand-row">
-      <button type="button" class="brand-pill" *ngFor="let b of assignedBrands" (click)="openBrandsModal()">
-        <img [src]="brandLogo(b.domain)" alt="" />
-        <span>{{ b.name }}</span>
-      </button>
-    </div>
-  </section>
+  <!-- ===== Two-column body ===== -->
+  <div class="yp2-cols">
 
-  <!-- ===== Permissions ===== -->
-  <section class="yp-card perm-card">
-    <div class="card-head perm-head">
-      <div>
-        <h2>Permissions</h2>
-        <p>{{ permissionGranted }} of {{ permissionTotal }} enabled across {{ groups.length }} sections</p>
+    <!-- ---- Assigned brands ---- -->
+    <aside class="yp2-brands">
+      <div class="yb-head">
+        <span class="yb-title">Assigned Brands</span>
+        <span class="yb-total">{{ assignedBrands.length }} Total</span>
       </div>
-      <label class="search-box">
+      <label class="yb-search">
         <span class="msr">search</span>
-        <input type="text" [(ngModel)]="search" placeholder="Search permissions" />
+        <input type="text" placeholder="Search brands…" [(ngModel)]="brandSearch" />
       </label>
-    </div>
-
-    <div class="perm-list">
-      <article class="perm-group" [ngClass]="'tone-' + group.tone" *ngFor="let group of visibleGroups">
-        <button type="button" class="pg-summary" [attr.aria-expanded]="expanded[group.id]" (click)="toggleGroup(group.id)">
-          <span class="msr chev">{{ expanded[group.id] ? 'expand_more' : 'chevron_right' }}</span>
-          <span class="pg-icon"><span class="msr">{{ group.icon }}</span></span>
-          <span class="pg-text">
-            <strong>{{ group.name }}</strong>
-            <small>{{ group.description }}</small>
+      <div class="yb-list">
+        <button type="button" class="yb-item" *ngFor="let b of filteredAssignedBrands" (click)="openBrandsModal()">
+          <span class="yb-logo" [style.background]="brandColor(b.name)">{{ brandInitials(b.name) }}</span>
+          <span class="yb-tx">
+            <span class="yb-name">{{ b.name }}</span>
+            <span class="yb-cat">{{ b.domain }}</span>
           </span>
-          <span class="pg-count">{{ groupEnabled(group) }}/{{ groupTotal(group) }}</span>
         </button>
+        <p class="yb-empty" *ngIf="!filteredAssignedBrands.length">No brands match “{{ brandSearch }}”.</p>
+      </div>
+      <button type="button" class="yb-more" (click)="openBrandsModal()">
+        <span class="msr">apps</span>Manage brands
+      </button>
+    </aside>
 
-        <div class="pg-caps" *ngIf="expanded[group.id]">
-          <div class="cap" *ngFor="let cap of group.capabilities">
-            <div class="cap-head">
-              <strong>{{ cap.name }}</strong>
-              <span class="risk" *ngIf="cap.risk" [class.high]="cap.risk === 'High risk'">
-                <span class="msr">warning</span>{{ cap.risk | uppercase }}
-              </span>
-              <span class="cap-count">{{ capEnabledCount(cap) }}/{{ cap.children.length }}</span>
-            </div>
-            <p class="cap-note">{{ cap.note }}</p>
-            <div class="cap-chips">
-              <span class="chip" *ngFor="let child of cap.children" [class.on]="capEnabled(cap)">
-                <span class="chip-mark"><span class="msr">{{ capEnabled(cap) ? 'check' : 'close' }}</span></span>
-                {{ child }}
-              </span>
+    <!-- ---- Grouped permissions ---- -->
+    <section class="yp2-perms">
+      <div class="gp-head">
+        <div class="gp-htx">
+          <p class="gp-eyebrow">Grouped Permissions</p>
+          <p class="gp-sub">{{ groups.length }} groups · click a group to view sub-permissions</p>
+        </div>
+        <div class="gp-legend">
+          <span class="gp-lg on"><i></i>Enabled</span>
+          <span class="gp-lg off"><i></i>Disabled</span>
+        </div>
+      </div>
+
+      <div class="gp-list">
+        <article class="gp-group" [ngClass]="'tone-' + group.tone" *ngFor="let group of groups"
+                 [class.open]="expanded[group.id]">
+          <button type="button" class="gp-summary" (click)="toggleGroup(group.id)"
+                  [attr.aria-expanded]="expanded[group.id]">
+            <span class="gp-icon"><span class="msr">{{ group.icon }}</span></span>
+            <span class="gp-tx">
+              <b>{{ group.name }}</b>
+              <small>{{ groupEnabled(group) }} of {{ groupTotal(group) }} enabled</small>
+            </span>
+            <span class="gp-badge" [class.full]="groupFull(group)">
+              {{ groupFull(group) ? 'Full access' : groupEnabled(group) + '/' + groupTotal(group) }}
+            </span>
+            <span class="msr gp-chev">{{ expanded[group.id] ? 'expand_less' : 'expand_more' }}</span>
+          </button>
+
+          <div class="gp-perms" *ngIf="expanded[group.id]">
+            <div class="gp-perm" *ngFor="let p of groupPermissions(group)" [class.off]="!p.enabled">
+              <span class="gp-check"><span class="msr">{{ p.enabled ? 'check' : 'remove' }}</span></span>
+              <span class="gp-perm-name">{{ p.name }}</span>
             </div>
           </div>
-        </div>
-      </article>
-
-      <div class="perm-empty" *ngIf="visibleGroups.length === 0">
-        <span class="msr">search_off</span>
-        No permissions match “{{ search }}”.
+        </article>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </div>
 
 <!-- ===== Assign brands modal ===== -->

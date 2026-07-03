@@ -1197,6 +1197,13 @@
 .sk-chips { display: flex; gap: 6px; margin-top: 2px; }
 .sk-chip { width: 52px; height: 18px; border-radius: 20px; }
 @keyframes wz-shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+.wz-search-help {
+  display: flex; align-items: flex-start; gap: 8px; margin: 10px 2px 0;
+  font-size: var(--font-size-12); color: var(--text-3); line-height: 1.5;
+}
+.wz-search-help .msr { font-size: var(--font-size-16); color: var(--wz-deep); flex: 0 0 auto; margin-top: 1px; }
+.wz-search-help b { color: var(--text-2); font-weight: 700; }
+
 .wz-search-tip {
   display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 12px 14px;
   background: var(--wz-soft2); border: 1px solid #e4e2fb; border-radius: 12px;

@@ -432,11 +432,12 @@
                 </button>
               </div>
 
-              <!-- hint before searching -->
-              <div class="wz-search-tip" *ngIf="!hasSearched && !searchLoading">
-                <span class="msr">tips_and_updates</span>
-                Type a <b>product</b> (iPhone 17), a <b>brand</b> (boAt), or <b>brand + type</b> (boAt watch), then press <b>Search</b>.
-              </div>
+              <!-- what you can search -->
+              <p class="wz-search-help">
+                <span class="msr">info</span>
+                <span>Search by <b>product name</b> (e.g. iPhone 17), by <b>brand</b> to see all its products (e.g. boAt),
+                  or <b>brand + type</b> to narrow it (e.g. boAt watch). Press <b>Search</b> to fetch live results.</span>
+              </p>
 
               <!-- loading skeleton -->
               <div class="wz-prod-list" *ngIf="searchLoading">

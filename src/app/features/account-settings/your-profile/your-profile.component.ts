@@ -34,14 +34,52 @@ export class YourProfileComponent {
   /** Editable profile fields (bound to the form). */
   firstName = 'Alam';
   lastName = 'Shaikh';
+  username = 'alam_sv';
   email = 'alam.shaikh@locobuzz.com';
   gender: 'male' | 'female' | 'other' = 'male';
   dob = '';
   countryCode = 'IND +91';
   phone = '';
+  status: 'Active' | 'Inactive' = 'Active';
 
   get fullName(): string {
     return `${this.firstName} ${this.lastName}`.trim();
+  }
+  get initials(): string {
+    return ((this.firstName[0] || '') + (this.lastName[0] || '')).toUpperCase();
+  }
+  get roleLabel(): string {
+    return this.role === 'admin' ? 'Supervisor Admin' : 'Agent';
+  }
+
+  // ---- brands search + presentation ------------------------------------
+  brandSearch = '';
+  get filteredAssignedBrands(): Brand[] {
+    const q = this.brandSearch.trim().toLowerCase();
+    const list = this.assignedBrands;
+    return q ? list.filter(b => b.name.toLowerCase().includes(q) || b.domain.toLowerCase().includes(q)) : list;
+  }
+  private readonly brandPalette = ['#6366f1', '#f59e0b', '#ec4899', '#14b8a6', '#8b5cf6', '#0ea5e9', '#f97316', '#10b981'];
+  brandColor(name: string): string {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return this.brandPalette[h % this.brandPalette.length];
+  }
+  brandInitials(name: string): string { return name.slice(0, 2).toUpperCase(); }
+
+  // ---- grouped-permissions view ----------------------------------------
+  /** Flat sub-permission list for a group, each with its enabled state. */
+  groupPermissions(group: PermissionGroup): { name: string; enabled: boolean }[] {
+    const out: { name: string; enabled: boolean }[] = [];
+    for (const cap of group.capabilities) {
+      const on = this.capEnabled(cap);
+      for (const child of cap.children) out.push({ name: child, enabled: on });
+    }
+    return out;
+  }
+  /** All sub-permissions in the group are enabled. */
+  groupFull(group: PermissionGroup): boolean {
+    return this.groupEnabled(group) === this.groupTotal(group);
   }
 
   /** Assigned brands. */
