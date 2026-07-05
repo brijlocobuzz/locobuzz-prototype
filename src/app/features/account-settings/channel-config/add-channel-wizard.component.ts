@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,11 +17,20 @@ interface Step { key: StepKey; label: string; }
   templateUrl: './add-channel-wizard.component.html',
   styleUrl: './add-channel-wizard.component.scss',
 })
-export class AddChannelWizardComponent {
+export class AddChannelWizardComponent implements OnInit {
+  /** Optionally pre-select a channel by id (e.g. opened from an empty channel state). */
+  @Input() preselectId: string | null = null;
   /** Emitted when the wizard should close (X, backdrop, or after Finish). */
   @Output() closed = new EventEmitter<void>();
   /** Emitted with the configured channel when the user clicks Finish. */
   @Output() added = new EventEmitter<CatalogChannel>();
+
+  ngOnInit(): void {
+    if (this.preselectId) {
+      const c = this.catalog.flatMap(g => g.channels).find(ch => ch.id === this.preselectId);
+      if (c) this.pickChannel(c);
+    }
+  }
 
   catalog = CHANNEL_CATALOG;
   pages = FACEBOOK_PAGES;

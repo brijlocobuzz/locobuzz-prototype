@@ -53,11 +53,12 @@
     </div>
   </div>
 
-  <button class="add-btn" (click)="wizardOpen = true"><span class="msr">add_circle</span>Add Channel</button>
+  <button class="add-btn" (click)="openAddWizard()"><span class="msr">add_circle</span>Add Channel</button>
 </header>
 
 <!-- Add-channel wizard -->
-<app-add-channel-wizard *ngIf="wizardOpen" (closed)="wizardOpen = false"></app-add-channel-wizard>
+<app-add-channel-wizard *ngIf="wizardOpen" [preselectId]="wizardPreselect"
+                        (closed)="wizardOpen = false; wizardPreselect = null"></app-add-channel-wizard>
 
 <!-- Body -->
 <div class="cc-body">
@@ -122,7 +123,7 @@
         </button>
       </span>
 
-      <div class="pf-tools" *ngIf="!expiredMode">
+      <div class="pf-tools" *ngIf="!expiredMode && !isEmptyChannel">
         <div class="style-toggle" *ngIf="viewMode === 'card'">
           <button [class.active]="cardStyle === 'classic'" (click)="cardStyle = 'classic'">Classic</button>
           <button [class.active]="cardStyle === 'vibrant'" (click)="cardStyle = 'vibrant'">Vibrant</button>
@@ -158,8 +159,48 @@
       </div>
     </div>
 
+    <!-- ================= EMPTY STATE — channel not configured yet ================= -->
+    <div class="pf-empty" *ngIf="isEmptyChannel && !expiredMode">
+      <div class="pfe-hero">
+        <span class="pfe-logo" [style.background]="activeChannel.color">
+          <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg>
+          <span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span>
+        </span>
+        <h2 class="pfe-title">No {{ activeChannel.label }} profiles yet</h2>
+        <p class="pfe-sub">Connect {{ activeChannel.label }} to start collecting mentions and bring every
+          conversation into your unified inbox and analytics.</p>
+        <button class="pfe-add" (click)="openAddWizard(activeChannel.id)">
+          <span class="msr">add_circle</span>Add {{ activeChannel.label }}
+        </button>
+      </div>
+
+      <!-- what this channel brings in (from the add-channel spec) -->
+      <div class="pfe-info" *ngIf="activeSpec as sp">
+        <div class="pfe-card">
+          <h4><span class="msr">check_circle</span>What we’ll collect</h4>
+          <ul>
+            <li *ngFor="let g of sp.modes[0].get"><span class="msr">check</span>{{ g }}</li>
+          </ul>
+        </div>
+        <div class="pfe-card facts">
+          <div class="pfe-fact">
+            <span class="pfe-fic"><span class="msr">sync</span></span>
+            <span class="pfe-ftx"><span class="pfe-fk">Mentions sync</span><span class="pfe-fv">{{ sp.modes[0].sync }}</span></span>
+          </div>
+          <div class="pfe-fact">
+            <span class="pfe-fic"><span class="msr">history</span></span>
+            <span class="pfe-ftx"><span class="pfe-fk">History on connect</span><span class="pfe-fv">{{ sp.modes[0].history }}</span></span>
+          </div>
+          <div class="pfe-fact">
+            <span class="pfe-fic"><span class="msr">database</span></span>
+            <span class="pfe-ftx"><span class="pfe-fk">Data collected</span><span class="pfe-fv">{{ sp.modes[0].dataTypes }}</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= VIEW TABS + CUSTOM-VIEW BUILDER ================= -->
-    <div class="pf-tabs" *ngIf="!expiredMode">
+    <div class="pf-tabs" *ngIf="!expiredMode && !isEmptyChannel">
       <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">
         All profiles <span class="pf-tab-count">{{ profiles.length }}</span>
       </button>
@@ -237,7 +278,7 @@
     </div>
 
     <!-- ================= LIST / DATA-GRID VIEW ================= -->
-    <div class="pf-table-wrap" *ngIf="viewMode === 'list' || expiredMode">
+    <div class="pf-table-wrap" *ngIf="(viewMode === 'list' && !isEmptyChannel) || expiredMode">
       <!-- shared header row -->
       <ng-template #headRow>
         <tr>
@@ -318,7 +359,8 @@
 
       <!-- row template shared by flat + grouped rendering (ch = per-row channel; defaults to activeChannel) -->
       <ng-template #rowTpl let-p let-ch="ch">
-          <tr [class.selected]="selected.has(p.name)" [class.expired]="p.alert">
+          <tr [class.selected]="selected.has(p.name)" [class.expired]="p.alert"
+              [class.is-parent]="hasChildren(p)" [class.open]="isProfileExpanded(p.name)">
             <!-- select -->
             <td class="col-check pin">
               <span class="cbx" [class.checked]="selected.has(p.name)" (click)="toggleRow(p.name)">
@@ -326,9 +368,13 @@
               </span>
             </td>
 
-            <!-- profile (with ownership badge right-aligned) -->
+            <!-- profile (with ownership badge + expander for grouped channels) -->
             <td class="col-name pin">
               <div class="t-profile">
+                <button class="t-expander" *ngIf="hasChildren(p)" (click)="toggleProfileExpand(p.name, $event)"
+                        [attr.aria-expanded]="isProfileExpanded(p.name)" title="Show locations / mailboxes">
+                  <span class="msr">{{ isProfileExpanded(p.name) ? 'expand_more' : 'chevron_right' }}</span>
+                </button>
                 <span class="t-avatar" [style.background]="p.avatarColor">
                   {{ p.initials }}
                   <span class="t-net" [style.background]="(ch || activeChannel).color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"><path [attr.d]="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"></path></svg><span class="msr" *ngIf="!brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)">{{ (ch || activeChannel).icon }}</span></span>
@@ -336,29 +382,37 @@
                 <span class="t-who">
                   <span class="t-name">{{ p.name }}  <span class="t-own" [class.public]="p.status === 'Public'">
                   <span class="msr">{{ p.status === 'Public' ? 'public' : 'verified' }}</span>{{ p.status }}
-                </span></span>
+                </span>
+                  <span class="t-subcount" *ngIf="hasChildren(p)" (click)="toggleProfileExpand(p.name, $event)"><span class="msr">{{ p.childKind === 'mailbox' ? 'mail' : 'place' }}</span>{{ childKindLabel(p) }}</span></span>
                   <span class="t-owner"><span class="msr">person</span>{{ p.owner }}</span>
                 </span>
-               
+
                 <button class="t-open" title="Open details" (click)="openDetail(p)">
                   <span class="msr">chevron_right</span>
                 </button>
               </div>
             </td>
 
-            <!-- mentions: same rich block for both states, with the full type list -->
+            <!-- mentions -->
             <td>
-              <!-- active: collecting — label on top, 2–3 types + more on the line below -->
-              <div class="mt-state active" *ngIf="!p.alert">
+              <!-- grouped parent: aggregate across children -->
+              <div class="mt-state active" *ngIf="hasChildren(p)">
+                <span class="mt-ic"><span class="msr">sensors</span></span>
+                <span class="mt-tx">
+                  <span class="mt-line"><b>Collecting across {{ childKindLabel(p) }}</b></span>
+                  <span class="mt-sub" [title]="combinedMentionTypes(p).join(', ')">{{ combinedMentionTypes(p).slice(0, 3).join('  ·  ') }}<ng-container *ngIf="combinedMentionTypes(p).length > 3">  ·  +{{ combinedMentionTypes(p).length - 3 }} more</ng-container></span>
+                </span>
+              </div>
+              <!-- normal active -->
+              <div class="mt-state active" *ngIf="!hasChildren(p) && !p.alert">
                 <span class="mt-ic"><span class="msr">sensors</span></span>
                 <span class="mt-tx">
                   <span class="mt-line"><b>Actively collecting</b></span>
                   <span class="mt-sub" [title]="p.mentionTypes.join(', ')">{{ p.mentionTypes.slice(0, 3).join('  ·  ') }}<ng-container *ngIf="p.mentionTypes.length > 3">  ·  +{{ p.mentionTypes.length - 3 }} more</ng-container></span>
                 </span>
               </div>
-
-              <!-- token expired: stopped since … + how to resume -->
-              <div class="mt-state stopped" *ngIf="p.alert">
+              <!-- token expired -->
+              <div class="mt-state stopped" *ngIf="!hasChildren(p) && p.alert">
                 <span class="mt-ic"><span class="mt-pulse"></span><span class="msr">sync_problem</span></span>
                 <span class="mt-tx">
                   <span class="mt-line"><b>Data collection stopped</b><span class="mt-since-chip"><span class="msr">schedule</span>{{ stoppedSince(p) }}</span></span>
@@ -367,21 +421,72 @@
               </div>
             </td>
 
-            <!-- status: Active / Token Expired -->
+            <!-- status: aggregate rollup for grouped, single badge otherwise -->
             <td>
-              <span class="t-badge danger" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
-              <span class="t-badge active" *ngIf="!p.alert"><span class="led"></span>Active</span>
+              <span class="agg-status" *ngIf="hasChildren(p)">
+                <span class="t-badge active" *ngIf="childActiveCount(p)"><span class="led"></span>{{ childActiveCount(p) }} Active</span>
+                <span class="t-badge danger" *ngIf="childExpiredCount(p)"><span class="led"></span>{{ childExpiredCount(p) }} Token Expired</span>
+              </span>
+              <ng-container *ngIf="!hasChildren(p)">
+                <span class="t-badge danger" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
+                <span class="t-badge active" *ngIf="!p.alert"><span class="led"></span>Active</span>
+              </ng-container>
             </td>
 
-            <!-- actions: expired → Reauthorize + Delete; active → Pause + Delete (reveal on hover) -->
+            <!-- actions -->
             <td class="col-act">
               <div class="t-acts">
-                <button class="t-reauth" *ngIf="p.alert"><span class="msr">autorenew</span>Reauthorize</button>
-                <button class="t-act" title="Pause" *ngIf="!p.alert"><span class="msr">pause</span></button>
-                <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+                <ng-container *ngIf="hasChildren(p)">
+                  <button class="t-reauth" *ngIf="childExpiredCount(p)"><span class="msr">autorenew</span>Reauthorize all</button>
+                  <button class="t-act" title="Pause all" *ngIf="!childExpiredCount(p)"><span class="msr">pause</span></button>
+                  <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+                </ng-container>
+                <ng-container *ngIf="!hasChildren(p)">
+                  <button class="t-reauth" *ngIf="p.alert"><span class="msr">autorenew</span>Reauthorize</button>
+                  <button class="t-act" title="Pause" *ngIf="!p.alert"><span class="msr">pause</span></button>
+                  <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+                </ng-container>
               </div>
             </td>
           </tr>
+
+          <!-- child rows: GMB locations / Email directions -->
+          <ng-container *ngIf="hasChildren(p) && isProfileExpanded(p.name)">
+            <tr class="subrow" *ngFor="let c of p.children; let last = last" [class.expired]="c.alert" [class.last]="last">
+              <td class="col-check pin"></td>
+              <td class="col-name pin">
+                <div class="t-profile sub">
+                  <span class="sub-tree" [class.last]="last"></span>
+                  <span class="sub-ic" [class.expired]="c.alert"><span class="msr">{{ c.icon }}</span></span>
+                  <span class="t-who">
+                    <span class="t-name">{{ c.name }}</span>
+                    <span class="t-owner sub-meta">{{ c.meta }}</span>
+                  </span>
+                </div>
+              </td>
+              <td>
+                <div class="mt-state active" *ngIf="!c.alert">
+                  <span class="mt-ic"><span class="msr">sensors</span></span>
+                  <span class="mt-tx"><span class="mt-line"><b>Actively collecting</b></span><span class="mt-sub">{{ c.mentionTypes.join('  ·  ') }}</span></span>
+                </div>
+                <div class="mt-state stopped" *ngIf="c.alert">
+                  <span class="mt-ic"><span class="mt-pulse"></span><span class="msr">sync_problem</span></span>
+                  <span class="mt-tx"><span class="mt-line"><b>Data collection stopped</b></span><small>Reauthorize to resume collecting.</small></span>
+                </div>
+              </td>
+              <td>
+                <span class="t-badge danger" *ngIf="c.alert"><span class="led"></span>Token Expired</span>
+                <span class="t-badge active" *ngIf="!c.alert"><span class="led"></span>Active</span>
+              </td>
+              <td class="col-act">
+                <div class="t-acts">
+                  <button class="t-reauth" *ngIf="c.alert"><span class="msr">autorenew</span>Reauthorize</button>
+                  <button class="t-act" title="Pause" *ngIf="!c.alert"><span class="msr">pause</span></button>
+                  <button class="t-act danger" title="Delete"><span class="msr">delete</span></button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
       </ng-template>
     </div>
 
@@ -466,7 +571,7 @@
 
     <!-- ================= CARD GRID VIEW ================= -->
     <!-- flat -->
-    <div class="pf-grid" *ngIf="viewMode === 'card' && !groupBy && !expiredMode">
+    <div class="pf-grid" *ngIf="viewMode === 'card' && !groupBy && !expiredMode && !isEmptyChannel">
       <ng-container *ngFor="let p of displayProfiles">
         <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: p }"></ng-container>
       </ng-container>
@@ -494,9 +599,8 @@
 
     <!-- card template shared by flat + grouped rendering -->
     <ng-template #cardTpl let-p>
-      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" [class.expired]="p.alert">
-        <!-- <span class="card-accent"
-              [style.background]="'linear-gradient(90deg,' + activeChannel.color + ',' + activeChannel.color + '99)'"></span> -->
+      <article class="card" [class.vibrant]="cardStyle === 'vibrant'" [class.expired]="p.alert"
+               [class.grouped]="hasChildren(p)" [class.open]="isProfileExpanded(p.name)">
 
         <!-- header -->
         <div class="card-head"
@@ -509,49 +613,114 @@
             <span class="card-name">{{ p.name }}</span>
             <span class="card-owner"><span class="msr">person</span>{{ p.owner }}</span>
           </div>
-          <span class="card-status expired" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
-          <span class="card-status" *ngIf="!p.alert"><span class="msr">verified</span>{{ p.status }}</span>
+          <!-- aggregate status for grouped, single badge otherwise -->
+          <span class="card-agg" *ngIf="hasChildren(p)">
+            <span class="ca-ok" *ngIf="childActiveCount(p)"><span class="led"></span>{{ childActiveCount(p) }}</span>
+            <span class="ca-bad" *ngIf="childExpiredCount(p)"><span class="led"></span>{{ childExpiredCount(p) }}</span>
+          </span>
+          <ng-container *ngIf="!hasChildren(p)">
+            <span class="card-status expired" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
+            <span class="card-status" *ngIf="!p.alert"><span class="msr">verified</span>{{ p.status }}</span>
+          </ng-container>
         </div>
 
-        <!-- mentions -->
-        <div class="card-mentions">
-          <div class="cm-head">
-            <span class="cm-title">
-              Mentions types being collected
-              <!-- <span class="cm-count">{{ p.mentionTypes.length }}</span> -->
-            </span>
-            <button class="cm-edit" *ngIf="!p.alert"><span class="msr">edit</span>Edit</button>
-          </div>
-
-          <div class="cm-chips" *ngIf="!p.alert">
-            <span class="cm-chip" *ngFor="let t of p.mentionTypes; let ci = index"
-                  [ngClass]="'tone-' + (ci % 4)">
-              <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
-            </span>
-          </div>
-
-          <!-- token expired → collection paused notice (action lives in the footer) -->
-          <div class="collect-stopped block" *ngIf="p.alert">
-            <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
-            <span class="cs-tx">
-              <span class="mt-line"><b>Data collection stopped</b><span class="mt-since-chip"><span class="msr">schedule</span>{{ stoppedSince(p) }}</span></span>
-              <small>Reauthorize this profile to start collecting mentions again.</small>
-            </span>
+        <!-- ===== EMAIL body: two clear Incoming / Outgoing blocks ===== -->
+        <div class="em-blocks" *ngIf="hasChildren(p) && p.childKind === 'mailbox'">
+          <div class="em-block" *ngFor="let c of p.children" [class.out]="c.tone === 'out'" [class.expired]="c.alert">
+            <div class="em-head">
+              <span class="msr">{{ c.icon }}</span>
+              <span class="em-head-lbl">{{ c.name }}</span>
+              <span class="em-badge" [class.bad]="c.alert"><span class="led"></span>{{ c.alert ? 'Expired' : 'Active' }}</span>
+            </div>
+            <div class="em-body">
+              <div class="em-acct">
+                <span class="em-av" [style.background]="p.avatarColor">{{ (c.account || '?').slice(0, 1) }}</span>
+                <span class="em-acct-tx">
+                  <span class="em-name">{{ c.account }}</span>
+                  <span class="em-addr"><span class="msr">mail</span>{{ c.address }}</span>
+                </span>
+              </div>
+              <div class="em-server"><span class="msr">dns</span>{{ c.server }}</div>
+            </div>
+            <div class="em-acts">
+              <button class="em-act" *ngIf="c.alert" title="Reauthorize"><span class="msr">autorenew</span>Reauthorize</button>
+              <button class="em-act" *ngIf="!c.alert" title="Pause"><span class="msr">pause</span>Pause</button>
+              <button class="em-act danger" title="Delete"><span class="msr">delete</span></button>
+            </div>
           </div>
         </div>
 
-        <!-- compact dates -->
-        <div class="card-dates">
-          <span class="cd-item"><span class="msr">calendar_today</span>Added <b>{{ shortDate(p.addedOn) }}</b></span>
-          <span class="cd-sep">·</span>
-          <span class="cd-item"><span class="msr">schedule</span>Updated <b>{{ shortDate(p.updatedOn) }}</b></span>
-        </div>
+        <!-- ===== GMB body: aggregate line + collapsible locations ===== -->
+        <ng-container *ngIf="hasChildren(p) && p.childKind !== 'mailbox'">
+          <div class="card-agg-meta" [title]="combinedMentionTypes(p).join(', ')">
+            <span class="msr">sensors</span>Collecting: {{ combinedMentionTypes(p).slice(0, 4).join(' · ') }}
+          </div>
+
+          <button class="cs-toggle" (click)="toggleProfileExpand(p.name)" [attr.aria-expanded]="isProfileExpanded(p.name)">
+            <span class="cs-toggle-l"><span class="msr">place</span>{{ childKindLabel(p) }}</span>
+            <span class="cs-toggle-r">{{ isProfileExpanded(p.name) ? 'Hide' : 'View' }}<span class="msr">{{ isProfileExpanded(p.name) ? 'expand_less' : 'expand_more' }}</span></span>
+          </button>
+
+          <div class="cs-items" *ngIf="isProfileExpanded(p.name)">
+            <div class="cs-item" *ngFor="let c of p.children" [class.expired]="c.alert">
+              <span class="cs-item-ic" [class.expired]="c.alert"><span class="msr">{{ c.icon }}</span></span>
+              <span class="cs-item-tx">
+                <span class="cs-item-name">{{ c.name }}</span>
+                <span class="cs-item-meta">{{ c.meta }}</span>
+              </span>
+              <span class="cs-item-badge" [class.bad]="c.alert"><span class="led"></span>{{ c.alert ? 'Expired' : 'Active' }}</span>
+              <div class="cs-item-acts">
+                <button *ngIf="c.alert" title="Reauthorize"><span class="msr">autorenew</span></button>
+                <button *ngIf="!c.alert" title="Pause"><span class="msr">pause</span></button>
+                <button class="danger" title="Delete"><span class="msr">delete</span></button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ===== NORMAL body: mentions + dates ===== -->
+        <ng-container *ngIf="!hasChildren(p)">
+          <div class="card-mentions">
+            <div class="cm-head">
+              <span class="cm-title">Mentions types being collected</span>
+              <button class="cm-edit" *ngIf="!p.alert"><span class="msr">edit</span>Edit</button>
+            </div>
+
+            <div class="cm-chips" *ngIf="!p.alert">
+              <span class="cm-chip" *ngFor="let t of p.mentionTypes; let ci = index"
+                    [ngClass]="'tone-' + (ci % 4)">
+                <span class="msr">{{ mentionIcon(t) }}</span>{{ t }}
+              </span>
+            </div>
+
+            <div class="collect-stopped block" *ngIf="p.alert">
+              <span class="cs-ic"><span class="cs-pulse"></span><span class="msr">sync_problem</span></span>
+              <span class="cs-tx">
+                <span class="mt-line"><b>Data collection stopped</b><span class="mt-since-chip"><span class="msr">schedule</span>{{ stoppedSince(p) }}</span></span>
+                <small>Reauthorize this profile to start collecting mentions again.</small>
+              </span>
+            </div>
+          </div>
+
+          <div class="card-dates">
+            <span class="cd-item"><span class="msr">calendar_today</span>Added <b>{{ shortDate(p.addedOn) }}</b></span>
+            <span class="cd-sep">·</span>
+            <span class="cd-item"><span class="msr">schedule</span>Updated <b>{{ shortDate(p.updatedOn) }}</b></span>
+          </div>
+        </ng-container>
 
         <!-- actions -->
         <div class="card-actions">
-          <button class="ca-btn"><span class="msr">autorenew</span>Reauthorize</button>
-          <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
-          <button class="ca-btn"><span class="msr">pause</span>Pause</button>
+          <ng-container *ngIf="hasChildren(p)">
+            <button class="ca-btn" *ngIf="childExpiredCount(p)"><span class="msr">autorenew</span>Reauthorize all</button>
+            <button class="ca-btn"><span class="msr">pause</span>Pause all</button>
+            <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+          </ng-container>
+          <ng-container *ngIf="!hasChildren(p)">
+            <button class="ca-btn"><span class="msr">autorenew</span>Reauthorize</button>
+            <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
+            <button class="ca-btn"><span class="msr">pause</span>Pause</button>
+          </ng-container>
         </div>
       </article>
     </ng-template>

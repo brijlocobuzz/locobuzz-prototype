@@ -30,13 +30,37 @@ export const CHANNEL_GROUPS: ChannelGroup[] = [
     ],
   },
   { label: 'MESSAGING', count: 4 },
-  { label: 'EMAIL', count: 1 },
-  { label: 'REVIEW PLATFORMS', count: 9 },
+  {
+    label: 'EMAIL', count: 1,
+    channels: [
+      { label: 'Email', id: 'email', icon: 'mail', color: '#ea4335', count: 2 },
+    ],
+  },
+  {
+    label: 'REVIEW PLATFORMS', count: 9,
+    channels: [
+      { label: 'Google My Business', id: 'gmb', icon: 'storefront', color: '#4285f4', count: 3 },
+    ],
+  },
   { label: 'E-COMMERCE', count: 1 },
   { label: 'WEB / NEWS', count: 4 },
   { label: 'ANALYTICS & MESSAGING API', count: 2 },
   { label: 'FORM', count: 1 },
 ];
+
+/** A child of a grouped profile — a GMB location or an Email direction (Incoming/Outgoing). */
+export interface SubProfile {
+  name: string;                 // location name / "Incoming Emails"
+  meta: string;                 // address / protocol description (table sub-row)
+  icon: string;                 // Material Symbols glyph for the child row
+  mentionTypes: string[];
+  alert?: { text: string; badge: string };   // token/collection issue
+  // --- Email-direction card fields ---
+  tone?: 'in' | 'out';          // incoming (blue) / outgoing (purple) accent
+  account?: string;             // person on the mailbox
+  address?: string;             // email address
+  server?: string;              // IMAP / SMTP host
+}
 
 export interface ChannelProfile {
   name: string;
@@ -48,6 +72,9 @@ export interface ChannelProfile {
   updatedOn: string;
   mentionTypes: string[];   // all types shown, no overflow
   alert?: { text: string; badge: string };   // e.g. token expired
+  /** Grouped channels (GMB, Email) expand into child rows. */
+  childKind?: 'location' | 'mailbox';
+  children?: SubProfile[];
 }
 
 export const FACEBOOK_PROFILES: ChannelProfile[] = [
@@ -107,6 +134,59 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Studio', owner: 'Jon Hale', initials: 'A', avatarColor: '#26a69a',
     status: 'Owned', addedOn: 'Sep 02, 2025 5:36 PM', updatedOn: 'Jun 02, 2026 8:50 AM',
     mentionTypes: ['Messages', 'User Comments', 'User Posts', 'Mentions', 'Reviews', 'Ratings'],
+  },
+];
+
+/* ===================================================================
+   Grouped channels — each account expands into child rows.
+   GMB → business locations · Email → Inbound / Outbound directions.
+   =================================================================== */
+export const GMB_PROFILES: ChannelProfile[] = [
+  {
+    name: 'Acme Retail (Business Profile)', owner: 'Priya Menon', initials: 'A', avatarColor: '#4285f4',
+    status: 'Owned', addedOn: 'May 03, 2026 9:21 AM', updatedOn: 'Jun 25, 2026 4:42 PM',
+    mentionTypes: ['Reviews', 'Ratings', 'Q&A'], childKind: 'location',
+    children: [
+      { name: 'Acme Store — MG Road', meta: 'MG Road, Bengaluru · 4.6★', icon: 'place', mentionTypes: ['Reviews', 'Ratings', 'Q&A'] },
+      { name: 'Acme Store — Indiranagar', meta: 'Indiranagar, Bengaluru · 4.4★', icon: 'place', mentionTypes: ['Reviews', 'Ratings'],
+        alert: { text: 'Access token expired', badge: 'ACTION NEEDED' } },
+      { name: 'Acme Store — Whitefield', meta: 'Whitefield, Bengaluru · 4.7★', icon: 'place', mentionTypes: ['Reviews', 'Q&A'] },
+    ],
+  },
+  {
+    name: 'Acme Cafe (Business Profile)', owner: 'Daniel Kim', initials: 'A', avatarColor: '#16b364',
+    status: 'Owned', addedOn: 'Apr 18, 2026 2:05 PM', updatedOn: 'Jun 24, 2026 11:30 AM',
+    mentionTypes: ['Reviews', 'Ratings'], childKind: 'location',
+    children: [
+      { name: 'Acme Cafe — Koramangala', meta: 'Koramangala, Bengaluru · 4.5★', icon: 'place', mentionTypes: ['Reviews', 'Ratings'] },
+      { name: 'Acme Cafe — HSR Layout', meta: 'HSR Layout, Bengaluru · 4.3★', icon: 'place', mentionTypes: ['Reviews', 'Ratings'] },
+    ],
+  },
+];
+
+export const EMAIL_PROFILES: ChannelProfile[] = [
+  {
+    name: 'support@acme.com', owner: 'Shivansh Choudhary', initials: 'S', avatarColor: '#ea4335',
+    status: 'Owned', addedOn: 'Jun 11, 2026 11:57 AM', updatedOn: 'Jun 26, 2026 6:07 PM',
+    mentionTypes: ['Messages'], childKind: 'mailbox',
+    children: [
+      { name: 'Incoming Emails', tone: 'in', icon: 'call_received', account: 'Shivansh Choudhary',
+        address: 'support@acme.com', server: 'imap.gmail.com', meta: 'imap.gmail.com', mentionTypes: ['Messages'] },
+      { name: 'Outgoing Emails', tone: 'out', icon: 'call_made', account: 'Shivansh Choudhary',
+        address: 'support@acme.com', server: 'smtp.gmail.com', meta: 'smtp.gmail.com', mentionTypes: ['Messages'] },
+    ],
+  },
+  {
+    name: 'care@acme.com', owner: 'Ravi Shah', initials: 'C', avatarColor: '#f0a020',
+    status: 'Owned', addedOn: 'May 03, 2026 9:21 AM', updatedOn: 'Jun 25, 2026 4:42 PM',
+    mentionTypes: ['Messages'], childKind: 'mailbox',
+    children: [
+      { name: 'Incoming Emails', tone: 'in', icon: 'call_received', account: 'Ravi Shah',
+        address: 'care@acme.com', server: 'imap.outlook.com', meta: 'imap.outlook.com', mentionTypes: ['Messages'],
+        alert: { text: 'Mailbox auth expired', badge: 'ACTION NEEDED' } },
+      { name: 'Outgoing Emails', tone: 'out', icon: 'call_made', account: 'Ravi Shah',
+        address: 'care@acme.com', server: 'smtp.outlook.com', meta: 'smtp.outlook.com', mentionTypes: ['Messages'] },
+    ],
   },
 ];
 

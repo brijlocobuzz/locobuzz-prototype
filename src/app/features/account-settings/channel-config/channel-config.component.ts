@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, Channel, ChannelGroup, ChannelProfile, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
@@ -28,10 +28,55 @@ export interface SavedView {
 })
 export class ChannelConfigComponent {
   groups = CHANNEL_GROUPS;
-  profiles = FACEBOOK_PROFILES;
   expanded: Record<string, boolean> = { 'SOCIAL MEDIA': true };
 
   mentionIcon = mentionTypeIcon;
+
+  /** Profiles for the active channel — grouped channels (GMB, Email) use their own sets. */
+  get profiles(): ChannelProfile[] {
+    if (this.activeChannel.empty) return [];   // not configured yet → empty state
+    switch (this.activeChannel.id) {
+      case 'gmb': return GMB_PROFILES;
+      case 'email': return EMAIL_PROFILES;
+      default: return FACEBOOK_PROFILES;
+    }
+  }
+
+  /* ---- unconfigured (empty) channel state ---- */
+  /** No profiles configured for the active channel yet. */
+  get isEmptyChannel(): boolean { return !this.expiredMode && this.profiles.length === 0; }
+  /** The add-channel spec for the active channel (drives the empty-state info). */
+  get activeSpec(): ChannelSpec | null { return this.activeChannel.id ? (CHANNEL_SPECS[this.activeChannel.id] ?? null) : null; }
+
+  /** Open the add-channel wizard, optionally pre-selected to a channel. */
+  wizardOpen = false;
+  wizardPreselect: string | null = null;
+  openAddWizard(channelId?: string) {
+    this.wizardPreselect = channelId ?? null;
+    this.wizardOpen = true;
+  }
+
+  /* ---- expandable grouped rows (GMB locations / Email directions) ---- */
+  expandedProfiles = new Set<string>();
+  toggleProfileExpand(name: string, ev?: Event) {
+    ev?.stopPropagation();
+    this.expandedProfiles.has(name) ? this.expandedProfiles.delete(name) : this.expandedProfiles.add(name);
+  }
+  isProfileExpanded(name: string): boolean { return this.expandedProfiles.has(name); }
+  hasChildren(p: ChannelProfile): boolean { return !!p.children?.length; }
+  childCount(p: ChannelProfile): number { return p.children?.length ?? 0; }
+  childKindLabel(p: ChannelProfile): string {
+    const n = this.childCount(p);
+    if (p.childKind === 'mailbox') return n + ' mailbox' + (n === 1 ? '' : 'es');
+    return n + ' location' + (n === 1 ? '' : 's');
+  }
+  childActiveCount(p: ChannelProfile): number { return (p.children ?? []).filter(c => !c.alert).length; }
+  childExpiredCount(p: ChannelProfile): number { return (p.children ?? []).filter(c => !!c.alert).length; }
+  combinedMentionTypes(p: ChannelProfile): string[] {
+    const set = new Set<string>();
+    (p.children ?? []).forEach(c => c.mentionTypes.forEach(t => set.add(t)));
+    return [...set];
+  }
 
   /** The channel whose profiles are shown — drives the panel title + brand theming. */
   activeChannel: Channel = CHANNEL_GROUPS[0].channels![0]; // Facebook
@@ -82,9 +127,6 @@ export class ChannelConfigComponent {
 
   /** Right-side detail drawer (null = closed). */
   detail: ChannelProfile | null = null;
-
-  /** Add-channel wizard modal. */
-  wizardOpen = false;
 
   toggle(g: ChannelGroup) {
     this.expanded[g.label] = !this.expanded[g.label];
