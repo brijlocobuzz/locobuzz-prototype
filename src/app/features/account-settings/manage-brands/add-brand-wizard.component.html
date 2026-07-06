@@ -69,10 +69,44 @@
       <p>{{ headingSub }}</p>
     </div>
     <div class="ab-head-right">
+      <!-- Quick Setup vs manual entry (Identity step only) -->
+      <div class="ab-setup-toggle" role="tablist" aria-label="Setup mode" *ngIf="isStep('identity')">
+        <button type="button" [class.on]="quickSetup" (click)="quickSetup = true">
+          <span class="msr">bolt</span> Quick setup
+        </button>
+        <button type="button" [class.on]="!quickSetup" (click)="quickSetup = false">
+          <span class="msr">edit</span> Manual
+        </button>
+      </div>
       <div class="ab-usermode" role="tablist" aria-label="Account preview">
         <button type="button" [class.on]="userMode === 'existing'" (click)="setUserMode('existing')">Existing user</button>
         <button type="button" [class.on]="userMode === 'new'" (click)="setUserMode('new')">New user</button>
       </div>
+
+      <!-- plan features -->
+      <button type="button" class="ab-plan-btn" [matMenuTriggerFor]="planMenu" aria-label="Plan features">
+        <span class="msr">tune</span>
+      </button>
+      <mat-menu #planMenu="matMenu" class="ab-plan-menu" xPosition="before">
+        <p class="ab-plan-head">Plan features</p>
+        <button type="button" class="ab-plan-item" [class.on]="listeningEnabled"
+                (click)="setListening(!listeningEnabled); $event.stopPropagation()">
+          <span class="ab-plan-check" [class.on]="listeningEnabled"><span class="msr" *ngIf="listeningEnabled">check</span></span>
+          <span class="ab-plan-tx">
+            <span class="ab-plan-name">Listening only</span>
+            <span class="ab-plan-sub">Collect &amp; analyse mentions</span>
+          </span>
+        </button>
+        <button type="button" class="ab-plan-item" [class.on]="planHasTicketing"
+                (click)="setDigitalCare(!planHasTicketing); $event.stopPropagation()">
+          <span class="ab-plan-check" [class.on]="planHasTicketing"><span class="msr" *ngIf="planHasTicketing">check</span></span>
+          <span class="ab-plan-tx">
+            <span class="ab-plan-name">Digital Care</span>
+            <span class="ab-plan-sub">Adds ticketing &amp; agent workflow</span>
+          </span>
+        </button>
+      </mat-menu>
+
       <span class="ab-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
       <button type="button" class="ab-head-close" (click)="close()" aria-label="Close">
         <span class="msr">close</span>
@@ -109,57 +143,115 @@
       <h1 class="ab-pane-title">Brand identity</h1>
       <p class="ab-pane-sub">Name your brand and add a short description so your team and AI understand it.</p>
 
-      <!-- Auto-fill from the brand's website (domain enrichment) -->
-      <div class="ab-fetch" [class.done]="fetchedDomain && !fetching">
-        <span class="ab-fetch-ic"><span class="msr">travel_explore</span></span>
-        <div class="ab-fetch-body">
-          <p class="ab-fetch-title">Auto-fill from website <span class="ab-fetch-badge">Fast setup</span></p>
-          <p class="ab-fetch-sub">Enter the brand's domain — we'll pull its name, logo, colour, description and region for you.</p>
-          <div class="ab-fetch-row">
-            <div class="ab-fetch-field" [class.err]="fetchError">
-              <span class="ab-fetch-prefix">https://</span>
-              <input type="text" placeholder="nike.com" [(ngModel)]="domainInput"
-                     (ngModelChange)="fetchError = ''" (keyup.enter)="fetchFromDomain()" [disabled]="fetching" />
+      <!-- Quick Setup: auto-fill everything from the brand's website -->
+      <div class="ab-quick" *ngIf="quickSetup" [class.done]="fetchedDomain && !fetching">
+        <span class="ab-quick-ic"><span class="msr">bolt</span></span>
+        <div class="ab-quick-body">
+          <div class="ab-quick-row">
+            <div class="ab-quick-field" [class.err]="fetchError">
+              <span class="ab-quick-prefix">https://</span>
+              <input type="text" placeholder="Enter brand website to auto-fill — e.g. nike.com" [(ngModel)]="domainInput"
+                     (ngModelChange)="fetchError = ''" (keyup.enter)="fetchFromDomain()" [disabled]="fetching"
+                     (focus)="setActive('website')" (blur)="clearActive()" />
             </div>
-            <button type="button" class="ab-fetch-btn" [disabled]="fetching || !domainInput.trim()" (click)="fetchFromDomain()">
+            <button type="button" class="ab-quick-btn" [disabled]="fetching || !domainInput.trim()" (click)="fetchFromDomain()">
               <span class="ab-spinner" *ngIf="fetching"></span>
               <span class="msr" *ngIf="!fetching">auto_awesome</span>
-              {{ fetching ? 'Fetching…' : 'Fetch details' }}
+              {{ fetching ? 'Setting up…' : 'Quick Setup' }}
             </button>
           </div>
-          <p class="ab-fetch-err" *ngIf="fetchError"><span class="msr">error</span>{{ fetchError }}</p>
-          <p class="ab-fetch-ok" *ngIf="fetchedDomain && !fetching">
-            <span class="msr">check_circle</span>Pre-filled from <b>{{ fetchedDomain }}</b> — review and edit anything below.
-          </p>
+          <div class="ab-quick-foot">
+            <span class="ab-quick-msg" *ngIf="!fetchError && !fetchedDomain">Fills name, logo, colour, description, industry &amp; region for you.</span>
+            <span class="ab-quick-msg err" *ngIf="fetchError"><span class="msr">error</span>{{ fetchError }}</span>
+            <span class="ab-quick-msg ok" *ngIf="fetchedDomain && !fetching"><span class="msr">check_circle</span>Filled from <b>{{ fetchedDomain }}</b> — review below.</span>
+            <span class="ab-quick-credit" title="This feature consumes AI credits"><span class="msr">toll</span>Uses AI credits</span>
+          </div>
         </div>
       </div>
 
-      <!-- Brand Name + (optional) Recognised Brand Name -->
-      <div class="ab-namerow">
-        <div class="ab-field ab-field-name">
+      <!-- Brand Name + Common Name -->
+      <div class="ab-tworow">
+        <div class="ab-field">
           <label class="ab-label">Brand Name <i>*</i></label>
-          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
+          <input class="ab-input" type="text" placeholder="e.g. Tata Consultancy Services" maxlength="50" [(ngModel)]="brandName"
+                 (focus)="setActive('brandName')" (blur)="clearActive()" />
         </div>
-
-        <button type="button" class="ab-addrec" *ngIf="!showRecognisedName" (click)="addRecognisedName()">
-          <span class="msr">add</span> Add recognised name
-        </button>
-
-        <div class="ab-field ab-field-name" *ngIf="showRecognisedName">
-          <label class="ab-label">Recognised Brand Name</label>
-          <div class="ab-recname">
-            <input class="ab-input" type="text" placeholder="e.g. Taj Hotels" maxlength="100" [(ngModel)]="aiFriendlyName" />
-            <button type="button" class="ab-recname-x" (click)="removeRecognisedName()" aria-label="Remove">
-              <span class="msr">close</span>
-            </button>
-          </div>
+        <div class="ab-field">
+          <label class="ab-label">Common Name</label>
+          <input class="ab-input" type="text" placeholder="e.g. TCS" maxlength="100" [(ngModel)]="aiFriendlyName"
+                 (focus)="setActive('commonName')" (blur)="clearActive()" />
         </div>
       </div>
 
-      <div class="ab-recname-note" *ngIf="showRecognisedName">
-        <span class="msr">lightbulb</span>
-        <span>The name people actually use for your brand, so the AI recognises it correctly.
-          <b>Example:</b> the official name is “IHCL”, but most people say “Taj Hotels” — so enter <b>Taj Hotels</b>.</span>
+      <!-- Website · Industry · Country -->
+      <div class="ab-triorow" [class.two]="quickSetup">
+        <!-- Brand website (manual mode only — Quick Setup captures it from the domain) -->
+        <div class="ab-field" *ngIf="!quickSetup">
+          <label class="ab-label">Brand Website <i>*</i></label>
+          <div class="ab-web">
+            <span class="ab-web-ic"><span class="msr">language</span></span>
+            <input class="ab-input" type="text" placeholder="e.g. tcs.com" [(ngModel)]="brandWebsite"
+                   (focus)="setActive('website')" (blur)="clearActive()" />
+          </div>
+        </div>
+
+        <!-- Industry (+ free-text to the right when "Others" is chosen) -->
+        <div class="ab-field">
+          <label class="ab-label">Industry <i>*</i></label>
+          <div class="ab-ind-line">
+            <div class="ab-select-wrap">
+              <button type="button" class="ab-select" [class.is-open]="industryOpen"
+                      (click)="industryOpen = !industryOpen; $event.stopPropagation()"
+                      (focus)="setActive('industry')" (blur)="clearActive()">
+                <span [class.placeholder]="!industry">{{ industry || 'Select industry' }}</span>
+                <span class="msr chev">expand_more</span>
+              </button>
+              <div class="ab-dropdown" *ngIf="industryOpen" (click)="$event.stopPropagation()">
+                <div class="ab-dropdown-search">
+                  <span class="msr">search</span>
+                  <input type="text" placeholder="Search industry" [(ngModel)]="industrySearch"
+                         (focus)="setActive('industry')" (blur)="clearActive()" />
+                </div>
+                <div class="ab-dropdown-list">
+                  <button type="button" class="ab-option" *ngFor="let i of filteredIndustries"
+                          [class.sel]="i === industry" (click)="selectIndustry(i)">{{ i }}</button>
+                  <p class="ab-option-empty" *ngIf="!filteredIndustries.length">No industries found</p>
+                </div>
+              </div>
+            </div>
+            <input *ngIf="industry === 'Others'" class="ab-input ab-industry-other" type="text" maxlength="30"
+                   placeholder="Your industry" [(ngModel)]="industryOther" />
+          </div>
+        </div>
+
+        <!-- Country -->
+        <div class="ab-field">
+          <label class="ab-label">Country <i>*</i></label>
+          <div class="ab-select-wrap">
+            <button type="button" class="ab-select" [class.is-open]="countryOpen"
+                    (click)="countryOpen = !countryOpen; $event.stopPropagation()"
+                    (focus)="setActive('country')" (blur)="clearActive()">
+              <span [class.placeholder]="!country">
+                <img class="ab-flag" *ngIf="country" [src]="countryFlagUrl(country)" alt="" />{{ country || 'Select country' }}
+              </span>
+              <span class="msr chev">expand_more</span>
+            </button>
+            <div class="ab-dropdown" *ngIf="countryOpen" (click)="$event.stopPropagation()">
+              <div class="ab-dropdown-search">
+                <span class="msr">search</span>
+                <input type="text" placeholder="Search country" [(ngModel)]="countrySearch"
+                       (focus)="setActive('country')" (blur)="clearActive()" />
+              </div>
+              <div class="ab-dropdown-list">
+                <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
+                        [class.sel]="c === country" (click)="selectCountry(c)">
+                  <img class="ab-flag" [src]="countryFlagUrl(c)" alt="" />{{ c }}
+                </button>
+                <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Description: write manually OR generate with AI -->
@@ -177,9 +269,9 @@
 
         <!-- Tab 1 · manual -->
         <div class="ab-tabpanel" *ngIf="descMode === 'manual'">
-          <textarea class="ab-textarea" rows="3" maxlength="200"
+          <textarea class="ab-textarea" rows="2" maxlength="200"
                     placeholder="Describe what your brand does, who it's for, and what makes it distinct…"
-                    [(ngModel)]="brandDescription"></textarea>
+                    [(ngModel)]="brandDescription" (focus)="setActive('description')" (blur)="clearActive()"></textarea>
           <div class="ab-counter-row end">
             <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
           </div>
@@ -192,51 +284,13 @@
           <div class="ab-ai-box" *ngIf="brandName.trim().length >= 3">
             <p class="ab-ai-generating" *ngIf="generating"><span class="ab-spinner dark"></span> Generating description…</p>
             <div class="ab-ai-box-desc">
-              <textarea class="ab-textarea" rows="3" maxlength="200" [disabled]="!descGenerated"
+              <textarea class="ab-textarea" rows="2" maxlength="200" [disabled]="!descGenerated"
                         [placeholder]="descGenerated ? '' : (generating ? 'Writing your description…' : 'Your AI-generated description will appear here.')"
-                        [(ngModel)]="brandDescription"></textarea>
+                        [(ngModel)]="brandDescription" (focus)="setActive('description')" (blur)="clearActive()"></textarea>
               <div class="ab-counter-row" [class.end]="!descGenerated">
                 <button type="button" class="ab-link" *ngIf="descGenerated" (click)="generateDescription()">Regenerate</button>
                 <span class="ab-counter" [class.over]="brandDescription.length > 200">{{ brandDescription.length }} / 200</span>
               </div>
-            </div>
-
-            <!-- Generate Description button removed — the AI tab now generates on entry.
-            <div class="ab-ai-genrow" *ngIf="!descGenerated">
-              <button type="button" class="ab-ai-btn" [disabled]="generating" (click)="generateDescription()">
-                <span class="msr" *ngIf="!generating">auto_awesome</span>
-                <span class="ab-spinner" *ngIf="generating"></span>
-                {{ generating ? 'Generating…' : 'Generate Description' }}
-              </button>
-            </div>
-            -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Country -->
-      <div class="ab-field ab-field-country">
-        <label class="ab-label">Country <i>*</i></label>
-        <p class="ab-hint top">Sets your brand's region on the maps and location charts in Analytics.</p>
-        <div class="ab-select-wrap">
-          <button type="button" class="ab-select" [class.is-open]="countryOpen"
-                  (click)="countryOpen = !countryOpen">
-            <span [class.placeholder]="!country">
-              <img class="ab-flag" *ngIf="country" [src]="countryFlagUrl(country)" alt="" />{{ country || 'Select country' }}
-            </span>
-            <span class="msr chev">expand_more</span>
-          </button>
-          <div class="ab-dropdown" *ngIf="countryOpen">
-            <div class="ab-dropdown-search">
-              <span class="msr">search</span>
-              <input type="text" placeholder="Search country" [(ngModel)]="countrySearch" />
-            </div>
-            <div class="ab-dropdown-list">
-              <button type="button" class="ab-option" *ngFor="let c of filteredCountries"
-                      [class.sel]="c === country" (click)="selectCountry(c)">
-                <img class="ab-flag" [src]="countryFlagUrl(c)" alt="" />{{ c }}
-              </button>
-              <p class="ab-option-empty" *ngIf="!filteredCountries.length">No countries found</p>
             </div>
           </div>
         </div>
@@ -270,36 +324,24 @@
                 </ng-container>
                 <span *ngIf="!aiFriendlyName && !country">How your brand appears across the product</span>
               </p>
-              <div class="ab2-chips">
-                <span class="ab2-chip"><span class="msr">analytics</span>Analytics</span>
-                <span class="ab2-chip"><span class="msr">summarize</span>Reports</span>
-                <span class="ab2-chip ghost"><span class="msr">forum</span>Mentions</span>
-              </div>
-
-              <!-- mini trend chart — shows how the brand color appears in analytics -->
-              <div class="ab2-chart">
-                <div class="ab2-chart-head">
-                  <span class="ab2-chart-id">
-                    <span class="ab2-chart-dot"></span>
-                    <span class="ab2-chart-title">{{ brandName || 'Your brand' }}</span>
-                  </span>
-                </div>
-                <svg class="ab2-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="ab2-spark-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" [attr.stop-color]="color" stop-opacity="0.32" />
-                      <stop offset="1" [attr.stop-color]="color" stop-opacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path [attr.d]="previewArea" fill="url(#ab2-spark-grad)" />
-                  <path [attr.d]="previewLine" fill="none" [attr.stroke]="color" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
-                  <circle [attr.cx]="previewLast.x" [attr.cy]="previewLast.y" r="2.6" fill="#fff"
-                          [attr.stroke]="color" stroke-width="2" vector-effect="non-scaling-stroke" />
+              <!-- brand-colour donut — the brand being created is pulled out & highlighted -->
+              <p class="ab2-donut-title">Your colour across your brands</p>
+              <div class="ab2-donut">
+                <svg class="ab2-donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+                  <path *ngFor="let s of donutArcs" [attr.d]="s.d" [attr.fill]="s.color"
+                        [attr.transform]="'translate(' + s.tx + ' ' + s.ty + ')'"
+                        [class.current]="s.current"></path>
                 </svg>
-                <div class="ab2-chart-x">
-                  <span *ngFor="let d of previewDays">{{ d }}</span>
+                <div class="ab2-donut-center">
+                  <span class="ab2-donut-c1">New brand</span>
+                  <span class="ab2-donut-c2">{{ brandName || 'Your brand' }}</span>
                 </div>
+              </div>
+              <div class="ab2-legend">
+                <span class="ab2-legend-item" *ngFor="let s of donutArcs" [class.current]="s.current">
+                  <span class="ab2-legend-dot" [style.background]="s.color"></span>{{ s.name }}
+                </span>
+                <span class="ab2-legend-item more" *ngIf="donutMore">+{{ donutMore }} more</span>
               </div>
             </div>
           </div>
@@ -309,7 +351,7 @@
         <!-- ===== Controls ===== -->
         <div class="ab2-controls">
           <!-- logo -->
-          <div class="ab2-block">
+          <div class="ab2-block" (focusin)="setActive('logo')" (focusout)="clearActive()">
             <p class="ab2-block-title">Brand Logo <i>*</i></p>
 
             <label class="ab2-drop" *ngIf="!logoDataUrl">
@@ -336,7 +378,7 @@
           </div>
 
           <!-- color -->
-          <div class="ab2-block">
+          <div class="ab2-block" (focusin)="setActive('color')" (focusout)="clearActive()">
             <p class="ab2-block-title">Brand Color</p>
             <p class="ab2-color-help">This color represents your brand in Analytics — used for its charts, graphs and maps.</p>
 
@@ -387,13 +429,13 @@
     </section>
 
     <!-- ---------- Step 3 · Products ---------- -->
-    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('products')">
+    <section class="ab-step-pane" *ngIf="isStep('products')">
       <h1 class="ab-pane-title">Products</h1>
       <p class="ab-pane-sub">Tell us what this brand offers so the AI understands it better — it helps the AI notice conversations about your products and gently skip the ones that don't matter.</p>
 
       <div class="ab-pc-grid one">
         <!-- ===== Products ===== -->
-        <div class="ab-pc-col">
+        <div class="ab-pc-col" (focusin)="setActive('products')" (focusout)="clearActive()">
           <div class="ab-pc-head">
             <span class="ab-pc-ic products"><span class="msr">deployed_code</span></span>
             <div class="ab-pc-head-text">
@@ -408,6 +450,9 @@
               <span class="msr">inventory_2</span>
               <p>No products yet</p>
               <span>Add what this brand sells so the AI understands it.</span>
+              <button type="button" class="ab-pc-add sm" (click)="startAddProduct()">
+                <span class="msr">add</span> Add product
+              </button>
             </div>
 
             <div class="ab-pc-item" *ngFor="let p of products">
@@ -417,38 +462,65 @@
                 <span class="ab-pc-syns" *ngIf="p.synonyms.length">
                   <span class="ab-pc-syn" *ngFor="let s of p.synonyms">{{ s }}</span>
                 </span>
+                <button type="button" class="ab-pc-addsyn" *ngIf="!p.synonyms.length && synEditingId !== p.id" (click)="startAddSynonyms(p)">
+                  <span class="msr">add</span> Add synonyms
+                </button>
+                <!-- inline synonyms input for this product -->
+                <div class="ab-pc-syninline" *ngIf="synEditingId === p.id"
+                     (click)="$event.stopPropagation()"
+                     (focusin)="setActive('synonyms'); $event.stopPropagation()" (focusout)="clearActive()">
+                  <input class="ab-input" type="text" placeholder="e.g. AM, Air-Max — comma separated"
+                         [(ngModel)]="synDraft" (keyup.enter)="saveSynonyms()" />
+                  <button type="button" class="ab-confirm" (click)="saveSynonyms()" aria-label="Save"><span class="msr">check</span></button>
+                  <button type="button" class="ab-cancel-x" (click)="cancelSynonyms()" aria-label="Cancel"><span class="msr">close</span></button>
+                </div>
               </div>
-              <div class="ab-pc-row-actions">
+              <div class="ab-pc-row-actions" *ngIf="synEditingId !== p.id">
                 <button type="button" (click)="editProduct(p)" aria-label="Edit"><span class="msr">edit</span></button>
                 <button type="button" class="danger" (click)="deleteProduct(p)" aria-label="Delete"><span class="msr">delete</span></button>
               </div>
             </div>
 
+            <!-- add-product action, right under the added products -->
+            <button type="button" class="ab-pc-addrow" *ngIf="products.length && !addingProduct" (click)="startAddProduct()">
+              <span class="msr">add</span> Add product
+            </button>
+
             <div class="ab-pc-editor" *ngIf="addingProduct">
-              <input class="ab-input" type="text" placeholder="Product name" [(ngModel)]="productDraftName" />
-              <input class="ab-input" type="text" placeholder="Synonyms (comma separated)" [(ngModel)]="productDraftSynonyms" />
+              <div class="ab-pc-fields">
+                <div class="ab-pc-field" (focusin)="setActive('products'); $event.stopPropagation()" (focusout)="clearActive()">
+                  <label class="ab-pc-flabel">Product name <i>*</i></label>
+                  <input class="ab-input" type="text" placeholder="e.g. Air Max, Jordan"
+                         [(ngModel)]="productDraftName" (keyup.enter)="saveProduct()" />
+                  <p class="ab-pc-fhint">Add multiple products separated by commas.</p>
+                </div>
+                <div class="ab-pc-field" (focusin)="setActive('synonyms'); $event.stopPropagation()" (focusout)="clearActive()">
+                  <label class="ab-pc-flabel">Synonyms</label>
+                  <input class="ab-input" type="text" placeholder="e.g. AM, Air-Max"
+                         [(ngModel)]="productDraftSynonyms" (keyup.enter)="saveProduct()" />
+                  <p class="ab-pc-fhint">Comma-separated alternate names or spellings.</p>
+                </div>
+              </div>
               <div class="ab-pc-editor-actions">
-                <button type="button" class="ab-confirm" (click)="saveProduct()"><span class="msr">check</span></button>
-                <button type="button" class="ab-cancel-x" (click)="cancelProduct()"><span class="msr">close</span></button>
+                <button type="button" class="ab-pc-ebtn ghost" (click)="cancelProduct()">Cancel</button>
+                <button type="button" class="ab-pc-ebtn" [disabled]="!productDraftName.trim()" (click)="saveProduct()">
+                  <span class="msr">check</span> {{ editingProductId ? 'Update' : 'Save' }}
+                </button>
               </div>
             </div>
           </div>
-
-          <button type="button" class="ab-pc-add" *ngIf="!addingProduct" (click)="startAddProduct()">
-            <span class="msr">add</span> Add product
-          </button>
         </div>
       </div>
     </section>
 
     <!-- ---------- Step 4 · Competitors ---------- -->
-    <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('competitors')">
+    <section class="ab-step-pane" *ngIf="isStep('competitors')">
       <h1 class="ab-pane-title">Competitors</h1>
       <p class="ab-pane-sub">Add your competitors so the AI can keep their mentions separate from yours, and group them into sets to compare them together in Analytics.</p>
 
       <div class="ab-pc-grid one">
         <!-- ===== Competitors ===== -->
-        <div class="ab-pc-col">
+        <div class="ab-pc-col" (focusin)="setActive('competitors')" (focusout)="clearActive()">
           <div class="ab-pc-head">
             <span class="ab-pc-ic competitors"><span class="msr">flag</span></span>
             <div class="ab-pc-head-text">
@@ -458,23 +530,9 @@
             <span class="ab-pc-count">{{ competitors.length + (useMappedCompetitors ? mappedCompetitors.length : 0) }}</span>
           </div>
 
-          <button type="button" class="ab-pc-mapped" [class.on]="useMappedCompetitors"
-                  (click)="useMappedCompetitors = !useMappedCompetitors">
-            <span class="msr">{{ useMappedCompetitors ? 'check_circle' : 'radio_button_unchecked' }}</span>
-            <span class="ab-pc-mapped-text">
-              <span class="ab-pc-mapped-title">Use mapped competitors</span>
-              <span class="ab-pc-mapped-sub">Auto-pull the ones mapped in Listening Settings</span>
-            </span>
-          </button>
-
           <div class="ab-pc-body">
+            <!-- your own competitors (always) -->
             <div class="ab-pc-chips">
-              <span class="ab-pc-chip mapped" *ngFor="let c of mappedCompetitors" [hidden]="!useMappedCompetitors">
-                <span class="ab-pc-chip-av">{{ c.name.slice(0, 2) | uppercase }}</span>
-                {{ c.name }}
-                <span class="ab-pc-chip-tag">Mapped</span>
-              </span>
-
               <span class="ab-pc-chip" *ngFor="let c of competitors">
                 <span class="ab-pc-chip-av">{{ c.name.slice(0, 2) | uppercase }}</span>
                 {{ c.name }}
@@ -482,10 +540,7 @@
                   <span class="msr">close</span>
                 </button>
               </span>
-
-              <span class="ab-pc-chips-empty" *ngIf="!competitors.length && !(useMappedCompetitors && mappedCompetitors.length)">
-                No competitors yet
-              </span>
+              <span class="ab-pc-chips-empty" *ngIf="!competitors.length">No competitors yet</span>
             </div>
 
             <div class="ab-pc-quickadd">
@@ -496,8 +551,35 @@
                       (click)="quickAddCompetitor()">Add</button>
             </div>
 
-            <!-- competitor sets -->
-            <div class="ab-pc-sets-wrap">
+            <!-- mapped competitors — Digital Care only (hidden for listening-only) -->
+            <div class="ab-pc-mapblock" *ngIf="planHasTicketing">
+              <div class="ab-pc-maptoggle" [class.on]="useMappedCompetitors">
+                <span class="ab-pc-map-ic"><span class="msr">hub</span></span>
+                <span class="ab-pc-map-tx">
+                  <span class="ab-pc-map-title">Use mapped competitors</span>
+                  <span class="ab-pc-map-sub">Auto-pull competitors already mapped in Listening Settings.</span>
+                </span>
+                <button type="button" class="ab-switch" [class.on]="useMappedCompetitors"
+                        (click)="useMappedCompetitors = !useMappedCompetitors" aria-label="Use mapped competitors">
+                  <span class="ab-knob"></span>
+                </button>
+              </div>
+
+              <!-- shown only when mapped competitors are turned on -->
+              <div class="ab-pc-mapbody" *ngIf="useMappedCompetitors">
+                <div class="ab-pc-chips" *ngIf="mappedCompetitors.length; else noMapped">
+                  <span class="ab-pc-chip mapped" *ngFor="let c of mappedCompetitors">
+                    <span class="ab-pc-chip-av">{{ c.name.slice(0, 2) | uppercase }}</span>
+                    {{ c.name }}
+                    <span class="ab-pc-chip-tag">Mapped</span>
+                  </span>
+                </div>
+                <ng-template #noMapped>
+                  <p class="ab-pc-chips-empty">No competitors mapped in Listening Settings yet.</p>
+                </ng-template>
+
+                <!-- competitor sets — only when mapped competitors are used -->
+                <div class="ab-pc-sets-wrap" (focusin)="setActive('sets'); $event.stopPropagation()" (focusout)="clearActive()">
               <div class="ab-pc-sets-head">
                 <span class="ab-pc-sets-title">Competitor sets</span>
                 <button type="button" class="ab-pc-set-new" *ngIf="!buildingSet"
@@ -539,9 +621,11 @@
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+                </div><!-- /.ab-pc-sets-wrap -->
+              </div><!-- /.ab-pc-mapbody -->
+            </div><!-- /.ab-pc-mapblock -->
+          </div><!-- /.ab-pc-body -->
+        </div><!-- /.ab-pc-col -->
       </div>
     </section>
 
@@ -555,7 +639,7 @@
 
       <div class="ab-cat4">
         <!-- LEFT · group rail -->
-        <aside class="ab-cat4-rail">
+        <aside class="ab-cat4-rail" (focusin)="setActive('group')" (focusout)="clearActive()">
           <p class="ab-cat4-rail-label">Category Group <i class="ab-req">*</i></p>
           <div class="ab-cat4-groups">
             <button type="button" class="ab-cat4-group" *ngFor="let g of categoryGroups"
@@ -628,7 +712,7 @@
                 <input type="text" placeholder="Search category" [(ngModel)]="categorySearch" />
               </div>
 
-              <div class="ab-cat4-tree">
+              <div class="ab-cat4-tree" (focusin)="setActive('catchall')" (focusout)="clearActive()">
                 <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
 
                 <!-- create-category input disabled for now
@@ -709,7 +793,7 @@
       <h1 class="ab-pane-title">Ticket Creation</h1>
       <p class="ab-pane-sub">Decide whether incoming mentions become actionable tickets your team can work on.</p>
 
-      <div class="ab-toggle-card">
+      <div class="ab-toggle-card" (focusin)="setActive('tickets')" (focusout)="clearActive()">
         <div class="ab-toggle-text">
           <p class="ab-toggle-title">Create tickets from mentions</p>
           <p class="ab-toggle-sub">When on, qualifying mentions become tickets. When off, mentions are captured for listening &amp; analytics only.</p>
@@ -727,7 +811,8 @@
 
       <!-- first user on a new account — self-assign -->
       <div class="ab-selfwrap" *ngIf="!allUsers.length">
-        <button type="button" class="ab-self" [class.on]="selfAssigned" (click)="selfAssigned = !selfAssigned">
+        <button type="button" class="ab-self" [class.on]="selfAssigned" (click)="selfAssigned = !selfAssigned"
+                (focus)="setActive('users')" (blur)="clearActive()">
           <span class="ab-self-av">{{ userInitials(selfUser) }}</span>
           <span class="ab-self-tx">
             <span class="ab-self-name">{{ selfUser.fullName }} <span class="ab-self-you">(you)</span></span>
@@ -759,7 +844,7 @@
             <span class="ab-search-inline">
               <span class="msr">search</span>
               <input type="text" placeholder="Search users…" [(ngModel)]="userSearch"
-                     (focus)="usersDropdownOpen = true" />
+                     (focus)="usersDropdownOpen = true; setActive('users')" (blur)="clearActive()" />
             </span>
           </div>
 
@@ -837,7 +922,7 @@
   </div><!-- /.ab-main -->
 
   <!-- ===== RIGHT: step-aware info panel (spans full popup height) ===== -->
-  <aside class="ab-aside" [ngSwitch]="currentKey">
+  <aside class="ab-aside" [class.has-active]="activeField" [ngSwitch]="currentKey">
 
     <!-- Step · Brand identity -->
     <ng-container *ngSwitchCase="'identity'">
@@ -845,24 +930,32 @@
       <h3 class="ab-aside-title">Start with the essentials</h3>
       <p class="ab-aside-lead">The name and description anchor everything — dashboards, reports, and how AI understands mentions about this brand.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'brandName'">
           <span class="ab-aside-info-ic"><span class="msr">badge</span></span>
           <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>How your brand is represented in Locobuzz — you'll see this name in filters and analytics. Use the name you'll recognise it by.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'commonName'">
           <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
-          <div class="ab-aside-info-tx"><b>Recognised name</b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
+          <div class="ab-aside-info-tx"><b>Common name</b><span>The name people commonly use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'description'">
           <span class="ab-aside-info-ic"><span class="msr">description</span></span>
           <div class="ab-aside-info-tx"><b>Description <span class="ab-aside-req">Required</span></b><span>A short summary of what the brand does. AI uses it to enrich mentions from your point of view.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'website'">
+          <span class="ab-aside-info-ic"><span class="msr">language</span></span>
+          <div class="ab-aside-info-tx"><b>Brand website <span class="ab-aside-req">Required</span></b><span>The brand's official site — also used to auto-fill these details for you.</span></div>
+        </div>
+        <div class="ab-aside-info" [class.active]="activeField === 'industry'">
+          <span class="ab-aside-info-ic"><span class="msr">domain</span></span>
+          <div class="ab-aside-info-tx"><b>Industry <span class="ab-aside-req">Required</span></b><span>The sector the brand operates in. Pick “Others” to enter your own.</span></div>
+        </div>
+        <div class="ab-aside-info" [class.active]="activeField === 'country'">
           <span class="ab-aside-info-ic"><span class="msr">public</span></span>
           <div class="ab-aside-info-tx"><b>Country <span class="ab-aside-req">Required</span></b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
         </div>
       </div>
-      <div class="ab-aside-tip">
+      <div class="ab-aside-tip" *ngIf="quickSetup">
         <span class="msr">bolt</span>
         <span>In a hurry? Enter the brand's website above and we'll auto-fill every field for you.</span>
       </div>
@@ -874,11 +967,11 @@
       <h3 class="ab-aside-title">Make it instantly recognisable</h3>
       <p class="ab-aside-lead">A logo and accent colour help you spot this brand at a glance across dashboards, reports, and charts.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'logo'">
           <span class="ab-aside-info-ic"><span class="msr">image</span></span>
           <div class="ab-aside-info-tx"><b>Brand logo <span class="ab-aside-req">Required</span></b><span>Shown next to the brand everywhere in the app, so it's easy to identify.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'color'">
           <span class="ab-aside-info-ic"><span class="msr">palette</span></span>
           <div class="ab-aside-info-tx"><b>Brand colour</b><span>Used to tint this brand's analytics charts and highlights across reports. A default is pre-selected.</span></div>
         </div>
@@ -895,11 +988,11 @@
       <h3 class="ab-aside-title">Tell us what you offer</h3>
       <p class="ab-aside-lead">Add your key products so mentions can be linked to them — and sentiment tracked per product, not just for the brand overall.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'products'">
           <span class="ab-aside-info-ic"><span class="msr">deployed_code</span></span>
           <div class="ab-aside-info-tx"><b>Products &amp; services</b><span>Add your key products so mentions link to them and sentiment is tracked per product, not just for the brand overall.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'synonyms'">
           <span class="ab-aside-info-ic"><span class="msr">sell</span></span>
           <div class="ab-aside-info-tx"><b>Synonyms</b><span>Add alternate names or spellings for each product so AI recognises every way people mention it.</span></div>
         </div>
@@ -916,11 +1009,11 @@
       <h3 class="ab-aside-title">Keep an eye on the market</h3>
       <p class="ab-aside-lead">Track the brands you compete with so you can benchmark share of voice and sentiment side by side.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'competitors'">
           <span class="ab-aside-info-ic"><span class="msr">flag</span></span>
           <div class="ab-aside-info-tx"><b>Competitors</b><span>Add rival brands to benchmark share of voice and sentiment against yours over time.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'sets'">
           <span class="ab-aside-info-ic"><span class="msr">workspaces</span></span>
           <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals into sets to compare against a whole segment in one view.</span></div>
         </div>
@@ -937,11 +1030,11 @@
       <h3 class="ab-aside-title">How mentions get organised</h3>
       <p class="ab-aside-lead">Every mention this brand receives is automatically sorted into a category. Set that structure up here.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'group'">
           <span class="ab-aside-info-ic"><span class="msr">account_tree</span></span>
           <div class="ab-aside-info-tx"><b>Category group <span class="ab-aside-req">Required</span></b><span>A ready-made set of categories your mentions are auto-sorted into. Brands in the same group share these categories.</span></div>
         </div>
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'catchall'">
           <span class="ab-aside-info-ic"><span class="msr">label</span></span>
           <div class="ab-aside-info-tx"><b>Catch-all category <span class="ab-aside-req">Required</span></b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
         </div>
@@ -961,7 +1054,7 @@
       <p class="ab-aside-lead">Decide whether incoming mentions become tickets your team can pick up, assign, and resolve.</p>
 
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'tickets'">
           <span class="ab-aside-info-ic"><span class="msr">confirmation_number</span></span>
           <div class="ab-aside-info-tx"><b>Ticket creation</b><span>Off by default. Toggle it on to create tickets from mentions — you can change this anytime later.</span></div>
         </div>
@@ -1009,7 +1102,7 @@
       <h3 class="ab-aside-title">Decide who gets in</h3>
       <p class="ab-aside-lead">Only the users you assign can see and work on this brand. You can change this anytime later.</p>
       <div class="ab-aside-infos">
-        <div class="ab-aside-info">
+        <div class="ab-aside-info" [class.active]="activeField === 'users'">
           <span class="ab-aside-info-ic"><span class="msr">group</span></span>
           <div class="ab-aside-info-tx"><b>Assign users <span class="ab-aside-req">Required</span></b><span>Pick who can access and work on this brand — at least one user. You can assign yourself if you're the only one.</span></div>
         </div>
@@ -1027,15 +1120,6 @@
         <span>You always keep admin access to brands you create.</span>
       </div>
     </ng-container>
-
-    <!-- static "Good to know" — shown on every step, pinned to the bottom -->
-    <div class="ab-aside-safe">
-      <span class="ab-aside-safe-h"><span class="msr">verified_user</span>Good to know</span>
-      <ul>
-        <li><span class="msr">check</span>Nothing is saved until you click Save Brand on the last step.</li>
-        <li><span class="msr">check</span>You can jump back to any completed step to edit.</li>
-      </ul>
-    </div>
 
   </aside>
   </div><!-- /.ab-shell -->

@@ -371,6 +371,9 @@ export class ManageUsersComponent {
     this.detail = null;
   }
 
+  /** Usernames already in use — handed to the wizard for its availability check. */
+  get usernames(): string[] { return this.users.map(u => u.username); }
+
   onUserSaved(user: { firstName: string; lastName: string; username: string; email: string; role: string; brands: number }) {
     this.users = [
       {

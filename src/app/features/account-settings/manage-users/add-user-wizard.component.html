@@ -58,7 +58,25 @@
       <h2>{{ headingName }}</h2>
       <p>{{ headingSub }}</p>
     </div>
-    <span class="au-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
+    <div class="au-head-right">
+      <!-- prototype-only: switch the role selector between cards and dropdown -->
+      <button type="button" class="au-proto-sso" [class.on]="roleVariant === 'cards'"
+              (click)="roleVariant = roleVariant === 'cards' ? 'dropdown' : 'cards'"
+              title="Prototype toggle — role cards vs dropdown">
+        <span class="au-proto-track"><span class="au-proto-knob"></span></span>
+        Role cards
+      </button>
+      <!-- prototype-only: simulate an SSO org being configured -->
+      <button type="button" class="au-proto-sso" [class.on]="ssoEnabled" (click)="ssoEnabled = !ssoEnabled"
+              title="Prototype toggle — simulate SSO on/off">
+        <span class="au-proto-track"><span class="au-proto-knob"></span></span>
+        SSO {{ ssoEnabled ? 'On' : 'Off' }}
+      </button>
+      <span class="au-step-pill">STEP {{ currentStep }} OF {{ totalSteps }}</span>
+      <button type="button" class="au-head-close" (click)="close()" aria-label="Close">
+        <span class="msr">close</span>
+      </button>
+    </div>
   </header>
 
   <!-- ===== Stepper ===== -->
@@ -107,29 +125,32 @@
       </div>
 
       <div class="au-grid-2">
-        <div class="au-field">
+        <div class="au-field" (focusin)="setActiveInfo('name')" (focusout)="clearActiveInfo()">
           <label class="au-label">First Name <i>*</i></label>
           <input class="au-input" type="text" placeholder="e.g. Aarav" maxlength="20" [(ngModel)]="firstName" />
         </div>
-        <div class="au-field">
+        <div class="au-field" (focusin)="setActiveInfo('name')" (focusout)="clearActiveInfo()">
           <label class="au-label">Last Name <i>*</i></label>
           <input class="au-input" type="text" placeholder="e.g. Mehta" maxlength="20" [(ngModel)]="lastName" />
         </div>
       </div>
 
       <div class="au-grid-2">
-        <div class="au-field">
+        <div class="au-field" (focusin)="setActiveInfo('username')" (focusout)="clearActiveInfo()">
           <label class="au-label">Username <i>*</i></label>
-          <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username" />
+          <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username"
+                 [class.is-invalid]="usernameTaken" [class.is-valid]="usernameAvailable" />
+          <p class="au-warn" *ngIf="usernameTaken">
+            <span class="msr">error</span>
+            <span class="au-warn-tx">This username is already taken — please choose another.</span>
+          </p>
+          <p class="au-ok" *ngIf="usernameAvailable">
+            <span class="msr">check_circle</span>
+            <span class="au-warn-tx"><b>{{ username.trim() }}</b> is available.</span>
+          </p>
         </div>
-        <div class="au-field au-field-sso">
+        <div class="au-field" (focusin)="setActiveInfo('email')" (focusout)="clearActiveInfo()">
           <label class="au-label">Email <i>*</i></label>
-          <!-- prototype-only: simulate an SSO org being configured (floats over the label row) -->
-          <button type="button" class="au-proto-sso" [class.on]="ssoEnabled" (click)="ssoEnabled = !ssoEnabled"
-                  title="Prototype toggle — simulate SSO on/off">
-            <span class="au-proto-track"><span class="au-proto-knob"></span></span>
-            SSO {{ ssoEnabled ? 'On' : 'Off' }}
-          </button>
           <input class="au-input" type="email"
                  [placeholder]="ssoEnabled ? 'name@' + ssoDomain : 'name@brand.com'" [(ngModel)]="email" />
           <p class="au-hint" *ngIf="ssoEnabled && !emailSsoMismatch">
@@ -154,12 +175,12 @@
         </div>
 
         <!-- contact: compact country code + number -->
-        <div class="au-field">
+        <div class="au-field" (focusin)="setActiveInfo('contact')" (focusout)="clearActiveInfo()">
           <label class="au-label">Contact Number</label>
           <div class="au-phone">
             <div class="au-select-wrap au-cc">
               <button type="button" class="au-select" [class.is-open]="countryOpen" (click)="countryOpen = !countryOpen">
-                <span>{{ country.dial }}</span>
+                <span class="au-cc-val"><img class="au-flag" [src]="countryFlag(country)" alt="" />{{ country.dial }}</span>
                 <span class="msr chev">expand_more</span>
               </button>
               <div class="au-dropdown" *ngIf="countryOpen">
@@ -169,7 +190,9 @@
                 </div>
                 <div class="au-dropdown-list">
                   <button type="button" class="au-option" *ngFor="let c of filteredCountryCodes"
-                          [class.sel]="c.code === country.code" (click)="selectCountry(c)">{{ c.code }} {{ c.dial }}</button>
+                          [class.sel]="c.code === country.code" (click)="selectCountry(c)">
+                    <img class="au-flag" [src]="countryFlag(c)" alt="" />{{ c.code }} {{ c.dial }}
+                  </button>
                   <p class="au-option-empty" *ngIf="!filteredCountryCodes.length">No codes found</p>
                 </div>
               </div>
@@ -187,9 +210,9 @@
       <h1 class="au-pane-title">Role &amp; permissions</h1>
       <p class="au-pane-sub">Pick the role that drives access, then fine-tune the platform permissions it unlocks.</p>
 
-      <div class="au-grid-2">
-        <!-- role -->
-        <div class="au-field">
+      <!-- role: dropdown variant -->
+      <div class="au-grid-2" *ngIf="roleVariant === 'dropdown'">
+        <div class="au-field" (focusin)="setActiveInfo('role')" (focusout)="clearActiveInfo()">
           <label class="au-label">Role <i>*</i></label>
           <div class="au-select-wrap">
             <button type="button" class="au-select" [class.is-open]="roleOpen" (click)="roleOpen = !roleOpen">
@@ -208,8 +231,7 @@
           </div>
         </div>
 
-        <!-- set as admin (role-gated) -->
-        <div class="au-field" *ngIf="showSupervisorAdmin">
+        <div class="au-field" *ngIf="showSupervisorAdmin" (focusin)="setActiveInfo('admin')" (focusout)="clearActiveInfo()">
           <label class="au-label">&nbsp;</label>
           <label class="au-checkbox admin">
             <input type="checkbox" [(ngModel)]="isSupervisorAdmin" />
@@ -219,8 +241,32 @@
         </div>
       </div>
 
+      <!-- role: card grid variant -->
+      <ng-container *ngIf="roleVariant === 'cards'">
+        <div class="au-field" (focusin)="setActiveInfo('role')" (focusout)="clearActiveInfo()">
+          <label class="au-label">Role <i>*</i></label>
+          <div class="au-role-cards">
+            <button type="button" class="au-role-card" *ngFor="let r of roles"
+                    [class.sel]="r.id === role?.id" (click)="selectRole(r)">
+              <span class="au-role-radio"><span class="au-role-dot"></span></span>
+              <span class="au-role-tx">
+                <span class="au-role-name">{{ r.label }}</span>
+                <span class="au-role-desc">{{ r.hint }}</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <label class="au-checkbox admin au-role-admin" *ngIf="showSupervisorAdmin"
+               (focusin)="setActiveInfo('admin')" (focusout)="clearActiveInfo()">
+          <input type="checkbox" [(ngModel)]="isSupervisorAdmin" />
+          <span class="au-check-box"><span class="msr">check</span></span>
+          Set this user as Admin
+        </label>
+      </ng-container>
+
       <!-- platform access -->
-      <div class="au-field">
+      <div class="au-field" (focusin)="setActiveInfo('permissions')" (focusout)="clearActiveInfo()">
         <label class="au-label">Platform Access</label>
         <div class="au-multi">
           <div class="au-pill-input" (click)="platformsDropdownOpen = true">
@@ -253,7 +299,7 @@
       </div>
 
       <!-- selected platform properties -->
-      <div class="au-field">
+      <div class="au-field" (focusin)="setActiveInfo('permissions')" (focusout)="clearActiveInfo()">
         <label class="au-label">Selected Platform Properties</label>
         <p class="au-hint top">Grant the user selective properties from each platform they can access.</p>
 
@@ -316,7 +362,8 @@
       <p class="au-pane-sub">Assign the brands this user can access. Only these brands will be visible to them.</p>
 
       <!-- assign brands -->
-      <div class="au-field" [class.au-field-fill]="!selectedBrands.length">
+      <div class="au-field" [class.au-field-fill]="!selectedBrands.length"
+           (focusin)="setActiveInfo('brands')" (focusout)="clearActiveInfo()">
         <label class="au-label">Assign Brands <i>*</i></label>
         <p class="au-hint top">Only brands assigned here will be visible to the user.</p>
 
@@ -348,7 +395,7 @@
               </span>
               <span class="au-row-meta">
                 <span class="au-row-name">{{ b.name }}</span>
-                <span class="au-row-sub">{{ b.description }}</span>
+                <span class="au-row-sub clamp2">{{ b.description }}</span>
               </span>
               <span class="au-ticket-pill" [class.off]="!b.ticketsEnabled">
                 <span class="msr">{{ b.ticketsEnabled ? 'confirmation_number' : 'block' }}</span>
@@ -433,6 +480,7 @@
             <ng-container *ngIf="!usePerBrand">
               <div class="au-sig-input-wrap">
                 <textarea class="au-textarea" rows="3" maxlength="30"
+                          (focus)="setActiveInfo('signature')" (blur)="clearActiveInfo()"
                           placeholder="e.g. — Team Locobuzz" [(ngModel)]="signature"></textarea>
                 <span class="au-sig-counter" [class.over]="signature.length >= 30">{{ signature.length }}/30</span>
               </div>
@@ -449,7 +497,7 @@
             <!-- per-brand -->
             <ng-container *ngIf="usePerBrand">
               <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in the Brands step to add per-brand signatures.</p>
-              <div class="au-sig-brand-list">
+              <div class="au-sig-brand-list" (focusin)="setActiveInfo('perbrand')" (focusout)="clearActiveInfo()">
                 <div class="au-sig-row" *ngFor="let b of selectedBrands">
                   <span class="au-sig-brand">
                     <span class="au-pill-dot" [style.background]="b.color"></span> {{ b.name }}
@@ -490,7 +538,8 @@
       <h1 class="au-pane-title">Team &amp; notifications</h1>
       <p class="au-pane-sub">Place this user on a response team and choose who gets notified about the new account.</p>
 
-      <div class="au-field" [class.au-field-fill]="!selectedTeam">
+      <div class="au-field" [class.au-field-fill]="!selectedTeam"
+           (focusin)="setActiveInfo('team')" (focusout)="clearActiveInfo()">
         <label class="au-label">Select Team</label>
         <div class="au-select-wrap">
           <button type="button" class="au-select" [class.is-open]="teamOpen" (click)="teamOpen = !teamOpen">
@@ -567,7 +616,7 @@
       </div>
 
       <!-- notifications -->
-      <div class="au-field">
+      <div class="au-field" (focusin)="setActiveInfo('notify')" (focusout)="clearActiveInfo()">
         <label class="au-label">Notifications</label>
         <p class="au-hint top">Choose who gets an email letting them know this account was created.</p>
 
@@ -633,14 +682,12 @@
             </span>
             <span class="au-pr-handle">{{ '@' + username }} · {{ role?.label }}</span>
           </span>
-          <button type="button" class="au-pr-edit" (click)="goToStep(1)"><span class="msr">edit</span> Edit</button>
         </div>
 
         <!-- personal details -->
         <div class="au-pr-section">
           <div class="au-pr-sec-head">
             <span class="au-pr-sec-title">Personal details</span>
-            <button type="button" class="au-link" (click)="goToStep(1)">Edit</button>
           </div>
           <div class="au-pr-grid">
             <div class="au-pr-item"><span class="au-pr-k">Email</span><span class="au-pr-v">{{ email }}</span></div>
@@ -653,7 +700,6 @@
         <div class="au-pr-section">
           <div class="au-pr-sec-head">
             <span class="au-pr-sec-title">Role &amp; access</span>
-            <button type="button" class="au-link" (click)="goToStep(2)">Edit</button>
           </div>
           <div class="au-pr-grid">
             <div class="au-pr-item"><span class="au-pr-k">Role</span><span class="au-pr-v">{{ role?.label }}</span></div>
@@ -665,7 +711,6 @@
         <div class="au-pr-section">
           <div class="au-pr-sec-head">
             <span class="au-pr-sec-title">Brands <span class="au-pr-sec-count">{{ selectedBrandIds.size }}</span></span>
-            <button type="button" class="au-link" (click)="goToStep(3)">Edit</button>
           </div>
           <div class="au-pr-chips">
             <span class="au-pr-chip" *ngFor="let b of selectedBrands">
@@ -678,11 +723,9 @@
         <div class="au-pr-section">
           <div class="au-pr-sec-head">
             <span class="au-pr-sec-title">Team &amp; notifications</span>
-            <button type="button" class="au-link" (click)="goToStep(5)">Edit</button>
           </div>
           <div class="au-pr-grid">
             <div class="au-pr-item"><span class="au-pr-k">Team</span><span class="au-pr-v">{{ selectedTeam?.name || 'Not assigned' }}</span></div>
-            <div class="au-pr-item" *ngIf="selectedTeam"><span class="au-pr-k">Team lead</span><span class="au-pr-v">{{ selectedTeam.lead }}</span></div>
             <div class="au-pr-item"><span class="au-pr-k">Notifies</span><span class="au-pr-v">{{ notifySummary }}</span></div>
           </div>
         </div>
@@ -691,7 +734,6 @@
         <div class="au-pr-section">
           <div class="au-pr-sec-head">
             <span class="au-pr-sec-title">Signature</span>
-            <button type="button" class="au-link" (click)="goToStep(4)">Edit</button>
           </div>
           <div class="au-pr-sig">{{ previewSignature || 'Not set' }}</div>
         </div>
@@ -734,8 +776,9 @@
     <h3 class="au-aside-title">{{ info.title }}</h3>
     <p class="au-aside-lead">{{ info.lead }}</p>
 
-    <div class="au-aside-fields">
-      <div class="au-aside-field" *ngFor="let f of info.fields">
+    <div class="au-aside-fields" [class.has-active]="activeInfo">
+      <div class="au-aside-field" *ngFor="let f of info.fields"
+           [class.active]="activeInfo === f.key" [class.dim]="activeInfo && activeInfo !== f.key">
         <span class="af-ic"><span class="msr">{{ f.icon }}</span></span>
         <div class="af-tx">
           <span class="af-name">{{ f.label }}<span class="af-req" *ngIf="f.required">Required</span></span>

@@ -9,9 +9,9 @@
   display: grid;
   place-items: center;
 
-  --au-accent: #4f46e5;
-  --au-accent-soft: #eef2ff;
-  --au-accent-grad: linear-gradient(135deg, #7c6cf6, #4f46e5);
+  --au-accent: #007AFF;
+  --au-accent-soft: #e7f1ff;
+  --au-accent-grad: linear-gradient(135deg, #4aa3ff, #007AFF);
   --au-dark: #0f172a;
   --au-req: #ef4444;
   --au-line: #e7eaf0;
@@ -30,7 +30,7 @@
 
 .au-modal {
   position: relative;
-  width: min(1160px, calc(100vw - 48px));
+  width: min(1320px, calc(100vw - 48px));
   /* Constant height across every step so the dialog never resizes. */
   height: min(720px, calc(100vh - 32px));
   display: flex;
@@ -60,6 +60,7 @@
 }
 .au-head-text h2 { margin: 0; font-size: var(--font-size-20); font-weight: 700; color: var(--au-dark); }
 .au-head-text p { margin: 4px 0 0; font-size: var(--font-size-14); color: var(--au-muted); }
+.au-head-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .au-step-pill {
   flex: 0 0 auto;
   padding: 6px 12px;
@@ -70,6 +71,20 @@
   font-weight: 700;
   letter-spacing: .6px;
 }
+.au-head-close {
+  width: 32px; height: 32px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background .15s ease, color .15s ease;
+}
+.au-head-close:hover { background: #f1f5f9; color: var(--au-dark); }
+.au-head-close .msr { font-size: var(--font-size-20); }
 
 /* ===================== Stepper ===================== */
 .au-stepper {
@@ -105,7 +120,7 @@
 .au-step.is-active .au-node {
   background: var(--au-accent-grad);
   color: #fff;
-  box-shadow: 0 6px 16px rgba(79, 70, 229, .35);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, .35);
 }
 .au-step.is-done .au-node { background: var(--au-accent); color: #fff; }
 .au-step-meta { display: flex; flex-direction: column; min-width: 0; }
@@ -140,22 +155,39 @@
 
 .au-aside {
   flex: 0 0 320px; width: 320px; overflow-y: auto;
-  padding: 22px 20px; border-left: 1px solid var(--au-line);
-  background: linear-gradient(180deg, #f5f3ff 0%, #faf5ff 60%, #fdf4ff 100%);
+  padding: 22px 20px; border-left: 1px solid #dbe7fa;
+  background: linear-gradient(180deg, #eef5ff 0%, #f2f8ff 60%, #eaf4ff 100%);
 }
 .au-aside-eyebrow {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: var(--font-size-12); font-weight: 700; color: #4f46e5;
-  background: #fff; border: 1px solid #e4e2fb; padding: 5px 12px; border-radius: 20px;
+  font-size: var(--font-size-12); font-weight: 700; color: var(--au-accent);
+  background: #fff; border: 1px solid #d3e5fb; padding: 5px 12px; border-radius: 20px;
 }
 .au-aside-eyebrow .msr { font-size: var(--font-size-16); }
 .au-aside-title { margin: 16px 0 0; font-size: var(--font-size-18); font-weight: 800; color: var(--au-dark); line-height: 1.25; }
 .au-aside-lead { margin: 8px 0 0; font-size: var(--font-size-13); color: var(--text-2); line-height: 1.5; }
-.au-aside-fields { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
-.au-aside-field { display: flex; gap: 11px; align-items: flex-start; }
+.au-aside-fields { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+.au-aside-field {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 8px 10px; margin: 0 -10px; border-radius: 12px;
+  transition: background .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+/* highlight the field matching what's focused on the left; dim the rest */
+.au-aside-field.dim { opacity: .38; }
+.au-aside-field.active {
+  opacity: 1;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 122, 255, .16);
+}
+.au-aside-field.active .af-ic {
+  background: var(--au-accent); border-color: transparent; color: #fff;
+  box-shadow: 0 4px 10px rgba(0, 122, 255, .30);
+}
+.au-aside-field.active .af-name { color: var(--au-accent); }
 .af-ic {
   width: 34px; height: 34px; flex: 0 0 auto; border-radius: 10px; display: grid; place-items: center;
-  background: #fff; border: 1px solid #ece9fb; color: #4f46e5; box-shadow: 0 2px 6px rgba(99, 102, 241, .12);
+  background: #fff; border: 1px solid #d6e6fb; color: var(--au-accent); box-shadow: 0 2px 6px rgba(0, 122, 255, .12);
+  transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 .af-ic .msr { font-size: var(--font-size-18); }
 .af-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -164,11 +196,11 @@
 .af-desc { font-size: var(--font-size-12); color: var(--text-3); line-height: 1.45; }
 .au-aside-tip {
   display: flex; gap: 9px; align-items: flex-start; margin-top: 16px; padding: 12px 14px;
-  background: #fff; border: 1px solid #e4e2fb; border-radius: 12px;
+  background: #fff; border: 1px solid #d6e6fb; border-radius: 12px;
   font-size: var(--font-size-12); color: var(--text-2); line-height: 1.5;
 }
 .au-aside-tip .msr { font-size: var(--font-size-18); color: #f59e0b; flex: 0 0 auto; }
-.au-aside-safe { margin-top: 18px; padding: 14px 16px; background: rgba(255, 255, 255, .6); border: 1px solid #ece9fb; border-radius: 14px; }
+.au-aside-safe { margin-top: 18px; padding: 14px 16px; background: rgba(255, 255, 255, .6); border: 1px solid #d9e8fb; border-radius: 14px; }
 .au-aside-safe-h { display: flex; align-items: center; gap: 8px; font-size: var(--font-size-13); font-weight: 700; color: var(--au-dark); }
 .au-aside-safe-h .msr { font-size: var(--font-size-18); color: #16a34a; }
 .au-aside-safe ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
@@ -232,6 +264,11 @@
 .au-textarea:hover { border-color: #c7d2fe; }
 .au-input:focus,
 .au-textarea:focus { border-color: var(--au-accent); box-shadow: 0 0 0 4px var(--au-accent-soft); }
+/* validation states (username availability) */
+.au-input.is-invalid,
+.au-input.is-invalid:focus { border-color: #dc2626; box-shadow: 0 0 0 4px rgba(220, 38, 38, .12); }
+.au-input.is-valid,
+.au-input.is-valid:focus { border-color: #16a34a; box-shadow: 0 0 0 4px rgba(22, 163, 74, .12); }
 .au-input::placeholder,
 .au-textarea::placeholder { color: #94a3b8; }
 .au-hint { margin: 8px 0 0; font-size: var(--font-size-13); color: var(--au-muted); }
@@ -249,6 +286,17 @@
 .au-warn .msr { font-size: var(--font-size-16); flex: 0 0 auto; margin-top: 1px; }
 .au-warn-tx { min-width: 0; }
 .au-warn b { font-weight: 700; white-space: nowrap; }
+.au-ok {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: var(--font-size-13);
+  color: #16a34a;
+  line-height: 1.4;
+}
+.au-ok .msr { font-size: var(--font-size-16); flex: 0 0 auto; margin-top: 1px; }
+.au-ok b { font-weight: 700; }
 
 /* email field carries the floating SSO toggle so its label height matches Username */
 .au-field-sso { position: relative; }
@@ -331,7 +379,7 @@
   place-items: center;
   cursor: pointer;
   border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, .3);
+  box-shadow: 0 4px 10px rgba(0, 122, 255, .3);
 }
 .au-photo-cam .msr { font-size: var(--font-size-14); }
 .au-photo-meta { min-width: 0; }
@@ -340,13 +388,24 @@
 
 /* compact phone field: small country-code select + number input */
 .au-phone { display: flex; gap: 10px; }
-.au-phone .au-cc { flex: 0 0 104px; }
+.au-phone .au-cc { flex: 0 0 120px; }
 .au-phone .au-cc .au-select { padding: 0 8px 0 12px; }
 .au-phone .au-input { flex: 1; min-width: 0; }
 /* the dropdown breaks out wider than the compact trigger so its search
    box and option labels (e.g. "UAE +971") never wrap or clip */
 .au-phone .au-cc .au-dropdown { right: auto; width: 240px; }
-.au-phone .au-cc .au-option { white-space: nowrap; }
+.au-phone .au-cc .au-option { white-space: nowrap; display: flex; align-items: center; }
+.au-cc-val { display: inline-flex; align-items: center; min-width: 0; }
+/* country flag image (matches the Add-Brand country dropdown) */
+.au-flag {
+  width: 20px; height: 14px;
+  margin-right: 8px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  object-fit: cover;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, .08);
+}
 
 /* radios */
 .au-radio-row { display: flex; gap: 18px; align-items: center; height: var(--au-ctrl-h); }
@@ -355,6 +414,51 @@
 .au-radio-stack { display: flex; flex-wrap: wrap; gap: 12px; }
 .au-radio.big { padding: 12px 18px; border: 1px solid var(--au-line); border-radius: 12px; transition: border-color .15s ease, background .15s ease; }
 .au-radio.big:hover { border-color: #c7d2fe; }
+
+/* ===================== Role cards (step 2 variant) ===================== */
+.au-role-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.au-role-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--au-line);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.au-role-card:hover { border-color: #c7d2fe; background: #fafbff; }
+.au-role-card.sel { border-color: var(--au-accent); box-shadow: 0 0 0 3px var(--au-accent-soft); }
+.au-role-radio {
+  width: 18px; height: 18px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s ease;
+}
+.au-role-card.sel .au-role-radio { border-color: var(--au-accent); }
+.au-role-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--au-accent);
+  transform: scale(0);
+  transition: transform .15s ease;
+}
+.au-role-card.sel .au-role-dot { transform: scale(1); }
+.au-role-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.au-role-name { font-size: var(--font-size-14); font-weight: 700; color: var(--au-dark); }
+.au-role-desc { font-size: var(--font-size-12); color: var(--au-muted); line-height: 1.4; }
+.au-role-admin { margin-top: 12px; }
 
 /* ===================== Custom select + dropdown ===================== */
 .au-select-wrap { position: relative; min-width: 0; }
@@ -602,6 +706,16 @@
 .au-row-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .au-row-name { font-size: var(--font-size-14); font-weight: 600; color: var(--au-dark); flex: 1; min-width: 0; }
 .au-row-sub { font-size: var(--font-size-12); color: var(--au-muted); }
+/* brand description — up to two lines, then ellipsis */
+.au-row-sub.clamp2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  line-height: 1.35;
+}
 .au-check {
   width: 22px; height: 22px;
   border-radius: 6px;
@@ -714,7 +828,7 @@
   place-items: center;
   background: var(--au-accent);
   color: #fff;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, .28);
+  box-shadow: 0 4px 10px rgba(0, 122, 255, .28);
 }
 .au-team-detail-icon .msr { font-size: var(--font-size-18); }
 .au-team-detail-titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -1114,7 +1228,7 @@
   color: #fff;
   font-size: var(--font-size-14);
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, .28);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, .28);
 }
 .au-pr-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .au-pr-id { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -1580,18 +1694,18 @@
   border: none;
   border-radius: 999px;
   /* same hue as the stepper node, a touch lighter for readability */
-  background: linear-gradient(135deg, #8a7bf6, #5d52ea);
+  background: linear-gradient(135deg, #4aa3ff, #007AFF);
   font: inherit;
   font-size: var(--font-size-14);
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(79, 70, 229, .28);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, .28);
   transition: transform .1s ease, opacity .15s ease, box-shadow .15s ease;
 }
 .au-btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, .36);
+  box-shadow: 0 8px 20px rgba(0, 122, 255, .36);
 }
 .au-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .au-btn-primary .msr { font-size: var(--font-size-18); }
@@ -1603,6 +1717,7 @@
   .au-sig-layout { grid-template-columns: 1fr; }
   .au-pr-grid { grid-template-columns: 1fr; }
   .au-team-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .au-role-cards { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ===================================================================
@@ -1656,7 +1771,7 @@
   opacity: 0;
   animation: au-ring-pulse 1.4s ease-out .15s infinite;
 }
-.au-ring.r2 { animation-delay: .75s; background: rgba(79, 70, 229, .14); }
+.au-ring.r2 { animation-delay: .75s; background: rgba(0, 122, 255, .14); }
 @keyframes au-ring-pulse {
   0%   { transform: scale(.5); opacity: .8; }
   80%  { transform: scale(1.8); opacity: 0; }

@@ -220,20 +220,27 @@ export const USER_ROLES: UserRole[] = [
 export interface CountryCode {
   code: string;        // ISO-ish label e.g. "IND"
   dial: string;        // dial code e.g. "+91"
+  /** ISO-3166 alpha-2 code, used to build the flag image URL. */
+  iso: string;
   /** Max national number length used for validation. */
   maxLen: number;
 }
 
 export const COUNTRY_CODES: CountryCode[] = [
-  { code: 'IND', dial: '+91', maxLen: 10 },
-  { code: 'USA', dial: '+1', maxLen: 10 },
-  { code: 'GBR', dial: '+44', maxLen: 10 },
-  { code: 'UAE', dial: '+971', maxLen: 9 },
-  { code: 'AUS', dial: '+61', maxLen: 9 },
-  { code: 'SGP', dial: '+65', maxLen: 8 },
-  { code: 'CAN', dial: '+1', maxLen: 10 },
-  { code: 'DEU', dial: '+49', maxLen: 11 },
+  { code: 'IND', dial: '+91', iso: 'in', maxLen: 10 },
+  { code: 'USA', dial: '+1', iso: 'us', maxLen: 10 },
+  { code: 'GBR', dial: '+44', iso: 'gb', maxLen: 10 },
+  { code: 'UAE', dial: '+971', iso: 'ae', maxLen: 9 },
+  { code: 'AUS', dial: '+61', iso: 'au', maxLen: 9 },
+  { code: 'SGP', dial: '+65', iso: 'sg', maxLen: 8 },
+  { code: 'CAN', dial: '+1', iso: 'ca', maxLen: 10 },
+  { code: 'DEU', dial: '+49', iso: 'de', maxLen: 11 },
 ];
+
+/** Real flag image (renders reliably everywhere, unlike emoji flags on Windows). */
+export function countryCodeFlagUrl(c: CountryCode): string {
+  return `https://flagcdn.com/${c.iso}.svg`;
+}
 
 /* ===================================================================
    Brands, teams, skills

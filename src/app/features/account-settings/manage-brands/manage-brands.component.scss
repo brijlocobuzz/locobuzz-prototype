@@ -212,6 +212,15 @@ position: absolute;
 .pf-table th.col-name, .pf-table td.col-name { left: 44px; }
 .pf-table td.col-name { box-shadow: 1px 0 0 var(--border-soft); }
 .pf-table thead th.col-name { box-shadow: 1px 0 0 var(--border); }
+.pf-table th.col-industry, .pf-table td.col-industry { max-width: 200px; }
+.t-industry {
+  display: inline-block; max-width: 190px;
+  padding: 4px 10px; border-radius: 999px;
+  background: #eef2f7; border: 1px solid var(--border);
+  font-size: var(--font-size-12); font-weight: 600; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
+}
+.t-industry-none { color: var(--text-3); }
 .pf-table tbody td { height: 56px; padding: 0 10px; border-bottom: 1px solid var(--border-soft); color: var(--text-2); vertical-align: middle; white-space: nowrap; }
 .pf-table tbody tr { transition: background .12s ease; }
 .pf-table tbody tr:hover td, .pf-table tbody tr:hover td.pin { background: #f7f9fc; }

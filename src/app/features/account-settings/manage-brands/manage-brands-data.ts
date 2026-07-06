@@ -10,6 +10,35 @@
 /** A user shown as an avatar (id + display name + role). */
 export interface BrandMember { id: string; name: string; role: string; }
 
+/** Industries a brand can belong to. "Others" reveals a free-text input in the wizard. */
+export const INDUSTRIES: readonly string[] = [
+  'Telecom',
+  'BFSI / Banking & Financial Services',
+  'Retail',
+  'FMCG / Consumer Goods',
+  'Healthcare',
+  'Automobile / Automotive',
+  'Travel',
+  'Hospitality',
+  'Aviation',
+  'Technology / IT / SaaS',
+  'Education',
+  'Energy & Utilities',
+  'Government & Public Sector',
+  'Real Estate',
+  'E-commerce',
+  'Media & Entertainment',
+  'Consumer Electronics',
+  'Manufacturing',
+  'Logistics & Transportation',
+  'Insurance',
+  'Pharmaceuticals',
+  'Food & Beverages',
+  'Infrastructure',
+  'Non-profit / NGO',
+  'Others',
+];
+
 export interface ManagedBrand {
   id: string;
   name: string;
@@ -20,11 +49,15 @@ export interface ManagedBrand {
   users: number;
   channels: number;
   ticketsEnabled: boolean;
+  /** Industry the brand operates in (from the INDUSTRIES list, or a free-text "Others" value). */
+  industry?: string;
+  /** Brand website URL. */
+  website?: string;
   /** Uploaded logo (data URL) — used for the avatar when present, else the favicon. */
   logoUrl?: string;
 
   /* ---- enriched: everything captured by the Add-Brand wizard ---- */
-  aiFriendlyName?: string;        // step 1
+  aiFriendlyName?: string;        // step 1 — common name
   description?: string;           // step 1
   userPreview?: BrandMember[];    // step 3 — a few assigned users for avatar stacks
   channelIds?: string[];          // listening channels (BRAND_ICONS keys) for logo stacks
@@ -36,7 +69,7 @@ export interface ManagedBrand {
 
 export const MANAGED_BRANDS: ManagedBrand[] = [
   {
-    id: 'amazon', name: 'Amazon', domain: 'amazon.in', color: '#ff9900', country: 'India',
+    id: 'amazon', name: 'Amazon', industry: 'E-commerce', domain: 'amazon.in', color: '#ff9900', country: 'India',
     users: 42, channels: 9, ticketsEnabled: true,
     aiFriendlyName: 'Amazon India', description: 'Amazon is a global e-commerce and cloud-computing marketplace selling products and services across categories.',
     userPreview: [
@@ -50,7 +83,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Flipkart', 'Walmart'],
   },
   {
-    id: 'nike', name: 'Nike', domain: 'nike.com', color: '#0f172a', country: 'United States',
+    id: 'nike', name: 'Nike', industry: 'Retail', domain: 'nike.com', color: '#0f172a', country: 'United States',
     users: 18, channels: 6, ticketsEnabled: true,
     aiFriendlyName: 'Nike', description: 'Nike designs, develops and markets athletic footwear, apparel and accessories globally.',
     userPreview: [
@@ -64,7 +97,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Adidas', 'Puma', 'Reebok'],
   },
   {
-    id: 'airindia', name: 'Air India', domain: 'airindia.com', color: '#c8102e', country: 'India',
+    id: 'airindia', name: 'Air India', industry: 'Aviation', domain: 'airindia.com', color: '#c8102e', country: 'India',
     users: 27, channels: 7, ticketsEnabled: true,
     aiFriendlyName: 'Air India', description: 'Air India is the flag-carrier airline of India operating domestic and international passenger flights.',
     userPreview: [
@@ -78,7 +111,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['IndiGo', 'Vistara'],
   },
   {
-    id: 'myntra', name: 'Myntra', domain: 'myntra.com', color: '#e91e63', country: 'India',
+    id: 'myntra', name: 'Myntra', industry: 'E-commerce', domain: 'myntra.com', color: '#e91e63', country: 'India',
     users: 15, channels: 5, ticketsEnabled: false,
     aiFriendlyName: 'Myntra', description: 'Myntra is an Indian fashion e-commerce platform for apparel, footwear and lifestyle products.',
     userPreview: [
@@ -92,7 +125,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Ajio', 'Nykaa Fashion'],
   },
   {
-    id: 'zomato', name: 'Zomato', domain: 'zomato.com', color: '#ef4444', country: 'India',
+    id: 'zomato', name: 'Zomato', industry: 'Food & Beverages', domain: 'zomato.com', color: '#ef4444', country: 'India',
     users: 33, channels: 8, ticketsEnabled: true,
     aiFriendlyName: 'Zomato', description: 'Zomato is a food-delivery and restaurant-discovery platform operating across hundreds of cities.',
     userPreview: [
@@ -106,7 +139,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Swiggy', 'Uber Eats'],
   },
   {
-    id: 'tata', name: 'Tata Cliq', domain: 'tatacliq.com', color: '#2563eb', country: 'India',
+    id: 'tata', name: 'Tata Cliq', industry: 'E-commerce', domain: 'tatacliq.com', color: '#2563eb', country: 'India',
     users: 11, channels: 4, ticketsEnabled: false,
     aiFriendlyName: 'Tata Cliq', description: 'Tata CLiQ is the flagship omni-channel e-commerce marketplace from the Tata Group.',
     userPreview: [
@@ -119,7 +152,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Amazon', 'Flipkart'],
   },
   {
-    id: 'flipkart', name: 'Flipkart', domain: 'flipkart.com', color: '#2874f0', country: 'India',
+    id: 'flipkart', name: 'Flipkart', industry: 'E-commerce', domain: 'flipkart.com', color: '#2874f0', country: 'India',
     users: 38, channels: 8, ticketsEnabled: true,
     aiFriendlyName: 'Flipkart', description: 'Flipkart is one of India\'s leading e-commerce marketplaces across electronics, fashion and groceries.',
     userPreview: [
@@ -133,7 +166,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Amazon', 'Meesho'],
   },
   {
-    id: 'swiggy', name: 'Swiggy', domain: 'swiggy.com', color: '#fc8019', country: 'India',
+    id: 'swiggy', name: 'Swiggy', industry: 'Food & Beverages', domain: 'swiggy.com', color: '#fc8019', country: 'India',
     users: 29, channels: 6, ticketsEnabled: true,
     aiFriendlyName: 'Swiggy', description: 'Swiggy is an on-demand food and grocery delivery platform operating across Indian cities.',
     userPreview: [
@@ -146,7 +179,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Zomato', 'Zepto'],
   },
   {
-    id: 'adidas', name: 'Adidas', domain: 'adidas.com', color: '#111827', country: 'Germany',
+    id: 'adidas', name: 'Adidas', industry: 'Retail', domain: 'adidas.com', color: '#111827', country: 'Germany',
     users: 21, channels: 5, ticketsEnabled: true,
     aiFriendlyName: 'Adidas', description: 'Adidas designs and manufactures sportswear, footwear and accessories worldwide.',
     userPreview: [
@@ -159,7 +192,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Nike', 'Puma'],
   },
   {
-    id: 'starbucks', name: 'Starbucks', domain: 'starbucks.com', color: '#00704a', country: 'United States',
+    id: 'starbucks', name: 'Starbucks', industry: 'Food & Beverages', domain: 'starbucks.com', color: '#00704a', country: 'United States',
     users: 16, channels: 5, ticketsEnabled: false,
     aiFriendlyName: 'Starbucks', description: 'Starbucks is a global coffeehouse chain serving beverages, food and packaged products.',
     userPreview: [
@@ -172,7 +205,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Costa Coffee', 'Tim Hortons'],
   },
   {
-    id: 'ola', name: 'Ola', domain: 'olacabs.com', color: '#1f2937', country: 'India',
+    id: 'ola', name: 'Ola', industry: 'Logistics & Transportation', domain: 'olacabs.com', color: '#1f2937', country: 'India',
     users: 24, channels: 6, ticketsEnabled: true,
     aiFriendlyName: 'Ola Cabs', description: 'Ola is a mobility platform offering ride-hailing and electric-vehicle services across India.',
     userPreview: [
@@ -185,7 +218,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Uber', 'Rapido'],
   },
   {
-    id: 'nykaa', name: 'Nykaa', domain: 'nykaa.com', color: '#fc2779', country: 'India',
+    id: 'nykaa', name: 'Nykaa', industry: 'E-commerce', domain: 'nykaa.com', color: '#fc2779', country: 'India',
     users: 19, channels: 5, ticketsEnabled: true,
     aiFriendlyName: 'Nykaa', description: 'Nykaa is an Indian beauty and lifestyle e-commerce retailer for cosmetics and wellness.',
     userPreview: [
@@ -198,7 +231,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Myntra', 'Sephora'],
   },
   {
-    id: 'cred', name: 'CRED', domain: 'cred.club', color: '#0b0b0b', country: 'India',
+    id: 'cred', name: 'CRED', industry: 'BFSI / Banking & Financial Services', domain: 'cred.club', color: '#0b0b0b', country: 'India',
     users: 13, channels: 4, ticketsEnabled: false,
     aiFriendlyName: 'CRED', description: 'CRED is a members-only platform for credit-card payments, rewards and financial products.',
     userPreview: [
@@ -210,7 +243,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Paytm', 'PhonePe'],
   },
   {
-    id: 'uber', name: 'Uber', domain: 'uber.com', color: '#000000', country: 'United States',
+    id: 'uber', name: 'Uber', industry: 'Logistics & Transportation', domain: 'uber.com', color: '#000000', country: 'United States',
     users: 31, channels: 7, ticketsEnabled: true,
     aiFriendlyName: 'Uber', description: 'Uber is a global mobility and delivery platform connecting riders, drivers and merchants.',
     userPreview: [
@@ -223,7 +256,7 @@ export const MANAGED_BRANDS: ManagedBrand[] = [
     competitors: ['Ola', 'Lyft'],
   },
   {
-    id: 'spotify', name: 'Spotify', domain: 'spotify.com', color: '#1db954', country: 'Sweden',
+    id: 'spotify', name: 'Spotify', industry: 'Media & Entertainment', domain: 'spotify.com', color: '#1db954', country: 'Sweden',
     users: 17, channels: 5, ticketsEnabled: true,
     aiFriendlyName: 'Spotify', description: 'Spotify is a digital music, podcast and audio-streaming service with a global catalogue.',
     userPreview: [
