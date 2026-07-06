@@ -106,6 +106,9 @@
           <th class="col-name pin sortable" (click)="sortBy('brand')">
             <span class="th-in">Brand <span class="msr sort-ic" [class.on]="sortKey==='brand'">{{ sortIcon('brand') }}</span></span>
           </th>
+          <th class="col-industry sortable" (click)="sortBy('industry')">
+            <span class="th-in">Industry <span class="msr sort-ic" [class.on]="sortKey==='industry'">{{ sortIcon('industry') }}</span></span>
+          </th>
           <th class="sortable" (click)="sortBy('users')">
             <span class="th-in">Users <span class="msr sort-ic" [class.on]="sortKey==='users'">{{ sortIcon('users') }}</span></span>
           </th>
@@ -138,6 +141,12 @@
               </span>
               <button class="t-open" title="Open details" (click)="openDetail(b)"><span class="msr">chevron_right</span></button>
             </div>
+          </td>
+
+          <!-- industry -->
+          <td class="col-industry">
+            <span class="t-industry" *ngIf="b.industry; else noInd">{{ b.industry }}</span>
+            <ng-template #noInd><span class="t-industry-none">—</span></ng-template>
           </td>
 
           <!-- users: square avatars + count -->
@@ -199,6 +208,7 @@
         <div class="card-who">
           <span class="card-name">{{ b.name }}</span>
           <span class="card-owner"><span class="msr">public</span>{{ b.country }}</span>
+          <span class="t-industry" *ngIf="b.industry">{{ b.industry }}</span>
         </div>
         <span class="t-badge active" *ngIf="b.ticketsEnabled"><span class="led"></span>Tickets On</span>
         <span class="t-badge off" *ngIf="!b.ticketsEnabled"><span class="led"></span>Tickets Off</span>

@@ -161,3 +161,15 @@ body {
 .ab2-oc-hex { font-size: 10px; font-weight: 700; color: #64748b; }
 
 .ab2-colors-menu .ab2-oc-empty { padding: 10px 14px; font-size: 12px; color: #94a3b8; font-style: italic; }
+
+/* Plan-features menu (Add Brand wizard header) */
+.ab-plan-menu.mat-mdc-menu-panel { min-width: 244px; max-width: 288px; padding: 4px; }
+.ab-plan-menu .ab-plan-head { margin: 0; padding: 8px 12px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #94a3b8; }
+.ab-plan-menu .ab-plan-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border: none; border-radius: 8px; background: transparent; font: inherit; cursor: pointer; }
+.ab-plan-menu .ab-plan-item:hover { background: #f1f5f9; }
+.ab-plan-menu .ab-plan-check { width: 20px; height: 20px; flex: 0 0 auto; border-radius: 6px; border: 1.5px solid #cfd6e0; background: #fff; display: grid; place-items: center; transition: background .13s ease, border-color .13s ease; }
+.ab-plan-menu .ab-plan-check.on { background: #007AFF; border-color: #007AFF; }
+.ab-plan-menu .ab-plan-check .msr { font-size: 15px; color: #fff; }
+.ab-plan-menu .ab-plan-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ab-plan-menu .ab-plan-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+.ab-plan-menu .ab-plan-sub { font-size: 11px; color: #64748b; }

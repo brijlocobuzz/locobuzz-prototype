@@ -507,6 +507,7 @@
 <!-- ===== Add-user wizard ===== -->
 <app-add-user-wizard *ngIf="wizardOpen"
                      [ssoDomain]="sso.domain"
+                     [takenUsernames]="usernames"
                      (closed)="wizardOpen = false"
                      (saved)="onUserSaved($event)">
 </app-add-user-wizard>

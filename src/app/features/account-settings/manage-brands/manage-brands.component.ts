@@ -253,6 +253,7 @@ export class ManageBrandsComponent {
   private sortVal(b: ManagedBrand, key: string): string | number {
     switch (key) {
       case 'brand': return b.name.toLowerCase();
+      case 'industry': return (b.industry || '').toLowerCase();
       case 'country': return b.country.toLowerCase();
       case 'users': return b.users;
       case 'channels': return b.channels;
@@ -332,13 +333,18 @@ export class ManageBrandsComponent {
 
   onBrandSaved(b: NewBrandPayload) {
     const slug = b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const domain = b.website
+      ? b.website.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '')
+      : `${b.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
     this.brands = [
       {
         id: `${slug || 'brand'}-${this.brands.length}`,
         name: b.name,
-        domain: `${b.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+        domain,
         color: b.color,
         country: b.country,
+        industry: b.industry || undefined,
+        website: b.website || undefined,
         users: b.users.length,
         channels: 0,
         ticketsEnabled: b.ticketsEnabled,

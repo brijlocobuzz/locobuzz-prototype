@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   USER_ROLES, COUNTRY_CODES, ASSIGNABLE_BRANDS, TEAMS,
-  NOTIFY_USERS, PERMISSION_GROUPS, ROLE_DEFAULT_GROUPS,
+  NOTIFY_USERS, PERMISSION_GROUPS, ROLE_DEFAULT_GROUPS, countryCodeFlagUrl,
   UserRole, CountryCode, AssignableBrand, Team, PermissionGroup, PermissionCapability,
 } from './manage-users-data';
 
@@ -34,6 +34,10 @@ export class AddUserWizardComponent {
   ssoEnabled = false;
   /** The configured SSO sign-in domain (e.g. "locobuzz.net"). */
   @Input() ssoDomain = 'locobuzz.net';
+  /** Usernames already in use — drives the availability check on step 1. */
+  @Input() takenUsernames: string[] = [];
+  /** Prototype toggle — role selector shown as a card grid vs. a dropdown. */
+  roleVariant: 'cards' | 'dropdown' = 'cards';
 
   // ---- wizard chrome -----------------------------------------------------
   currentStep = 1;
@@ -56,17 +60,17 @@ export class AddUserWizardComponent {
   /** Right-side contextual help — describes the important fields on each step. */
   readonly stepInfo: Record<number, {
     title: string; lead: string;
-    fields: { icon: string; label: string; desc: string; required?: boolean }[];
+    fields: { key: string; icon: string; label: string; desc: string; required?: boolean }[];
     tip?: string;
   }> = {
     1: {
       title: 'Who is this user?',
       lead: 'Their identity and how they sign in. Get the name and email right — the email is their login and where the invite is sent.',
       fields: [
-        { icon: 'badge', label: 'First & last name', desc: 'The person’s real name (3–20 characters). Shown across tickets and reports.', required: true },
-        { icon: 'alternate_email', label: 'Username', desc: 'A unique handle used to sign in. Choose carefully — it can’t be changed later.', required: true },
-        { icon: 'mail', label: 'Email', desc: 'Their login address and where the account invite is delivered.', required: true },
-        { icon: 'call', label: 'Contact number', desc: 'Optional — used for call/SMS escalations. Validated against the selected country.' },
+        { key: 'name', icon: 'badge', label: 'First & last name', desc: 'The person’s real name (3–20 characters). Shown across tickets and reports.', required: true },
+        { key: 'username', icon: 'alternate_email', label: 'Username', desc: 'A unique handle used to sign in. Choose carefully — it can’t be changed later.', required: true },
+        { key: 'email', icon: 'mail', label: 'Email', desc: 'Their login address and where the account invite is delivered.', required: true },
+        { key: 'contact', icon: 'call', label: 'Contact number', desc: 'Optional — used for call/SMS escalations. Validated against the selected country.' },
       ],
       tip: 'A clear headshot helps teammates recognise them in the shared inbox.',
     },
@@ -74,9 +78,9 @@ export class AddUserWizardComponent {
       title: 'Role & permissions',
       lead: 'The role presets a sensible baseline of access; fine-tune exactly what this user can do in each module.',
       fields: [
-        { icon: 'shield_person', label: 'Role', desc: 'Sets the access level (e.g. Agent, Supervisor) and pre-selects the permissions below.', required: true },
-        { icon: 'tune', label: 'Platform permissions', desc: 'Toggle what the user can see and do per module. At least one permission is required.', required: true },
-        { icon: 'warning', label: 'Supervisor Admin', desc: 'Grants full, account-wide control — assign only to trusted owners.' },
+        { key: 'role', icon: 'shield_person', label: 'Role', desc: 'Sets the access level (e.g. Agent, Supervisor) and pre-selects the permissions below.', required: true },
+        { key: 'permissions', icon: 'tune', label: 'Platform permissions', desc: 'Toggle what the user can see and do per module. At least one permission is required.', required: true },
+        { key: 'admin', icon: 'warning', label: 'Supervisor Admin', desc: 'Grants full, account-wide control — assign only to trusted owners.' },
       ],
       tip: 'Start from the role’s defaults, then remove anything this user shouldn’t have.',
     },
@@ -84,7 +88,7 @@ export class AddUserWizardComponent {
       title: 'Brand access',
       lead: 'Choose which brands this user can see and work on. Only assigned brands appear in their inbox, analytics and reports.',
       fields: [
-        { icon: 'storefront', label: 'Assigned brands', desc: 'Select one or more brands — the user is scoped strictly to these.', required: true },
+        { key: 'brands', icon: 'storefront', label: 'Assigned brands', desc: 'Select one or more brands — the user is scoped strictly to these.', required: true },
       ],
       tip: 'Assign the fewest brands needed; you can always add more later.',
     },
@@ -92,8 +96,8 @@ export class AddUserWizardComponent {
       title: 'Reply signature',
       lead: 'The sign-off appended to this user’s outgoing replies. Keep it short and on-brand.',
       fields: [
-        { icon: 'draw', label: 'Signature', desc: 'Up to 30 characters appended to replies, e.g. “— Aarav, Acme Care”.' },
-        { icon: 'storefront', label: 'Per-brand signatures', desc: 'When the user works across brands, set a distinct sign-off for each one.' },
+        { key: 'signature', icon: 'draw', label: 'Signature', desc: 'Up to 30 characters appended to replies, e.g. “— Aarav, Acme Care”.' },
+        { key: 'perbrand', icon: 'storefront', label: 'Per-brand signatures', desc: 'When the user works across brands, set a distinct sign-off for each one.' },
       ],
       tip: 'Signatures are optional — they can be set later from the user’s profile.',
     },
@@ -101,20 +105,25 @@ export class AddUserWizardComponent {
       title: 'Team & notifications',
       lead: 'Place the user in a team for routing and reporting, and choose who is told about the new account.',
       fields: [
-        { icon: 'group', label: 'Team', desc: 'Groups the user for ticket routing, reporting and bulk actions.' },
-        { icon: 'notifications', label: 'Notify', desc: 'Email the team and/or specific people that this account was created.' },
+        { key: 'team', icon: 'group', label: 'Team', desc: 'Groups the user for ticket routing, reporting and bulk actions.' },
+        { key: 'notify', icon: 'notifications', label: 'Notify', desc: 'Email the team and/or specific people that this account was created.' },
       ],
     },
     6: {
       title: 'Review & create',
       lead: 'A final check before the account is created. Go back to any step to edit anything that looks off.',
       fields: [
-        { icon: 'fact_check', label: 'Summary', desc: 'Confirm the name, role, brands and permissions are all correct.' },
-        { icon: 'mail', label: 'Invite', desc: 'On create, the user receives an email invite to set their password.' },
+        { key: 'summary', icon: 'fact_check', label: 'Summary', desc: 'Confirm the name, role, brands and permissions are all correct.' },
+        { key: 'invite', icon: 'mail', label: 'Invite', desc: 'On create, the user receives an email invite to set their password.' },
       ],
       tip: 'Need to add more people? The success screen offers “Add another user”.',
     },
   };
+
+  /** Key of the field currently focused on the left — highlights its aside block. */
+  activeInfo: string | null = null;
+  setActiveInfo(key: string) { this.activeInfo = key; }
+  clearActiveInfo() { this.activeInfo = null; }
 
   // ---- reference data ----------------------------------------------------
   readonly roles = USER_ROLES;
@@ -123,6 +132,8 @@ export class AddUserWizardComponent {
   readonly allTeams = TEAMS;
   readonly notifyUsers = NOTIFY_USERS;
   readonly groups = PERMISSION_GROUPS;
+  /** Flag image URL for a country dial-code entry. */
+  readonly countryFlag = countryCodeFlagUrl;
 
   // =======================================================================
   //  Step 1 · user profile
@@ -186,7 +197,7 @@ export class AddUserWizardComponent {
         const ln = this.lastName.trim().length;
         const un = this.username.trim().length;
         return fn >= 3 && fn <= 20 && ln >= 3 && ln <= 20
-          && un >= 3 && un <= 20 && this.emailRe.test(this.email.trim())
+          && un >= 3 && un <= 20 && !this.usernameTaken && this.emailRe.test(this.email.trim())
           && (!this.contactNumber || this.contactNumber.length >= 4);
       }
       case 2: return !!this.role && this.checkedPermissions.size > 0;   // role & permissions
@@ -274,6 +285,18 @@ export class AddUserWizardComponent {
     const email = this.email.trim().toLowerCase();
     if (!this.ssoEnabled || !this.ssoDomain || !email) return false;
     return !email.endsWith('@' + this.ssoDomain.toLowerCase());
+  }
+
+  /** True when the typed username is already in use. */
+  get usernameTaken(): boolean {
+    const u = this.username.trim().toLowerCase();
+    return u.length >= 3 && this.takenUsernames.some(t => t.toLowerCase() === u);
+  }
+
+  /** True when the typed username is valid and free. */
+  get usernameAvailable(): boolean {
+    const u = this.username.trim();
+    return u.length >= 3 && u.length <= 20 && !this.usernameTaken;
   }
 
   /** True for roles that may be promoted to admin. */
@@ -510,7 +533,7 @@ export class AddUserWizardComponent {
   }
 
   /** Rotating avatar colours for the team member stack. */
-  readonly memberColors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+  readonly memberColors = ['#007AFF', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
   // =======================================================================
   //  Step 5 helpers (read-only review)
@@ -617,7 +640,7 @@ export class AddUserWizardComponent {
 
   /** A spread of confetti pieces with varied colour, position, timing. */
   private makeConfetti() {
-    const colors = ['#4f46e5', '#7c6cf6', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'];
+    const colors = ['#007AFF', '#4aa3ff', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'];
     return Array.from({ length: 28 }, (_, i) => ({
       left: Math.round(Math.random() * 100),
       delay: +(Math.random() * 0.5).toFixed(2),

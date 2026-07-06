@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatMenuModule } from '@angular/material/menu';
 import {
-  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, BRAND_COLORS, MANAGED_BRANDS, brandLogo, countryFlagUrl,
+  COUNTRIES, BRAND_USERS, CATEGORY_GROUPS, BRAND_COLORS, MANAGED_BRANDS, INDUSTRIES, brandLogo, countryFlagUrl,
   BrandUser, BrandProduct, BrandCompetitor, CategoryGroupInfo, CategoryNode, ManagedBrand,
   flattenCategories,
 } from './manage-brands-data';
@@ -21,10 +21,12 @@ interface WizardStep {
 /** Full brand payload emitted when a brand is saved. */
 export interface NewBrandPayload {
   name: string;
-  aiFriendlyName: string;
+  aiFriendlyName: string;         // common name
   description: string;
   color: string;
   country: string;
+  website: string;
+  industry: string;
   ticketsEnabled: boolean;
   categoryGroup: string;
   catchAll: string;
@@ -55,6 +57,25 @@ export class AddBrandWizardComponent {
    * When false, the Tickets step is dropped and the wizard has one fewer step.
    */
   planHasTicketing = true;
+  /** Listening is the base capability; Digital Care builds on top of it. */
+  listeningEnabled = true;
+
+  /** Plan-features menu — Digital Care requires Listening; turning Listening off drops both. */
+  setListening(on: boolean) {
+    this.listeningEnabled = on;
+    if (!on) { this.planHasTicketing = false; this.ticketsEnabled = false; this.useMappedCompetitors = false; }
+    this.clampStep();
+  }
+  setDigitalCare(on: boolean) {
+    this.planHasTicketing = on;
+    if (on) this.listeningEnabled = true;      // Digital Care needs Listening
+    if (!on) this.useMappedCompetitors = false;  // mapped competitors are a Digital Care feature
+    this.ticketsEnabled = on;
+    this.clampStep();
+  }
+  private clampStep() {
+    if (this.currentStep > this.totalSteps) this.currentStep = this.totalSteps;
+  }
 
   /**
    * Preview mode. An **existing** account has data (sample products, competitors,
@@ -117,29 +138,68 @@ export class AddBrandWizardComponent {
   // ---- step 1 · brand identity -------------------------------------------
   brandName = '';
   country = '';
-  aiFriendlyName = '';            // recognised brand name (optional)
-  showRecognisedName = false;     // revealed via the "Add recognised name" button
+  aiFriendlyName = '';            // common name (optional)
   brandDescription = '';
   countryOpen = false;
   countrySearch = '';
 
+  // website + industry
+  brandWebsite = '';
+  readonly industries = INDUSTRIES;
+  industry = '';                  // selected industry (from the list)
+  industryOther = '';            // free-text industry when "Others" is selected
+  industryOpen = false;
+  industrySearch = '';
+
+  /** The industry to persist — the free-text value when "Others" is chosen. */
+  get resolvedIndustry(): string {
+    return this.industry === 'Others' ? this.industryOther.trim() : this.industry;
+  }
+  get filteredIndustries(): string[] {
+    const q = this.industrySearch.trim().toLowerCase();
+    return q ? this.industries.filter(i => i.toLowerCase().includes(q)) : [...this.industries];
+  }
+  selectIndustry(i: string) {
+    this.industry = i;
+    if (i !== 'Others') this.industryOther = '';
+    this.industryOpen = false;
+    this.industrySearch = '';
+  }
+
+  /**
+   * The field the user is currently interacting with on the left. Its matching block
+   * in the right info panel is highlighted while everything else is dimmed. When null,
+   * the whole panel shows normally. (Reusable pattern — mirror it in other wizards.)
+   */
+  activeField: string | null = null;
+  private focusToken = 0;
+  /** Call on focus/click of a left-hand control to highlight its info block. */
+  setActive(key: string) { this.activeField = key; this.focusToken++; }
+  /** Call on blur; clears the highlight only if focus didn't move to another tracked control. */
+  clearActive() {
+    const token = ++this.focusToken;
+    setTimeout(() => { if (token === this.focusToken) this.activeField = null; }, 0);
+  }
+
   // ---- domain auto-fill (prototype of the context.dev enrichment API) ----
+  /** Step-1 mode: Quick Setup (auto-fill from website) vs manual entry. */
+  quickSetup = true;
   domainInput = '';
   fetching = false;
   fetchError = '';
   fetchedDomain = '';             // set once details have been pulled for a domain
   /** Mock enrichment directory — stands in for the real domain-lookup API. */
   private readonly brandDirectory: Record<string, {
-    name: string; recognised?: string; country: string; color: string; description: string;
+    name: string; recognised?: string; country: string; color: string; industry?: string; description: string;
   }> = {
-    'nike.com':      { name: 'Nike', country: 'United States', color: '#111111', description: 'Nike designs, markets and sells athletic footwear, apparel and equipment for sport and everyday wear worldwide.' },
-    'amazon.in':     { name: 'Amazon India', recognised: 'Amazon', country: 'India', color: '#ff9900', description: 'Amazon India is an online marketplace offering electronics, fashion, groceries and more, with fast delivery and Prime membership.' },
-    'zomato.com':    { name: 'Zomato', country: 'India', color: '#e23744', description: 'Zomato is a food-delivery and restaurant-discovery platform connecting customers with restaurants across India and beyond.' },
-    'myntra.com':    { name: 'Myntra', country: 'India', color: '#e91e63', description: 'Myntra is an Indian fashion e-commerce platform for apparel, footwear, accessories and lifestyle products.' },
-    'flipkart.com':  { name: 'Flipkart', country: 'India', color: '#2874f0', description: 'Flipkart is one of India’s largest e-commerce marketplaces, selling electronics, fashion, home and grocery.' },
-    'starbucks.com': { name: 'Starbucks', country: 'United States', color: '#00704a', description: 'Starbucks is a global coffeehouse chain serving coffee, tea, beverages and food across thousands of stores.' },
-    'swiggy.com':    { name: 'Swiggy', country: 'India', color: '#fc8019', description: 'Swiggy is an on-demand delivery platform for food, groceries and essentials across cities in India.' },
-    'airindia.com':  { name: 'Air India', country: 'India', color: '#d21034', description: 'Air India is the flag carrier airline of India, operating domestic and international passenger and cargo services.' },
+    'nike.com':      { name: 'Nike', country: 'United States', color: '#111111', industry: 'Retail', description: 'Nike designs, markets and sells athletic footwear, apparel and equipment for sport and everyday wear worldwide.' },
+    'amazon.in':     { name: 'Amazon India', recognised: 'Amazon', country: 'India', color: '#ff9900', industry: 'E-commerce', description: 'Amazon India is an online marketplace offering electronics, fashion, groceries and more, with fast delivery and Prime membership.' },
+    'zomato.com':    { name: 'Zomato', country: 'India', color: '#e23744', industry: 'Food & Beverages', description: 'Zomato is a food-delivery and restaurant-discovery platform connecting customers with restaurants across India and beyond.' },
+    'myntra.com':    { name: 'Myntra', country: 'India', color: '#e91e63', industry: 'E-commerce', description: 'Myntra is an Indian fashion e-commerce platform for apparel, footwear, accessories and lifestyle products.' },
+    'flipkart.com':  { name: 'Flipkart', country: 'India', color: '#2874f0', industry: 'E-commerce', description: 'Flipkart is one of India’s largest e-commerce marketplaces, selling electronics, fashion, home and grocery.' },
+    'starbucks.com': { name: 'Starbucks', country: 'United States', color: '#00704a', industry: 'Food & Beverages', description: 'Starbucks is a global coffeehouse chain serving coffee, tea, beverages and food across thousands of stores.' },
+    'swiggy.com':    { name: 'Swiggy', country: 'India', color: '#fc8019', industry: 'Food & Beverages', description: 'Swiggy is an on-demand delivery platform for food, groceries and essentials across cities in India.' },
+    'airindia.com':  { name: 'Air India', country: 'India', color: '#d21034', industry: 'Aviation', description: 'Air India is the flag carrier airline of India, operating domestic and international passenger and cargo services.' },
   };
 
   /** Description authoring mode: write it manually, or generate it with AI. */
@@ -156,28 +216,48 @@ export class AddBrandWizardComponent {
   color = '#0f172a';
   customColorOpen = false;
   colorFromLogo = false;          // colour was auto-extracted from the uploaded logo
-  // sample data for the brand-color chart preview
-  readonly previewBars = [38, 60, 47, 72, 55, 88, 96];
-  readonly previewDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  /**
+   * Donut showing every existing brand's colour plus the one being created (highlighted).
+   * Uses stroke-dasharray on a normalised circle (pathLength = 100).
+   */
+  /** How many brands the donut shows besides the one being created. */
+  private readonly donutMax = 5;
+  get donutMore(): number { return Math.max(0, this.otherBrands.length - this.donutMax); }
 
-  /** Points for the preview sparkline, mapped into a 100×40 viewBox. */
-  private get previewPoints(): { x: number; y: number }[] {
-    const w = 100, h = 40, pad = 4, max = 100, n = this.previewBars.length;
-    return this.previewBars.map((v, i) => ({
-      x: +(pad + (i * (w - 2 * pad)) / (n - 1)).toFixed(1),
-      y: +(h - pad - (v / max) * (h - 2 * pad)).toFixed(1),
-    }));
+  /** Filled-wedge donut segments; the brand being created is pulled out & emphasised. */
+  get donutArcs(): { name: string; color: string; current: boolean; d: string; tx: number; ty: number }[] {
+    const brands = [
+      ...this.otherBrands.slice(0, this.donutMax).map(b => ({ name: b.name, color: b.color, current: false })),
+      { name: this.brandName.trim() || 'Your brand', color: this.color, current: true },
+    ];
+    const n = brands.length || 1;
+    const cx = 50, cy = 50, R = 44, r = 27;
+    const gapDeg = n > 1 ? 3 : 0;
+    const each = 360 / n;
+    return brands.map((b, i) => {
+      const start = -90 + i * each + gapDeg / 2;
+      const end = -90 + (i + 1) * each - gapDeg / 2;
+      const mid = (start + end) / 2 * Math.PI / 180;
+      const push = b.current ? 5 : 0;
+      return {
+        ...b,
+        d: this.annulusPath(cx, cy, R, r, start, end),
+        tx: +(push * Math.cos(mid)).toFixed(2),
+        ty: +(push * Math.sin(mid)).toFixed(2),
+      };
+    });
   }
-  get previewLine(): string {
-    return this.previewPoints.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
-  }
-  get previewArea(): string {
-    const pts = this.previewPoints;
-    return `M${pts[0].x} 40 ` + pts.map(p => `L${p.x} ${p.y}`).join(' ') + ` L${pts[pts.length - 1].x} 40 Z`;
-  }
-  get previewLast(): { x: number; y: number } {
-    const pts = this.previewPoints;
-    return pts[pts.length - 1];
+
+  /** Path for one donut wedge (annulus sector). */
+  private annulusPath(cx: number, cy: number, R: number, r: number, a0: number, a1: number): string {
+    const pt = (rad: number, deg: number): [number, number] => {
+      const a = deg * Math.PI / 180;
+      return [+(cx + rad * Math.cos(a)).toFixed(2), +(cy + rad * Math.sin(a)).toFixed(2)];
+    };
+    const large = a1 - a0 > 180 ? 1 : 0;
+    const [ox0, oy0] = pt(R, a0), [ox1, oy1] = pt(R, a1);
+    const [ix1, iy1] = pt(r, a1), [ix0, iy0] = pt(r, a0);
+    return `M${ox0} ${oy0} A${R} ${R} 0 ${large} 1 ${ox1} ${oy1} L${ix1} ${iy1} A${r} ${r} 0 ${large} 0 ${ix0} ${iy0} Z`;
   }
 
   // ---- step 3 · team & tickets -------------------------------------------
@@ -226,6 +306,9 @@ export class AddBrandWizardComponent {
   productDraftName = '';
   productDraftSynonyms = '';
   editingProductId: string | null = null;
+  /** Inline "add synonyms" editor, opened under a specific product row. */
+  synEditingId: string | null = null;
+  synDraft = '';
 
   private seq = 100;
 
@@ -256,6 +339,7 @@ export class AddBrandWizardComponent {
       case 'identity': {
         const n = this.brandName.trim().length;
         return n >= 3 && n <= 50 && !!this.country
+          && !!this.brandWebsite.trim() && !!this.resolvedIndustry
           && !!this.brandDescription.trim() && this.brandDescription.length <= 200;
       }
       case 'logo': return !!this.logoDataUrl;
@@ -310,8 +394,6 @@ export class AddBrandWizardComponent {
   }
 
   /** Reveal / clear the optional recognised-brand-name field. */
-  addRecognisedName() { this.showRecognisedName = true; }
-  removeRecognisedName() { this.showRecognisedName = false; this.aiFriendlyName = ''; }
 
   /** Generate the brand description — uses the recognised name if given, else the brand name. */
   generateDescription() {
@@ -344,27 +426,29 @@ export class AddBrandWizardComponent {
     setTimeout(() => {
       const data = this.brandDirectory[domain] ?? this.deriveFromDomain(domain);
       this.brandName = data.name;
-      if (data.recognised) { this.aiFriendlyName = data.recognised; this.showRecognisedName = true; }
+      if (data.recognised) this.aiFriendlyName = data.recognised;
       this.brandDescription = data.description.slice(0, 200);
-      this.descMode = 'ai';
-      this.descGenerated = true;
+      this.descMode = 'manual';   // keep the user on the manual tab after Quick Setup
       this.country = data.country;
-      this.color = data.color;
+      this.color = data.color;              // fallback colour…
       this.colorFromLogo = false;
+      this.brandWebsite = `https://${domain}`;
+      if (data.industry) { this.industry = data.industry; this.industryOther = ''; }
       this.logoDataUrl = `https://logo.clearbit.com/${domain}`;
+      this.extractColorFromLogo(this.logoDataUrl);   // …overridden by the fetched logo's colour when readable
       this.fetchedDomain = domain;
       this.fetching = false;
     }, 1400);
   }
 
   /** Fallback enrichment for a domain we don't have canned data for. */
-  private deriveFromDomain(domain: string): { name: string; country: string; color: string; description: string } {
+  private deriveFromDomain(domain: string): { name: string; country: string; color: string; industry?: string; description: string } {
     const label = domain.split('.')[0].replace(/[-_]/g, ' ');
     const name = label.replace(/\b\w/g, c => c.toUpperCase());
     return {
       name,
       country: 'India',
-      color: '#4f46e5',
+      color: '#007AFF',
       description: `${name} is the brand behind ${domain}. Review this summary and refine it so your team and AI understand the brand.`,
     };
   }
@@ -668,6 +752,7 @@ export class AddBrandWizardComponent {
   //  Step 5 · products & competitors
   // =======================================================================
   startAddProduct() {
+    this.cancelSynonyms();
     this.addingProduct = true;
     this.editingProductId = null;
     this.productDraftName = '';
@@ -675,6 +760,7 @@ export class AddBrandWizardComponent {
   }
 
   editProduct(p: BrandProduct) {
+    this.cancelSynonyms();
     this.addingProduct = true;
     this.editingProductId = p.id;
     this.productDraftName = p.name;
@@ -682,14 +768,20 @@ export class AddBrandWizardComponent {
   }
 
   saveProduct() {
-    const name = this.productDraftName.trim();
-    if (!name) return;
+    const raw = this.productDraftName.trim();
+    if (!raw) return;
+    // synonyms are optional
     const synonyms = this.productDraftSynonyms.split(',').map(s => s.trim()).filter(Boolean);
     if (this.editingProductId) {
       const existing = this.products.find(p => p.id === this.editingProductId);
-      if (existing) { existing.name = name; existing.synonyms = synonyms; }
+      if (existing) { existing.name = raw; existing.synonyms = synonyms; }
     } else {
-      this.products.push({ id: `p${this.seq++}`, name, synonyms });
+      // the name field accepts several products separated by commas
+      const names = raw.split(',').map(n => n.trim()).filter(Boolean);
+      for (const name of names) {
+        if (this.products.some(p => p.name.toLowerCase() === name.toLowerCase())) continue;
+        this.products.push({ id: `p${this.seq++}`, name, synonyms: [...synonyms] });
+      }
     }
     this.cancelProduct();
   }
@@ -699,6 +791,24 @@ export class AddBrandWizardComponent {
     this.editingProductId = null;
     this.productDraftName = '';
     this.productDraftSynonyms = '';
+  }
+
+  /** Open the inline synonyms input under a product row. */
+  startAddSynonyms(p: BrandProduct) {
+    this.cancelProduct();
+    this.synEditingId = p.id;
+    this.synDraft = '';
+    this.setActive('synonyms');   // highlight the Synonyms block in the info panel
+  }
+  saveSynonyms() {
+    const p = this.products.find(x => x.id === this.synEditingId);
+    if (p) p.synonyms = this.synDraft.split(',').map(s => s.trim()).filter(Boolean);
+    this.cancelSynonyms();
+  }
+  cancelSynonyms() {
+    this.synEditingId = null;
+    this.synDraft = '';
+    this.clearActive();
   }
 
   deleteProduct(p: BrandProduct) {
@@ -816,6 +926,8 @@ export class AddBrandWizardComponent {
       description: this.brandDescription.trim(),
       color: this.color,
       country: this.country,
+      website: this.brandWebsite.trim(),
+      industry: this.resolvedIndustry,
       ticketsEnabled: this.ticketsEnabled,
       categoryGroup: this.categoryGroup,
       catchAll: this.catchAll,
@@ -886,17 +998,23 @@ export class AddBrandWizardComponent {
   private resetForNewBrand() {
     this.celebrating = false;
     this.currentStep = 1;
+    this.activeField = null;
     // step 1
     this.brandName = '';
     this.country = '';
     this.aiFriendlyName = '';
-    this.showRecognisedName = false;
     this.brandDescription = '';
     this.descMode = 'manual';
     this.aiNameLoading = this.aiNameAttempted = this.generating = this.descGenerated = false;
     this.aiNameError = '';
     this.countryOpen = false;
     this.countrySearch = '';
+    this.brandWebsite = '';
+    this.industry = '';
+    this.industryOther = '';
+    this.industryOpen = false;
+    this.industrySearch = '';
+    this.quickSetup = true;
     this.domainInput = '';
     this.fetching = false;
     this.fetchError = '';
@@ -959,12 +1077,14 @@ export class AddBrandWizardComponent {
   @HostListener('document:click')
   onDocumentClick() {
     this.usersDropdownOpen = false;
+    this.countryOpen = false;
+    this.industryOpen = false;
   }
 
   // Close any open inline popovers when clicking elsewhere in the dialog.
   @HostListener('document:keydown.escape')
   onEscape() {
-    this.countryOpen = false;
+    this.countryOpen = this.industryOpen = false;
     this.customColorOpen = this.usersDropdownOpen = false;
   }
 }
