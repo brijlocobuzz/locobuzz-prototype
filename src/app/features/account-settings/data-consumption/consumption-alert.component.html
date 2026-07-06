@@ -64,13 +64,26 @@
                     (click)="toggleThreshold(p)">
               {{ p }}%
             </button>
+            <!-- Always-on 100% level: shown selected, can't be toggled off. -->
+            <button type="button" class="ca-th-chip on locked" disabled aria-pressed="true"
+                    title="Always on — sent when your full data limit is reached">
+              <span class="msr">lock</span>{{ mandatoryThreshold }}%
+            </button>
           </div>
 
+          <!-- Explains the mandatory 100% alert -->
+          <p class="ca-th-note" role="note">
+            <span class="msr">lock</span>
+            <span>The <strong>{{ mandatoryThreshold }}%</strong> level is always on. The moment usage reaches your full
+            data limit, we automatically email your default recipient — this alert can't be turned off.</span>
+          </p>
+
           <!-- visual usage scale -->
-          <div class="ca-scale" *ngIf="threshold.thresholds.length">
+          <div class="ca-scale" *ngIf="scaleThresholds.length">
             <span class="ca-scale-cap">Where alerts fire across your usage</span>
             <div class="ca-scale-track">
-              <span class="ca-scale-tick" *ngFor="let t of threshold.thresholds" [style.left.%]="t">
+              <span class="ca-scale-tick" *ngFor="let t of scaleThresholds"
+                    [class.locked]="t === mandatoryThreshold" [style.left.%]="t">
                 <span class="ca-scale-tag">{{ t }}%</span>
               </span>
             </div>

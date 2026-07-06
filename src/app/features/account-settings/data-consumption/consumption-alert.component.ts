@@ -41,6 +41,10 @@ export class ConsumptionAlertComponent {
   readonly senderEmail = 'alerts@locobuzz.com';
   readonly presetThresholds = [10, 20, 25, 30, 50, 75, 80, 90, 95];
 
+  /** Always-on level. When usage hits the full data limit we notify the default
+   *  recipient — this one can't be turned off, so it isn't a preset chip. */
+  readonly mandatoryThreshold = 100;
+
   /** Most usage levels a user can watch at once. */
   readonly maxThresholds = 5;
 
@@ -199,6 +203,11 @@ export class ConsumptionAlertComponent {
 
   /** A preset chip is disabled when the cap is reached and it isn't already on. */
   isThresholdDisabled(v: number): boolean { return this.thresholdsFull && !this.isThresholdSelected(v); }
+
+  /** Selected levels plus the always-on 100% mark, for the usage scale. */
+  get scaleThresholds(): number[] {
+    return [...this.threshold.thresholds, this.mandatoryThreshold].sort((a, b) => a - b);
+  }
 
   /* ---- email chips ---- */
   addEmail(cfg: AlertSection) {

@@ -194,6 +194,23 @@
 .ca-th-chip.on:hover:not(.disabled) { background: var(--brand-600, #5b39d6); border-color: var(--brand-600, #5b39d6); }
 .ca-th-chip:focus-visible { outline: 2px solid var(--brand, #6d4af3); outline-offset: 2px; }
 .ca-th-chip.disabled { opacity: .45; cursor: not-allowed; }
+/* Always-on 100% chip: reads as selected but is locked, not disabled-looking. */
+.ca-th-chip.locked {
+  display: inline-flex; align-items: center; gap: 4px;
+  cursor: default; opacity: 1;
+  padding-left: 11px;
+}
+.ca-th-chip.locked .msr { font-size: 14px; }
+
+/* note explaining the mandatory 100% alert */
+.ca-th-note {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 12px 0 0; padding: 10px 12px;
+  border: 1px solid var(--border-soft, #eef0f4); border-radius: 10px; background: var(--surface-2, #f7f8fb);
+  font-size: var(--font-size-12, 12px); line-height: 1.5; color: var(--text-2, #4b5563);
+}
+.ca-th-note .msr { font-size: 16px; color: var(--brand, #6d4af3); flex: none; margin-top: 1px; }
+.ca-th-note strong { color: var(--text-1, #1c1d22); }
 
 /* usage scale */
 .ca-scale {
@@ -210,6 +227,9 @@
   content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 3px; height: 16px; border-radius: 2px; background: #1c1d22; box-shadow: 0 0 0 2px #fff;
 }
+/* the always-on 100% mark reads distinctly from user-picked levels */
+.ca-scale-tick.locked::after { background: #e0533f; }
+.ca-scale-tick.locked .ca-scale-tag { border-color: #e0533f; color: #e0533f; }
 .ca-scale-tag {
   position: absolute; left: 50%; bottom: 13px; transform: translateX(-50%);
   font-size: 11px; font-weight: 700; color: var(--text-1, #1c1d22);
