@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, AD_ACCOUNTS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, AdAccount, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 
 interface BrandOption { id: string; name: string; category: string; color: string; hasChannels: boolean; }
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
@@ -299,12 +299,38 @@ export class ChannelConfigComponent {
 
   /** Count of token-expired profiles — drives the built-in "Token Expired" view. */
   get expiredCount(): number { return this.profiles.filter(p => !!p.alert).length; }
+  /** Count of profiles with an active linked ads account — drives the "Ads Accounts" view. */
+  get adsCount(): number { return this.profiles.filter(p => !!p.adsActive).length; }
+
+  /* ---- link-ads-account popover ---- */
+  adAccounts = AD_ACCOUNTS;
+  adsModalProfile: ChannelProfile | null = null;
+  adsDraft = new Set<string>();
+  openAdsModal(p: ChannelProfile) {
+    this.adsModalProfile = p;
+    this.adsDraft = new Set(p.adAccountIds ?? []);
+  }
+  closeAdsModal() { this.adsModalProfile = null; }
+  toggleAdsDraft(id: string) { this.adsDraft.has(id) ? this.adsDraft.delete(id) : this.adsDraft.add(id); }
+  get allAdsDraftSelected(): boolean { return this.adsDraft.size === this.adAccounts.length; }
+  toggleAllAdsDraft() {
+    if (this.allAdsDraftSelected) this.adsDraft.clear();
+    else this.adAccounts.forEach(a => this.adsDraft.add(a.id));
+  }
+  adName(id: string): string { return this.adAccounts.find(a => a.id === id)?.name ?? id; }
+  saveAdsLink() {
+    if (!this.adsModalProfile) return;
+    this.adsModalProfile.adAccountIds = [...this.adsDraft];
+    this.adsModalProfile.adsActive = this.adsDraft.size > 0;
+    this.closeAdsModal();
+  }
 
   /** Profiles after the active view's filter + column sort are applied (all pages). */
   get filteredProfiles(): ChannelProfile[] {
     const v = this.savedViews.find(s => s.id === this.activeViewId);
     let rows: ChannelProfile[];
     if (this.activeViewId === 'expired') rows = this.profiles.filter(p => !!p.alert);
+    else if (this.activeViewId === 'ads') rows = this.profiles.filter(p => !!p.adsActive);
     else if (v) rows = this.profiles.filter(p => this.matchesCondition(p, v.filter));
     else rows = [...this.profiles];
     if (this.sortKey) {

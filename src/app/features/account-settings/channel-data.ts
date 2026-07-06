@@ -72,6 +72,10 @@ export interface ChannelProfile {
   updatedOn: string;
   mentionTypes: string[];   // all types shown, no overflow
   alert?: { text: string; badge: string };   // e.g. token expired
+  /** A linked ads account is active for this profile (Meta / X / LinkedIn Ads). */
+  adsActive?: boolean;
+  /** Ids of the linked ads accounts (from AD_ACCOUNTS). */
+  adAccountIds?: string[];
   /** Grouped channels (GMB, Email) expand into child rows. */
   childKind?: 'location' | 'mailbox';
   children?: SubProfile[];
@@ -82,6 +86,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Brandacca1', owner: 'Asish Locobuzz Brand', initials: 'B', avatarColor: '#7c4dff',
     status: 'Owned', addedOn: 'Jun 11, 2026 11:57 AM', updatedOn: 'Jun 26, 2026 6:07 PM',
     mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions', 'Reviews', 'Ratings'],
+    adsActive: true,
   },
   {
     name: 'Locouser', owner: 'Nani R', initials: 'L', avatarColor: '#f0a020',
@@ -93,6 +98,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Official', owner: 'Priya Menon', initials: 'A', avatarColor: '#2563eb',
     status: 'Owned', addedOn: 'May 03, 2026 9:21 AM', updatedOn: 'Jun 25, 2026 4:42 PM',
     mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions'],
+    adsActive: true,
   },
   {
     name: 'Acme India', owner: 'Ravi Shah', initials: 'A', avatarColor: '#e1306c',
@@ -114,6 +120,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Global', owner: 'Marcus Webb', initials: 'A', avatarColor: '#5c6bc0',
     status: 'Owned', addedOn: 'Nov 30, 2025 11:11 AM', updatedOn: 'Jun 12, 2026 6:48 PM',
     mentionTypes: ['User Comments', 'Messages', 'Visitor Posts', 'Mentions', 'Reviews', 'Recommendations'],
+    adsActive: true,
   },
   {
     name: 'Acme Events', owner: 'Aria Tan', initials: 'A', avatarColor: '#ff7043',
@@ -385,6 +392,20 @@ export const FACEBOOK_PAGES: FacebookPage[] = [
   { id: 'india',    name: 'Acme India',    followers: '8.2k followers',  initials: 'A', color: '#e1306c', igHandle: '@acme.india', igMessages: true },
   { id: 'store',    name: 'Acme Store',    followers: '2.7k followers',  initials: 'A', color: '#00bcd4' },
 ];
+
+/** An advertising account the user can link (Meta / X / LinkedIn Ads). */
+export interface AdAccount { id: string; name: string; meta: string; }
+
+/** Ads accounts available for the demo (shown for Twitter, LinkedIn, Meta). */
+export const AD_ACCOUNTS: AdAccount[] = [
+  { id: 'ad-brand',   name: 'Acme — Brand Ads',      meta: 'Act #4471029 · USD' },
+  { id: 'ad-perf',    name: 'Acme — Performance',    meta: 'Act #8820551 · USD' },
+  { id: 'ad-retarget',name: 'Acme — Retargeting',    meta: 'Act #1290337 · INR' },
+  { id: 'ad-intl',    name: 'Acme — International',   meta: 'Act #5563100 · EUR' },
+];
+
+/** Channels that support linking an ads account (X, LinkedIn, Meta = FB/IG). */
+export const ADS_SUPPORTED_IDS = ['twitter', 'facebook', 'instagram', 'linkedin'];
 
 /** Icon per mention type for the chips. */
 export function mentionTypeIcon(type: string): string {

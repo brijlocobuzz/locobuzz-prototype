@@ -72,6 +72,83 @@
 <app-add-channel-wizard *ngIf="wizardOpen" [preselectId]="wizardPreselect"
                         (closed)="wizardOpen = false; wizardPreselect = null"></app-add-channel-wizard>
 
+<!-- ===== Link ads account popover ===== -->
+<div class="ads-scrim" *ngIf="adsModalProfile" (click)="closeAdsModal()"></div>
+<div class="ads-modal" *ngIf="adsModalProfile as p" role="dialog" aria-modal="true">
+  <div class="ads-shell">
+    <!-- left: selection -->
+    <div class="ads-main">
+      <header class="ads-head">
+        <span class="ads-head-ic"><span class="msr">ads_click</span></span>
+        <div class="ads-head-tx">
+          <h2>Link an ads account</h2>
+          <p>Select the ads accounts to link to <b>{{ p.name }}</b>.</p>
+        </div>
+        <button class="ads-x" (click)="closeAdsModal()" aria-label="Close"><span class="msr">close</span></button>
+      </header>
+
+      <div class="ads-body">
+        <div class="ads-bar">
+          <span class="ads-count">
+            <span class="msr">{{ adsDraft.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
+            <b>{{ adsDraft.size }}</b>&nbsp;of {{ adAccounts.length }} selected
+          </span>
+          <button class="ads-selall" (click)="toggleAllAdsDraft()">
+            <span class="msr">{{ allAdsDraftSelected ? 'remove_done' : 'done_all' }}</span>
+            {{ allAdsDraftSelected ? 'Clear all' : 'Select all' }}
+          </button>
+        </div>
+
+        <div class="ads-grid">
+          <button class="ads-card" *ngFor="let a of adAccounts" [class.sel]="adsDraft.has(a.id)" (click)="toggleAdsDraft(a.id)">
+            <span class="ads-check" [class.on]="adsDraft.has(a.id)"><span class="msr" *ngIf="adsDraft.has(a.id)">check</span></span>
+            <span class="ads-av"><span class="msr">ads_click</span></span>
+            <span class="ads-who">
+              <span class="ads-name">{{ a.name }}</span>
+              <span class="ads-meta"><span class="msr">tag</span>{{ a.meta }}</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <footer class="ads-foot">
+        <button class="ads-btn ghost" (click)="closeAdsModal()">Cancel</button>
+        <button class="ads-btn primary" (click)="saveAdsLink()">
+          <span class="msr">check</span>{{ adsDraft.size ? 'Link ' + adsDraft.size + ' account' + (adsDraft.size > 1 ? 's' : '') : 'Save' }}
+        </button>
+      </footer>
+    </div>
+
+    <!-- right: info panel -->
+    <aside class="ads-aside">
+      <span class="ads-eyebrow">Ads account</span>
+      <h3 class="ads-aside-title">Bring paid &amp; organic together.</h3>
+      <p class="ads-aside-lead">Linking an ads account pulls your paid activity into the same inbox as organic
+        mentions — the full picture in one place.</p>
+
+      <div class="ads-safe">
+        <span class="ads-safe-h"><span class="msr">check_circle</span>What we’ll collect</span>
+        <ul>
+          <li><span class="msr">check</span>Ad posts &amp; creatives</li>
+          <li><span class="msr">check</span>Comments on your ads</li>
+          <li><span class="msr">check</span>Paid metrics — spend, reach &amp; impressions</li>
+        </ul>
+      </div>
+
+      <div class="ads-feat">
+        <span class="ads-feat-ic"><span class="msr">forum</span></span>
+        <div class="ads-feat-tx"><b>Never miss ad comments</b><span>Reply to comments on paid posts right from your inbox.</span></div>
+      </div>
+      <div class="ads-feat">
+        <span class="ads-feat-ic"><span class="msr">insights</span></span>
+        <div class="ads-feat-tx"><b>Paid vs organic</b><span>Compare campaign performance next to organic reach &amp; sentiment.</span></div>
+      </div>
+
+      <div class="ads-tip"><span class="msr">lightbulb</span>You can change linked ads accounts anytime — nothing is charged here.</div>
+    </aside>
+  </div>
+</div>
+
 <!-- ===== Brand-level empty state — no channels configured anywhere ===== -->
 <div class="cc-onboard" *ngIf="brandEmpty">
   <div class="ob-hero">
@@ -286,6 +363,10 @@
         <span class="msr">error</span>Token Expired <span class="pf-tab-count">{{ expiredCount }}</span>
       </button>
 
+      <button class="pf-tab ads" [class.active]="activeViewId === 'ads'" (click)="setView('ads')">
+        <span class="msr">ads_click</span>Ads Accounts <span class="pf-tab-count">{{ adsCount }}</span>
+      </button>
+
       <button class="pf-tab" *ngFor="let v of savedViews"
               [class.active]="activeViewId === v.id" (click)="setView(v.id)" [title]="v.label">
         <span class="pf-tab-lbl">{{ v.label }}</span>
@@ -373,6 +454,7 @@
           <th class="sortable" (click)="sortBy('status')">
             <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
           </th>
+          <th class="col-ads">Ads Account</th>
           <th class="col-act">Action</th>
         </tr>
       </ng-template>
@@ -510,6 +592,16 @@
               </ng-container>
             </td>
 
+            <!-- ads account -->
+            <td class="col-ads">
+              <button class="ads-badge on" *ngIf="p.adsActive" (click)="openAdsModal(p)" title="Manage linked ads accounts">
+                <span class="msr">ads_click</span>Active<span class="ads-n" *ngIf="p.adAccountIds?.length">{{ p.adAccountIds?.length }}</span>
+              </button>
+              <button class="ads-link-btn" *ngIf="!p.adsActive" (click)="openAdsModal(p)" title="Link an ads account">
+                <span class="msr">add_link</span>Link account
+              </button>
+            </td>
+
             <!-- actions -->
             <td class="col-act">
               <div class="t-acts">
@@ -555,6 +647,7 @@
                 <span class="t-badge danger" *ngIf="c.alert"><span class="led"></span>Token Expired</span>
                 <span class="t-badge active" *ngIf="!c.alert"><span class="led"></span>Active</span>
               </td>
+              <td class="col-ads"><span class="ads-badge off"><span class="msr">remove</span>—</span></td>
               <td class="col-act">
                 <div class="t-acts">
                   <button class="t-reauth" *ngIf="c.alert"><span class="msr">autorenew</span>Reauthorize</button>

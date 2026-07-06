@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   CHANNEL_CATALOG, FACEBOOK_PAGES, BRAND_ICONS, CHANNEL_SPECS, WIZARD_COPY, X_API_VERSIONS,
-  ECOM_PRODUCTS, searchEcom,
-  CatalogChannel, CatalogGroup, FacebookPage, ChannelSpec, ChannelMode, EcomProduct,
+  AD_ACCOUNTS, ADS_SUPPORTED_IDS, ECOM_PRODUCTS, searchEcom,
+  CatalogChannel, CatalogGroup, FacebookPage, AdAccount, ChannelSpec, ChannelMode, EcomProduct,
 } from '../channel-data';
 
-type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'review';
+type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'ads' | 'review';
 interface Step { key: StepKey; label: string; }
 
 @Component({
@@ -60,6 +60,13 @@ export class AddChannelWizardComponent implements OnInit {
     v1: { loading: false, done: false },
     v2: { loading: false, done: false },
   };
+
+  // Ads accounts (Meta / X / LinkedIn) — optional step
+  adAccounts = AD_ACCOUNTS;
+  /** Demo toggle in the header: does this account have ads accounts available? */
+  adsAvailable = false;
+  selectedAds = new Set<string>();
+  private readonly adsSupported = new Set(ADS_SUPPORTED_IDS);
 
   // E-Commerce — add sources by URL, CSV or search
   ecomTab: 'url' | 'search' = 'url';
@@ -175,6 +182,7 @@ export class AddChannelWizardComponent implements OnInit {
       if (withConnection) arr.push({ key: 'connection', label: 'Account Type' });
       arr.push({ key: 'authenticate', label: 'Authenticate' });
       if (m.pages) arr.push({ key: 'pages', label: 'Select accounts' });
+      if (this.showAdsStep) arr.push({ key: 'ads', label: 'Ads account' });
       arr.push(review);
       return arr;
     };
@@ -214,6 +222,7 @@ export class AddChannelWizardComponent implements OnInit {
     this.authDone = false;
     this.authLoading = false;
     this.selectedPages.clear();
+    this.selectedAds.clear();
     this.xState = { v1: { loading: false, done: false }, v2: { loading: false, done: false } };
     this.ecomTab = 'url';
     this.urlDraft = ''; this.urlList = []; this.editIndex = -1; this.editDraft = '';
@@ -371,6 +380,21 @@ export class AddChannelWizardComponent implements OnInit {
     return this.pages.filter(p => this.selectedPages.has(p.id));
   }
 
+  // ---- ads accounts step -------------------------------------------------
+  /** This channel + mode can link an ads account (owned X / LinkedIn / Meta). */
+  get channelSupportsAds(): boolean {
+    return !!this.selected && this.adsSupported.has(this.selected.id) && this.activeMode?.key === 'owned';
+  }
+  /** The optional "Ads account" step is shown (demo toggle on + supported channel). */
+  get showAdsStep(): boolean { return this.adsAvailable && this.channelSupportsAds; }
+  toggleAd(id: string) { this.selectedAds.has(id) ? this.selectedAds.delete(id) : this.selectedAds.add(id); }
+  get allAdsSelected(): boolean { return this.selectedAds.size === this.adAccounts.length; }
+  toggleAllAds() {
+    if (this.allAdsSelected) this.selectedAds.clear();
+    else this.adAccounts.forEach(a => this.selectedAds.add(a.id));
+  }
+  get selectedAdList(): AdAccount[] { return this.adAccounts.filter(a => this.selectedAds.has(a.id)); }
+
   // ---- navigation --------------------------------------------------------
   get canContinue(): boolean {
     switch (this.current) {
@@ -379,6 +403,7 @@ export class AddChannelWizardComponent implements OnInit {
       case 'authenticate': return this.isXVersionAuth ? this.xConnectedCount === 2 : this.authDone;
       case 'public':       return this.isEcommerce ? this.ecomTotal > 0 : this.publicHandle.trim().length > 0;
       case 'pages':        return this.selectedPages.size > 0;
+      case 'ads':          return true;   // optional — skippable
       case 'review':       return true;
       default:             return false;
     }
@@ -418,6 +443,7 @@ export class AddChannelWizardComponent implements OnInit {
     this.authDone = false;
     this.authLoading = false;
     this.selectedPages.clear();
+    this.selectedAds.clear();
     this.xState = { v1: { loading: false, done: false }, v2: { loading: false, done: false } };
     this.ecomTab = 'url';
     this.urlDraft = ''; this.urlList = []; this.editIndex = -1; this.editDraft = '';

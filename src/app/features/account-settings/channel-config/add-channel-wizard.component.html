@@ -78,6 +78,11 @@
           <h2>{{ selected ? selected.label : copy.header }}</h2>
           <p>{{ selected ? 'Add and configure your ' + selected.label + ' channel.' : copy.sub }}</p>
         </div>
+        <button type="button" class="wz-demo" [class.on]="adsAvailable" (click)="adsAvailable = !adsAvailable"
+                title="Demo: simulate ads accounts being available on this login">
+          <span class="msr">ads_click</span>Ads accounts
+          <span class="wz-demo-sw" [class.on]="adsAvailable"><span></span></span>
+        </button>
         <button class="wz-x" (click)="close()" aria-label="Close"><span class="msr">close</span></button>
       </header>
 
@@ -537,6 +542,44 @@
           </div>
         </section>
 
+        <!-- 3d · ads account (optional) -->
+        <section *ngSwitchCase="'ads'" class="wz-pages">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">Link an ads account <span class="wz-optional">Optional</span></h3>
+            <p class="wz-sub left">We found ads accounts on your {{ selected?.label }} login. Link any to pull in
+              <b>ad posts, ad comments &amp; paid metrics</b> alongside organic mentions — or skip and add later.</p>
+          </div>
+
+          <div class="wz-pages-bar">
+            <span class="wz-pages-count">
+              <span class="msr">{{ selectedAds.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              <b>{{ selectedAds.size }}</b>&nbsp;of {{ adAccounts.length }} ads accounts selected
+            </span>
+            <button class="wz-selectall" (click)="toggleAllAds()">
+              <span class="msr">{{ allAdsSelected ? 'remove_done' : 'done_all' }}</span>
+              {{ allAdsSelected ? 'Clear all' : 'Select all' }}
+            </button>
+          </div>
+
+          <div class="wz-page-grid">
+            <button class="wz-pagecard" *ngFor="let a of adAccounts"
+                    [class.sel]="selectedAds.has(a.id)" (click)="toggleAd(a.id)" [style.--ch]="selected?.color">
+              <span class="wz-check" [class.on]="selectedAds.has(a.id)">
+                <span class="msr" *ngIf="selectedAds.has(a.id)">check</span>
+              </span>
+              <span class="wz-page-av lg ads"><span class="msr">ads_click</span></span>
+              <span class="wz-page-who">
+                <span class="wz-page-name">{{ a.name }}</span>
+                <span class="wz-page-sub"><span class="msr">tag</span>{{ a.meta }}</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="wz-ads-skip">
+            <span class="msr">info</span>This step is optional — you can link or change ads accounts anytime from Channel Configuration.
+          </div>
+        </section>
+
         <!-- 4 · review & finish — connected-account preview -->
         <section *ngSwitchCase="'review'" class="wz-review">
 
@@ -593,6 +636,17 @@
             <div class="wz-chiprow">
               <span class="wz-chip2" *ngFor="let p of selectedPageList">
                 <span class="wz-chip2-av" [style.background]="p.color">{{ p.initials }}</span>{{ p.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- linked ads accounts -->
+          <div class="wz-collect" *ngIf="selectedAdList.length">
+            <span class="wz-collect-h"><span class="msr">ads_click</span>Ads accounts linked
+              <span class="wz-sum-count">{{ selectedAdList.length }}</span></span>
+            <div class="wz-chiprow">
+              <span class="wz-chip2" *ngFor="let a of selectedAdList">
+                <span class="wz-chip2-av" [style.background]="selected?.color"><span class="msr">ads_click</span></span>{{ a.name }}
               </span>
             </div>
           </div>
@@ -811,6 +865,34 @@
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">tune</span></span>
           <div class="wz-feat-text"><b>Change anytime</b><span>Pause or remove any {{ pagesNoun }} later from Channel Configuration.</span></div>
+        </div>
+      </ng-container>
+
+      <!-- ads account: what it adds + why it helps -->
+      <ng-container *ngSwitchCase="'ads'">
+        <span class="wz-aside-eyebrow">Ads account · optional</span>
+        <h3 class="wz-aside-title">Bring paid &amp; organic together.</h3>
+        <p class="wz-aside-lead">Link a {{ selected?.label }} ads account and Locobuzz pulls your paid activity in
+          alongside organic mentions — the full picture in one inbox.</p>
+        <div class="wz-safe">
+          <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
+          <ul>
+            <li><span class="msr">check</span>Ad posts &amp; creatives</li>
+            <li><span class="msr">check</span>Comments on your ads</li>
+            <li><span class="msr">check</span>Paid metrics — spend, reach &amp; impressions</li>
+          </ul>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">forum</span></span>
+          <div class="wz-feat-text"><b>Never miss ad comments</b><span>Reply to comments on paid posts right from your inbox.</span></div>
+        </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">insights</span></span>
+          <div class="wz-feat-text"><b>Paid vs organic</b><span>Compare campaign performance next to organic reach & sentiment.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">lightbulb</span>Good to know</span>
+          <p>This step is optional — skip it and link an ads account anytime from Channel Configuration.</p>
         </div>
       </ng-container>
 
