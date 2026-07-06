@@ -123,6 +123,25 @@ export class AddBrandWizardComponent {
   countryOpen = false;
   countrySearch = '';
 
+  // ---- domain auto-fill (prototype of the context.dev enrichment API) ----
+  domainInput = '';
+  fetching = false;
+  fetchError = '';
+  fetchedDomain = '';             // set once details have been pulled for a domain
+  /** Mock enrichment directory — stands in for the real domain-lookup API. */
+  private readonly brandDirectory: Record<string, {
+    name: string; recognised?: string; country: string; color: string; description: string;
+  }> = {
+    'nike.com':      { name: 'Nike', country: 'United States', color: '#111111', description: 'Nike designs, markets and sells athletic footwear, apparel and equipment for sport and everyday wear worldwide.' },
+    'amazon.in':     { name: 'Amazon India', recognised: 'Amazon', country: 'India', color: '#ff9900', description: 'Amazon India is an online marketplace offering electronics, fashion, groceries and more, with fast delivery and Prime membership.' },
+    'zomato.com':    { name: 'Zomato', country: 'India', color: '#e23744', description: 'Zomato is a food-delivery and restaurant-discovery platform connecting customers with restaurants across India and beyond.' },
+    'myntra.com':    { name: 'Myntra', country: 'India', color: '#e91e63', description: 'Myntra is an Indian fashion e-commerce platform for apparel, footwear, accessories and lifestyle products.' },
+    'flipkart.com':  { name: 'Flipkart', country: 'India', color: '#2874f0', description: 'Flipkart is one of India’s largest e-commerce marketplaces, selling electronics, fashion, home and grocery.' },
+    'starbucks.com': { name: 'Starbucks', country: 'United States', color: '#00704a', description: 'Starbucks is a global coffeehouse chain serving coffee, tea, beverages and food across thousands of stores.' },
+    'swiggy.com':    { name: 'Swiggy', country: 'India', color: '#fc8019', description: 'Swiggy is an on-demand delivery platform for food, groceries and essentials across cities in India.' },
+    'airindia.com':  { name: 'Air India', country: 'India', color: '#d21034', description: 'Air India is the flag carrier airline of India, operating domestic and international passenger and cargo services.' },
+  };
+
   /** Description authoring mode: write it manually, or generate it with AI. */
   descMode: 'manual' | 'ai' = 'manual';
   /** AI tab state. */
@@ -136,6 +155,7 @@ export class AddBrandWizardComponent {
   logoDataUrl: string | null = null;
   color = '#0f172a';
   customColorOpen = false;
+  colorFromLogo = false;          // colour was auto-extracted from the uploaded logo
   // sample data for the brand-color chart preview
   readonly previewBars = [38, 60, 47, 72, 55, 88, 96];
   readonly previewDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -307,6 +327,53 @@ export class AddBrandWizardComponent {
     }, 1400);
   }
 
+  /**
+   * Prototype of the domain-enrichment API (context.dev): look the domain up and
+   * pre-fill the whole identity — name, recognised name, description, region, logo & colour.
+   */
+  fetchFromDomain() {
+    const domain = this.domainInput.trim().toLowerCase()
+      .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').trim();
+    if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
+      this.fetchError = 'Enter a valid domain, e.g. nike.com';
+      this.fetchedDomain = '';
+      return;
+    }
+    this.fetchError = '';
+    this.fetching = true;
+    setTimeout(() => {
+      const data = this.brandDirectory[domain] ?? this.deriveFromDomain(domain);
+      this.brandName = data.name;
+      if (data.recognised) { this.aiFriendlyName = data.recognised; this.showRecognisedName = true; }
+      this.brandDescription = data.description.slice(0, 200);
+      this.descMode = 'ai';
+      this.descGenerated = true;
+      this.country = data.country;
+      this.color = data.color;
+      this.colorFromLogo = false;
+      this.logoDataUrl = `https://logo.clearbit.com/${domain}`;
+      this.fetchedDomain = domain;
+      this.fetching = false;
+    }, 1400);
+  }
+
+  /** Fallback enrichment for a domain we don't have canned data for. */
+  private deriveFromDomain(domain: string): { name: string; country: string; color: string; description: string } {
+    const label = domain.split('.')[0].replace(/[-_]/g, ' ');
+    const name = label.replace(/\b\w/g, c => c.toUpperCase());
+    return {
+      name,
+      country: 'India',
+      color: '#4f46e5',
+      description: `${name} is the brand behind ${domain}. Review this summary and refine it so your team and AI understand the brand.`,
+    };
+  }
+
+  /** Clears a broken remote logo so the avatar falls back to initials. */
+  onLogoError() {
+    this.logoDataUrl = null;
+  }
+
   // =======================================================================
   //  Step 2 · logo & color
   // =======================================================================
@@ -324,18 +391,68 @@ export class AddBrandWizardComponent {
     if (!/image\/(png|jpe?g)/.test(file.type)) return;
     if (file.size > 5 * 1024 * 1024) return;
     const reader = new FileReader();
-    reader.onload = () => (this.logoDataUrl = reader.result as string);
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      this.logoDataUrl = dataUrl;
+      this.extractColorFromLogo(dataUrl);      // pull the dominant colour from the logo
+    };
     reader.readAsDataURL(file);
     input.value = '';
   }
 
   pickColor(hex: string) {
     this.color = hex;
+    this.colorFromLogo = false;                // manual override
     this.customColorOpen = false;
   }
 
   removeLogo() {
     this.logoDataUrl = null;
+    this.colorFromLogo = false;
+  }
+
+  /** Re-run colour extraction on demand (button in the colour block). */
+  useLogoColor() {
+    if (this.logoDataUrl) this.extractColorFromLogo(this.logoDataUrl);
+  }
+
+  /**
+   * Extract the dominant colour from a logo image (client-side, via canvas).
+   * Prefers vivid colours; falls back to the average of all opaque pixels.
+   */
+  private extractColorFromLogo(src: string) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const size = 48;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, size, size);
+      let px: Uint8ClampedArray;
+      try { px = ctx.getImageData(0, 0, size, size).data; } catch { return; }  // tainted canvas
+
+      const vivid = { r: 0, g: 0, b: 0, n: 0 };
+      const all = { r: 0, g: 0, b: 0, n: 0 };
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i], g = px[i + 1], b = px[i + 2], a = px[i + 3];
+        if (a < 200) continue;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        if (max > 244 && min > 244) continue;            // near-white background
+        all.r += r; all.g += g; all.b += b; all.n++;
+        if (max - min >= 24 && max > 40) { vivid.r += r; vivid.g += g; vivid.b += b; vivid.n++; }
+      }
+      const pick = vivid.n > 6 ? vivid : all;
+      if (!pick.n) return;
+      this.color = this.rgbToHex(Math.round(pick.r / pick.n), Math.round(pick.g / pick.n), Math.round(pick.b / pick.n));
+      this.colorFromLogo = true;
+    };
+    img.src = src;
+  }
+
+  private rgbToHex(r: number, g: number, b: number): string {
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
   }
 
   // =======================================================================
@@ -780,10 +897,15 @@ export class AddBrandWizardComponent {
     this.aiNameError = '';
     this.countryOpen = false;
     this.countrySearch = '';
+    this.domainInput = '';
+    this.fetching = false;
+    this.fetchError = '';
+    this.fetchedDomain = '';
     // step 2
     this.logoDataUrl = null;
     this.color = '#0f172a';
     this.customColorOpen = false;
+    this.colorFromLogo = false;
     // step 3
     this.products = [];
     this.competitors = [];
