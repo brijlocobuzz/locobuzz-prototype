@@ -79,10 +79,17 @@ export class AddBrandWizardComponent {
     { key: 'users',    label: 'Assign users',   subtitle: 'Brand access',        icon: 'group' },
   ];
 
-  /** The visible steps for this plan, numbered sequentially (computed once). */
-  readonly steps: (WizardStep & { num: number })[] = this.allSteps
-    .filter(s => s.key !== 'tickets' || this.planHasTicketing)
-    .map((s, i) => ({ ...s, num: i + 1 }));
+  /**
+   * The visible steps, numbered sequentially. The Tickets step is hidden on plans
+   * without ticketing; the Categories step is skipped for a brand-new account
+   * (its group is auto-set to Default), so it appears only for existing accounts.
+   */
+  get steps(): (WizardStep & { num: number })[] {
+    return this.allSteps
+      .filter(s => s.key !== 'tickets' || this.planHasTicketing)
+      .filter(s => s.key !== 'categories' || this.userMode !== 'new')
+      .map((s, i) => ({ ...s, num: i + 1 }));
+  }
   get totalSteps(): number { return this.steps.length; }
   get currentKey(): StepKey { return this.steps[this.currentStep - 1]?.key ?? 'identity'; }
   isStep(key: StepKey): boolean { return this.currentKey === key; }
@@ -110,7 +117,8 @@ export class AddBrandWizardComponent {
   // ---- step 1 · brand identity -------------------------------------------
   brandName = '';
   country = '';
-  aiFriendlyName = '';
+  aiFriendlyName = '';            // recognised brand name (optional)
+  showRecognisedName = false;     // revealed via the "Add recognised name" button
   brandDescription = '';
   countryOpen = false;
   countrySearch = '';
@@ -128,11 +136,38 @@ export class AddBrandWizardComponent {
   logoDataUrl: string | null = null;
   color = '#0f172a';
   customColorOpen = false;
+  // sample data for the brand-color chart preview
+  readonly previewBars = [38, 60, 47, 72, 55, 88, 96];
+  readonly previewDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  /** Points for the preview sparkline, mapped into a 100×40 viewBox. */
+  private get previewPoints(): { x: number; y: number }[] {
+    const w = 100, h = 40, pad = 4, max = 100, n = this.previewBars.length;
+    return this.previewBars.map((v, i) => ({
+      x: +(pad + (i * (w - 2 * pad)) / (n - 1)).toFixed(1),
+      y: +(h - pad - (v / max) * (h - 2 * pad)).toFixed(1),
+    }));
+  }
+  get previewLine(): string {
+    return this.previewPoints.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ');
+  }
+  get previewArea(): string {
+    const pts = this.previewPoints;
+    return `M${pts[0].x} 40 ` + pts.map(p => `L${p.x} ${p.y}`).join(' ') + ` L${pts[pts.length - 1].x} 40 Z`;
+  }
+  get previewLast(): { x: number; y: number } {
+    const pts = this.previewPoints;
+    return pts[pts.length - 1];
+  }
 
   // ---- step 3 · team & tickets -------------------------------------------
   selectedUserIds = new Set<string>();
   usersDropdownOpen = false;
   userSearch = '';
+  /** The current account owner — the only user on a brand-new account. */
+  readonly selfUser: BrandUser = { id: 'self', name: 'you', fullName: 'You', role: 'Admin', team: 'Owner' };
+  /** When there are no other users, the owner assigns themselves (default on). */
+  selfAssigned = true;
   ticketsEnabled = this.planHasTicketing;   // off by default when the plan has no ticketing
 
   // ---- step 4 · categories -----------------------------------------------
@@ -206,9 +241,10 @@ export class AddBrandWizardComponent {
       case 'logo': return !!this.logoDataUrl;
       case 'products': return true;                   // optional
       case 'competitors': return true;                // optional
-      case 'categories': return !!this.categoryGroup && !!this.catchAll;
+      // new accounts skip this step — the Default group is assigned automatically
+      case 'categories': return this.userMode === 'new' || (!!this.categoryGroup && !!this.catchAll);
       case 'tickets': return true;                    // toggle always valid
-      case 'users': return this.selectedUserIds.size > 0 || this.allUsers.length === 0;
+      case 'users': return this.allUsers.length ? this.selectedUserIds.size > 0 : this.selfAssigned;
       default: return false;
     }
   }
@@ -245,45 +281,26 @@ export class AddBrandWizardComponent {
     this.countrySearch = '';
   }
 
-  /** AI friendly name is available (generated or typed) and not mid-fetch. */
-  get aiNameReady(): boolean {
-    return !!this.aiFriendlyName.trim() && !this.aiNameLoading;
-  }
-
-  /** Switch the description-authoring tab; entering the AI tab kicks off name generation. */
+  /** Switch the description-authoring tab; the AI tab auto-generates on entry. */
   setDescMode(mode: 'manual' | 'ai') {
     this.descMode = mode;
-    if (mode === 'ai' && !this.aiNameAttempted && !this.aiFriendlyName.trim()
-        && !this.aiNameLoading && this.brandName.trim().length >= 3) {
-      this.generateAiName();
+    if (mode === 'ai' && !this.descGenerated && !this.generating && this.brandName.trim().length >= 3) {
+      this.generateDescription();
     }
   }
 
-  /** Try to fetch/generate the AI friendly name from the brand name. */
-  generateAiName() {
-    if (this.brandName.trim().length < 3 || this.aiNameLoading) return;
-    this.aiNameAttempted = true;
-    this.aiNameLoading = true;
-    this.aiNameError = '';
-    setTimeout(() => {
-      this.aiNameLoading = false;
-      // Simulated round-trip — occasionally fails so the manual fallback is reachable.
-      if (Math.random() < 0.3) {
-        this.aiFriendlyName = '';
-        this.aiNameError = 'Couldn’t generate AI friendly name. Please enter the AI friendly name.';
-      } else {
-        this.aiFriendlyName = this.brandName.trim();
-      }
-    }, 1200);
-  }
+  /** Reveal / clear the optional recognised-brand-name field. */
+  addRecognisedName() { this.showRecognisedName = true; }
+  removeRecognisedName() { this.showRecognisedName = false; this.aiFriendlyName = ''; }
 
-  /** Generate the brand description from the AI friendly name. */
+  /** Generate the brand description — uses the recognised name if given, else the brand name. */
   generateDescription() {
-    if (!this.aiFriendlyName.trim() || this.generating) return;
+    if (this.brandName.trim().length < 3 || this.generating) return;
     this.generating = true;
+    const name = this.aiFriendlyName.trim() || this.brandName.trim();
     setTimeout(() => {
       this.brandDescription =
-        `${this.aiFriendlyName.trim()} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
+        `${name} designs, develops, and markets athletic footwear, apparel, and accessories globally.`
           .slice(0, 200);
       this.descGenerated = true;
       this.generating = false;
@@ -326,6 +343,12 @@ export class AddBrandWizardComponent {
   // =======================================================================
   get selectedUsers(): BrandUser[] {
     return this.allUsers.filter(u => this.selectedUserIds.has(u.id));
+  }
+
+  /** Everyone assigned to the brand — picked users, or just the owner on a new account. */
+  get assignedUsers(): BrandUser[] {
+    if (this.allUsers.length) return this.selectedUsers;
+    return this.selfAssigned ? [this.selfUser] : [];
   }
 
   get filteredUsers(): BrandUser[] {
@@ -661,7 +684,7 @@ export class AddBrandWizardComponent {
 
   /** One-line recap of the brand's basics, shown on the success screen. */
   get brandSummary(): string {
-    const users = this.selectedUserIds.size;
+    const users = this.assignedUsers.length;
     const userPart = `${users} user${users === 1 ? '' : 's'}`;
     const tickets = this.ticketsEnabled ? 'ticket creation on' : 'ticket creation off';
     return `${this.brandName} (${this.country}) is ready — ${userPart} assigned, `
@@ -679,7 +702,7 @@ export class AddBrandWizardComponent {
       ticketsEnabled: this.ticketsEnabled,
       categoryGroup: this.categoryGroup,
       catchAll: this.catchAll,
-      users: this.selectedUsers.map(u => ({ id: u.id, name: u.fullName, role: u.role })),
+      users: this.assignedUsers.map(u => ({ id: u.id, name: u.fullName, role: u.role })),
       products: this.products.map(p => ({ name: p.name, synonyms: [...p.synonyms] })),
       competitors: [
         ...(this.useMappedCompetitors ? this.mappedCompetitors : []),
@@ -723,9 +746,10 @@ export class AddBrandWizardComponent {
     this.cancelCompetitor();
     this.cancelSet();
 
-    // category selection depends on the (now different) group list
-    this.selectedGroup = null;
-    this.categoryGroup = '';
+    // category selection depends on the (now different) group list.
+    // a new account skips the Categories step, so auto-assign the Default group.
+    this.selectedGroup = mode === 'new' ? this.newGroups[0] : null;
+    this.categoryGroup = mode === 'new' ? 'Default' : '';
     this.catchAll = '';
     this.expandedNodes = new Set<CategoryNode>();
     this.suggestingCats = false;
@@ -734,8 +758,12 @@ export class AddBrandWizardComponent {
 
     // assigned users
     this.selectedUserIds = new Set<string>();
+    this.selfAssigned = true;
     this.usersDropdownOpen = false;
     this.userSearch = '';
+
+    // the step list changed length — keep the current step in range
+    if (this.currentStep > this.totalSteps) this.currentStep = this.totalSteps;
   }
 
   private resetForNewBrand() {
@@ -745,6 +773,7 @@ export class AddBrandWizardComponent {
     this.brandName = '';
     this.country = '';
     this.aiFriendlyName = '';
+    this.showRecognisedName = false;
     this.brandDescription = '';
     this.descMode = 'manual';
     this.aiNameLoading = this.aiNameAttempted = this.generating = this.descGenerated = false;
@@ -776,6 +805,7 @@ export class AddBrandWizardComponent {
     // step 5 / 6
     this.ticketsEnabled = this.planHasTicketing;
     this.selectedUserIds = new Set<string>();
+    this.selfAssigned = true;
     this.userSearch = '';
     this.usersDropdownOpen = false;
   }

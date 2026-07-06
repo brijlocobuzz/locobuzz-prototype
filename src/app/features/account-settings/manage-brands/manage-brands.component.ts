@@ -79,8 +79,8 @@ export class ManageBrandsComponent {
   }
 
   /** How many user avatars / channel logos to show inline before the "+N" chip. */
-  readonly maxUsers = 6;
-  readonly maxChannels = 6;
+  readonly maxUsers = 4;
+  readonly maxChannels = 4;
 
   private readonly usersPool: BrandMember[] = BRAND_USERS.map(u => ({ id: u.id, name: u.name, role: u.role }));
 
@@ -95,8 +95,18 @@ export class ManageBrandsComponent {
     return shown.slice(0, target);
   }
 
+  /** Fallback channels used to top up the logo stack when a brand lists fewer ids than it has. */
+  private readonly channelPool = ['facebook', 'instagram', 'twitter', 'youtube', 'whatsapp', 'playstore', 'gmb', 'tripadvisor'];
+
+  /** Channel logos for the grid — the brand's ids padded from the pool up to maxChannels. */
   channelLogos(b: ManagedBrand): string[] {
-    return (b.channelIds || []).slice(0, this.maxChannels);
+    const shown = [...(b.channelIds || [])];
+    const target = Math.min(this.maxChannels, b.channels);
+    for (const c of this.channelPool) {
+      if (shown.length >= target) break;
+      if (!shown.includes(c)) shown.push(c);
+    }
+    return shown.slice(0, target);
   }
 
   /* ===================================================================

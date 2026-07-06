@@ -40,10 +40,10 @@
       </div>
 
       <div class="ab-recap-grid">
-        <span class="ab-recap-fact"><span class="msr">group</span><b>{{ selectedUserIds.size }}</b> user{{ selectedUserIds.size === 1 ? '' : 's' }}</span>
+        <span class="ab-recap-fact"><span class="msr">group</span><b>{{ assignedUsers.length }}</b> user{{ assignedUsers.length === 1 ? '' : 's' }}</span>
         <span class="ab-recap-fact"><span class="msr">confirmation_number</span>Ticket creation {{ ticketsEnabled ? 'on' : 'off' }}</span>
         <span class="ab-recap-fact"><span class="msr">account_tree</span>{{ categoryGroup }}</span>
-        <span class="ab-recap-fact"><span class="msr">label</span>Catch-all: {{ catchAll }}</span>
+        <span class="ab-recap-fact" *ngIf="catchAll"><span class="msr">label</span>Catch-all: {{ catchAll }}</span>
         <span class="ab-recap-fact"><span class="msr">deployed_code</span><b>{{ products.length }}</b> product{{ products.length === 1 ? '' : 's' }}</span>
         <span class="ab-recap-fact"><span class="msr">flag</span><b>{{ competitors.length }}</b> competitor{{ competitors.length === 1 ? '' : 's' }}</span>
       </div>
@@ -59,7 +59,9 @@
     </div>
   </div>
 
-  <ng-container *ngIf="!celebrating">
+  <div class="ab-shell" *ngIf="!celebrating">
+  <!-- ===== LEFT: the wizard (header + stepper + body + footer) ===== -->
+  <div class="ab-main">
   <!-- ===== Header ===== -->
   <header class="ab-head">
     <div class="ab-head-text">
@@ -107,14 +109,36 @@
       <h1 class="ab-pane-title">Brand identity</h1>
       <p class="ab-pane-sub">Name your brand and add a short description so your team and AI understand it.</p>
 
-      <!-- Brand Name -->
-      <div class="ab-field ab-field-name">
-        <label class="ab-label">Brand Name <i>*</i></label>
-        <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
+      <!-- Brand Name + (optional) Recognised Brand Name -->
+      <div class="ab-namerow">
+        <div class="ab-field ab-field-name">
+          <label class="ab-label">Brand Name <i>*</i></label>
+          <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="50" [(ngModel)]="brandName" />
+        </div>
+
+        <button type="button" class="ab-addrec" *ngIf="!showRecognisedName" (click)="addRecognisedName()">
+          <span class="msr">add</span> Add recognised name
+        </button>
+
+        <div class="ab-field ab-field-name" *ngIf="showRecognisedName">
+          <label class="ab-label">Recognised Brand Name</label>
+          <div class="ab-recname">
+            <input class="ab-input" type="text" placeholder="e.g. Taj Hotels" maxlength="100" [(ngModel)]="aiFriendlyName" />
+            <button type="button" class="ab-recname-x" (click)="removeRecognisedName()" aria-label="Remove">
+              <span class="msr">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-recname-note" *ngIf="showRecognisedName">
+        <span class="msr">lightbulb</span>
+        <span>The name people actually use for your brand, so the AI recognises it correctly.
+          <b>Example:</b> the official name is “IHCL”, but most people say “Taj Hotels” — so enter <b>Taj Hotels</b>.</span>
       </div>
 
       <!-- Description: write manually OR generate with AI -->
-      <div class="ab-field">
+      <div class="ab-field ab-desc-field">
         <label class="ab-label">Brand Description <i>*</i></label>
 
         <div class="ab-tabs">
@@ -141,32 +165,10 @@
           <p class="ab-hint top" *ngIf="brandName.trim().length < 3">Enter a brand name above to generate a description with AI.</p>
 
           <div class="ab-ai-box" *ngIf="brandName.trim().length >= 3">
-            <div class="ab-ai-box-note">
-              <span class="msr">lightbulb</span>
-              <p>
-                Enter the name people actually use for your brand, so the AI recognises it correctly and doesn't get confused.
-                <span class="ab-ai-eg"><b>Example:</b> the official name is “IHCL”, but most people say “Taj Hotels” — so enter <b>Taj Hotels</b>.</span>
-              </p>
-            </div>
-
-            <div class="ab-ai-name-field">
-              <label class="ab-sublabel">AI Friendly Name <i>*</i></label>
-              <div class="ab-ainame">
-                <input class="ab-input" type="text" placeholder="e.g. Nike" maxlength="100"
-                       [disabled]="aiNameLoading" [(ngModel)]="aiFriendlyName" />
-                <span class="ab-ainame-loading" *ngIf="aiNameLoading"><span class="ab-spinner dark"></span>Generating…</span>
-              </div>
-            </div>
-
-            <p class="ab-hint" *ngIf="!aiNameError && !aiNameLoading">Used internally so the AI references your brand consistently.</p>
-            <p class="ab-err" *ngIf="aiNameError">
-              <span class="msr">error</span>{{ aiNameError }}
-              <button type="button" class="ab-link" (click)="generateAiName()">Try again</button>
-            </p>
-
+            <p class="ab-ai-generating" *ngIf="generating"><span class="ab-spinner dark"></span> Generating description…</p>
             <div class="ab-ai-box-desc">
               <textarea class="ab-textarea" rows="3" maxlength="200" [disabled]="!descGenerated"
-                        [placeholder]="descGenerated ? '' : 'Your AI-generated description will appear here.'"
+                        [placeholder]="descGenerated ? '' : (generating ? 'Writing your description…' : 'Your AI-generated description will appear here.')"
                         [(ngModel)]="brandDescription"></textarea>
               <div class="ab-counter-row" [class.end]="!descGenerated">
                 <button type="button" class="ab-link" *ngIf="descGenerated" (click)="generateDescription()">Regenerate</button>
@@ -174,13 +176,15 @@
               </div>
             </div>
 
+            <!-- Generate Description button removed — the AI tab now generates on entry.
             <div class="ab-ai-genrow" *ngIf="!descGenerated">
-              <button type="button" class="ab-ai-btn" [disabled]="!aiNameReady || generating" (click)="generateDescription()">
+              <button type="button" class="ab-ai-btn" [disabled]="generating" (click)="generateDescription()">
                 <span class="msr" *ngIf="!generating">auto_awesome</span>
                 <span class="ab-spinner" *ngIf="generating"></span>
                 {{ generating ? 'Generating…' : 'Generate Description' }}
               </button>
             </div>
+            -->
           </div>
         </div>
       </div>
@@ -245,6 +249,32 @@
                 <span class="ab2-chip"><span class="msr">analytics</span>Analytics</span>
                 <span class="ab2-chip"><span class="msr">summarize</span>Reports</span>
                 <span class="ab2-chip ghost"><span class="msr">forum</span>Mentions</span>
+              </div>
+
+              <!-- mini trend chart — shows how the brand color appears in analytics -->
+              <div class="ab2-chart">
+                <div class="ab2-chart-head">
+                  <span class="ab2-chart-id">
+                    <span class="ab2-chart-dot"></span>
+                    <span class="ab2-chart-title">{{ brandName || 'Your brand' }}</span>
+                  </span>
+                </div>
+                <svg class="ab2-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="ab2-spark-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" [attr.stop-color]="color" stop-opacity="0.32" />
+                      <stop offset="1" [attr.stop-color]="color" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path [attr.d]="previewArea" fill="url(#ab2-spark-grad)" />
+                  <path [attr.d]="previewLine" fill="none" [attr.stroke]="color" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+                  <circle [attr.cx]="previewLast.x" [attr.cy]="previewLast.y" r="2.6" fill="#fff"
+                          [attr.stroke]="color" stroke-width="2" vector-effect="non-scaling-stroke" />
+                </svg>
+                <div class="ab2-chart-x">
+                  <span *ngFor="let d of previewDays">{{ d }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -483,27 +513,16 @@
 
     <!-- ---------- Step 4 · Categories ---------- -->
     <section class="ab-step-pane ab-pane-fill" *ngIf="isStep('categories')">
-      <div class="ab-cat4-head">
-        <div>
-          <h1 class="ab-pane-title">Categories</h1>
-          <p class="ab-pane-sub">Choose how this brand's mentions are automatically sorted into categories, and where the ones that don't fit any category should go.</p>
-        </div>
-      </div>
-
-      <!-- prominent, read-before-you-pick warning -->
-      <div class="ab-cat4-banner" role="alert">
-        <span class="ab-cat4-banner-ic"><span class="msr">warning</span></span>
-        <p class="ab-cat4-banner-text">
-          <b>The category group is permanent.</b> Once you create the brand, it can't be changed —
-          choose carefully before selecting.
-        </p>
+      <!-- permanent-choice warning, kept in the main area so it isn't missed -->
+      <div class="ab-cat4-warn" role="alert">
+        <span class="msr">warning</span>
+        <span><b>The category group is permanent.</b> It can't be changed once the brand is created — choose carefully before continuing.</span>
       </div>
 
       <div class="ab-cat4">
         <!-- LEFT · group rail -->
         <aside class="ab-cat4-rail">
           <p class="ab-cat4-rail-label">Category Group <i class="ab-req">*</i></p>
-          <p class="ab-cat4-rail-help">The ready-made set of categories your brand's mentions are auto-sorted into. Brands in the same group share these categories.</p>
           <div class="ab-cat4-groups">
             <button type="button" class="ab-cat4-group" *ngFor="let g of categoryGroups"
                     [class.sel]="categoryGroup === g.name" (click)="selectGroup(g)">
@@ -548,6 +567,7 @@
             <div class="ab-cat4-block">
               <div class="ab-cat4-mini-row">
                 <p class="ab-cat4-mini">Category mapping <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span></p>
+                <!-- AI suggest / create-category actions disabled for now
                 <div class="ab-cat4-mini-actions">
                   <button type="button" class="ab-cat4-suggest" [disabled]="suggestingCats" (click)="suggestCategories()">
                     <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
@@ -558,15 +578,15 @@
                     <span class="msr">add</span> Create category
                   </button>
                 </div>
+                -->
               </div>
-              <p class="ab-cat4-maphelp">These are the categories in this group. Incoming mentions are automatically tagged into them by their keywords.</p>
               <p class="ab-cat4-pickhint" *ngIf="!catchAll">
                 <span class="msr">touch_app</span>
-                <span>Now choose a <b>catch-all category</b> <i class="ab-req">*</i> — the fallback for any mention that doesn't match a category above, so nothing is missed. Click a category below to set it.</span>
+                <span>Click a <b>top-level category</b> to set the <b>catch-all</b> <i class="ab-req">*</i>.</span>
               </p>
               <p class="ab-cat4-pickhint sel" *ngIf="catchAll">
                 <span class="msr">check_circle</span>
-                <span>Catch-all: <b>{{ catchAll }}</b> — mentions that don't match any other category will be filed here. Click another category to change it.</span>
+                <span>Catch-all: <b>{{ catchAll }}</b> · click another to change.</span>
               </p>
 
               <div class="ab-cat4-toolbar">
@@ -577,22 +597,26 @@
               <div class="ab-cat4-tree">
                 <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
 
+                <!-- create-category input disabled for now
                 <div class="ab-cat4-newcat" *ngIf="addingCatRoot">
                   <input class="ab-input" type="text" placeholder="Category name" maxlength="50" [(ngModel)]="catDraft" />
                   <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
                   <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
                 </div>
+                -->
 
-                <p class="ab-cat4-empty" *ngIf="!displayTree.length && !addingCatRoot && categorySearch.trim()">No categories match your search.</p>
-                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !addingCatRoot && !categorySearch.trim()">
+                <p class="ab-cat4-empty" *ngIf="!displayTree.length && categorySearch.trim()">No categories match your search.</p>
+                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !categorySearch.trim()">
                   <span class="msr">account_tree</span>
                   <p>No categories yet</p>
-                  <span>Not sure where to start? Let AI suggest a starter taxonomy, or create your own.</span>
+                  <span>This group doesn't have any categories yet.</span>
+                  <!-- AI suggest disabled for now
                   <button type="button" class="ab-cat4-suggest lg" [disabled]="suggestingCats" (click)="suggestCategories()">
                     <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
                     <span class="ab-spinner" *ngIf="suggestingCats"></span>
                     {{ suggestingCats ? 'Suggesting categories…' : 'Suggest categories with AI' }}
                   </button>
+                  -->
                 </div>
               </div>
             </div>
@@ -615,25 +639,32 @@
               <span class="msr">{{ isExpanded(n) ? 'indeterminate_check_box' : 'add_box' }}</span>
             </button>
             <span class="ab-cat4-toggle-sp" *ngIf="!n.children?.length"></span>
-            <button type="button" class="ab-cat4-chip" [class.sel]="catchAll === n.name" (click)="selectCatchAll(n.name)">
+            <button type="button" class="ab-cat4-chip" [class.sel]="catchAll === n.name"
+                    [disabled]="level > 1"
+                    [title]="level > 1 ? 'Only top-level categories can be the catch-all' : ''"
+                    (click)="selectCatchAll(n.name)">
               {{ n.name }}
               <span class="ab-cat4-chip-tag" *ngIf="catchAll === n.name">Catch-all</span>
             </button>
+            <!-- add sub-category disabled for now
             <button type="button" class="ab-cat4-addchild" (click)="startAddChildCat(n)" title="Add sub-category">
               <span class="msr">add</span>
             </button>
+            -->
           </div>
 
-          <div class="ab-cat4-children" *ngIf="(n.children?.length && isExpanded(n)) || addCatParent === n"
+          <div class="ab-cat4-children" *ngIf="n.children?.length && isExpanded(n)"
                [style.padding-left.px]="level * 18">
             <ng-container *ngIf="n.children?.length && isExpanded(n)">
               <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: n.children, level: level + 1 }"></ng-container>
             </ng-container>
+            <!-- add sub-category input disabled for now
             <div class="ab-cat4-newcat child" *ngIf="addCatParent === n">
               <input class="ab-input" type="text" placeholder="Sub-category name" maxlength="50" [(ngModel)]="catDraft" />
               <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
               <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
             </div>
+            -->
           </div>
         </div>
       </ng-template>
@@ -653,33 +684,6 @@
           <span class="ab-knob"></span>
         </button>
       </div>
-
-      <!-- Digital Care info (ticket creation on) -->
-      <div class="ab-care" *ngIf="ticketsEnabled">
-        <div class="ab-care-head">
-          <span class="ab-care-ic"><span class="msr">support_agent</span></span>
-          <div>
-            <p class="ab-care-title">This brand joins Digital Care</p>
-            <p class="ab-care-sub">Turning on ticket creation enables your full Care workflow for this brand.</p>
-          </div>
-        </div>
-        <ul class="ab-care-list">
-          <li><span class="msr">move_to_inbox</span>Convert incoming mentions into tickets</li>
-          <li><span class="msr">group_add</span>Assign tickets to team members</li>
-          <li><span class="msr">forum</span>Respond to customers and continue the conversation until the issue is resolved</li>
-          <li><span class="msr">diversity_3</span>Collaborate with other team members</li>
-          <li><span class="msr">insights</span>Get ticketing access and ticketing analytics</li>
-        </ul>
-        <p class="ab-care-tip">
-          <span class="msr">tips_and_updates</span>
-          <span><b>Pro tip:</b> since this brand is now part of Digital Care, explore the Care-specific features to streamline your workflow.</span>
-        </p>
-      </div>
-
-      <div class="ab-explain muted" *ngIf="!ticketsEnabled">
-        <p class="ab-explain-title"><span class="msr">visibility</span>Listening only</p>
-        <p class="ab-explain-foot">All mentions are still collected for analytics and reporting — they just won't create tickets or land in agent queues.</p>
-      </div>
     </section>
 
     <!-- ---------- Step 6 · Assign Users ---------- -->
@@ -687,16 +691,20 @@
       <h1 class="ab-pane-title">Assign Users</h1>
       <p class="ab-pane-sub">Choose who can access and work on this brand.</p>
 
-      <!-- no users on the account yet -->
-      <div class="ab-nousers" *ngIf="!allUsers.length">
-        <span class="ab-nousers-ic"><span class="msr">group_off</span></span>
-        <div class="ab-nousers-text">
-          <p class="ab-nousers-title">No team members to assign yet</p>
-          <p class="ab-nousers-sub">
-            Your account doesn't have any users besides you. You'll have access to this brand as the admin — invite team members
-            later from <b>Manage Users</b>, then come back to assign them here. You can go ahead and create the brand now.
-          </p>
-        </div>
+      <!-- first user on a new account — self-assign -->
+      <div class="ab-selfwrap" *ngIf="!allUsers.length">
+        <button type="button" class="ab-self" [class.on]="selfAssigned" (click)="selfAssigned = !selfAssigned">
+          <span class="ab-self-av">{{ userInitials(selfUser) }}</span>
+          <span class="ab-self-tx">
+            <span class="ab-self-name">{{ selfUser.fullName }} <span class="ab-self-you">(you)</span></span>
+            <span class="ab-self-sub">Account owner · you'll be the only user on this brand for now</span>
+          </span>
+          <span class="ab-check" [class.on]="selfAssigned"><span class="msr" *ngIf="selfAssigned">check</span></span>
+        </button>
+        <p class="ab-self-note">
+          <span class="msr">info</span>
+          <span>You're the first user on this account, so you can assign yourself to this brand. Invite team members later from <b>Manage Users</b> in Account Settings and assign them here.</span>
+        </p>
       </div>
 
       <div class="ab-field" *ngIf="allUsers.length">
@@ -792,5 +800,189 @@
       </button>
     </div>
   </footer>
-  </ng-container>
+  </div><!-- /.ab-main -->
+
+  <!-- ===== RIGHT: step-aware info panel (spans full popup height) ===== -->
+  <aside class="ab-aside" [ngSwitch]="currentKey">
+
+    <!-- Step · Brand identity -->
+    <ng-container *ngSwitchCase="'identity'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Identity</span>
+      <h3 class="ab-aside-title">Start with the essentials</h3>
+      <p class="ab-aside-lead">The name and description anchor everything — dashboards, reports, and how AI understands mentions about this brand.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">badge</span></span>
+          <div class="ab-aside-info-tx"><b>Brand name</b><span>How your brand is represented in Locobuzz — you'll see this name in filters and analytics. Use the name you'll recognise it by.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
+          <div class="ab-aside-info-tx"><b>Recognised name</b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">description</span></span>
+          <div class="ab-aside-info-tx"><b>Description</b><span>A short summary of what the brand does. AI uses it to enrich mentions from your point of view.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">public</span></span>
+          <div class="ab-aside-info-tx"><b>Country</b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
+        </div>
+      </div>
+      <div class="ab-aside-tip">
+        <span class="msr">auto_awesome</span>
+        <span>Let AI draft the description for you from just the brand name.</span>
+      </div>
+    </ng-container>
+
+    <!-- Step · Logo & color -->
+    <ng-container *ngSwitchCase="'logo'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Visual identity</span>
+      <h3 class="ab-aside-title">Make it instantly recognisable</h3>
+      <p class="ab-aside-lead">A logo and accent colour help you spot this brand at a glance across dashboards, reports, and charts.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">image</span></span>
+          <div class="ab-aside-info-tx"><b>Brand logo</b><span>Shown next to the brand everywhere in the app, so it's easy to identify.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">palette</span></span>
+          <div class="ab-aside-info-tx"><b>Brand colour</b><span>Used to tint this brand's analytics charts and highlights across reports.</span></div>
+        </div>
+      </div>
+      <div class="ab-aside-tip">
+        <span class="msr">tips_and_updates</span>
+        <span>Reuse a colour from an existing brand to keep your workspace consistent.</span>
+      </div>
+    </ng-container>
+
+    <!-- Step · Products -->
+    <ng-container *ngSwitchCase="'products'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Products</span>
+      <h3 class="ab-aside-title">Tell us what you offer</h3>
+      <p class="ab-aside-lead">Add your key products so mentions can be linked to them — and sentiment tracked per product, not just for the brand overall.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">deployed_code</span></span>
+          <div class="ab-aside-info-tx"><b>Why products?</b><span>Understand what customers say about each product line separately.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">auto_awesome</span></span>
+          <div class="ab-aside-info-tx"><b>AI suggestions</b><span>AI can propose products it recognises for this brand — review and refine them.</span></div>
+        </div>
+      </div>
+      <div class="ab-aside-tip">
+        <span class="msr">schedule</span>
+        <span>Not sure yet? You can add or edit products anytime after creating the brand.</span>
+      </div>
+    </ng-container>
+
+    <!-- Step · Competitors -->
+    <ng-container *ngSwitchCase="'competitors'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Competitors</span>
+      <h3 class="ab-aside-title">Keep an eye on the market</h3>
+      <p class="ab-aside-lead">Track the brands you compete with so you can benchmark share of voice and sentiment side by side.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">flag</span></span>
+          <div class="ab-aside-info-tx"><b>Why competitors?</b><span>Compare how your brand performs against rivals over time.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">workspaces</span></span>
+          <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals into sets to compare against a segment in one view.</span></div>
+        </div>
+      </div>
+      <div class="ab-aside-tip">
+        <span class="msr">auto_awesome</span>
+        <span>AI can suggest well-known competitors in your space to get you started.</span>
+      </div>
+    </ng-container>
+
+    <!-- Step · Categories -->
+    <ng-container *ngSwitchCase="'categories'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Taxonomy</span>
+      <h3 class="ab-aside-title">How mentions get organised</h3>
+      <p class="ab-aside-lead">Every mention this brand receives is automatically sorted into a category. Set that structure up here.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">account_tree</span></span>
+          <div class="ab-aside-info-tx"><b>Category group</b><span>A ready-made set of categories your mentions are auto-sorted into. Brands in the same group share these categories.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">label</span></span>
+          <div class="ab-aside-info-tx"><b>Catch-all category</b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
+        </div>
+        <!-- AI suggest info disabled for now
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">auto_awesome</span></span>
+          <div class="ab-aside-info-tx"><b>Not sure where to start?</b><span>Let AI suggest a starter taxonomy, then fine-tune it — add, rename, or nest categories anytime.</span></div>
+        </div>
+        -->
+      </div>
+    </ng-container>
+
+    <!-- Step · Ticket creation -->
+    <ng-container *ngSwitchCase="'tickets'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Ticketing</span>
+      <h3 class="ab-aside-title">Turn mentions into action</h3>
+      <p class="ab-aside-lead">Decide whether incoming mentions become tickets your team can pick up, assign, and resolve.</p>
+
+      <!-- ON: what joining Digital Care unlocks -->
+      <div class="ab-aside-infos" *ngIf="ticketsEnabled">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">support_agent</span></span>
+          <div class="ab-aside-info-tx"><b>This brand joins Digital Care</b><span>Ticket creation enables your full Care workflow for this brand.</span></div>
+        </div>
+        <ul class="ab-aside-care">
+          <li><span class="msr">move_to_inbox</span>Convert incoming mentions into tickets</li>
+          <li><span class="msr">group_add</span>Assign tickets to team members</li>
+          <li><span class="msr">forum</span>Respond and continue the conversation until it's resolved</li>
+          <li><span class="msr">diversity_3</span>Collaborate with other team members</li>
+        </ul>
+      </div>
+
+      <!-- OFF: listening-only explanation -->
+      <div class="ab-aside-infos" *ngIf="!ticketsEnabled">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">visibility</span></span>
+          <div class="ab-aside-info-tx"><b>Listening only</b><span>Mentions are still collected for analytics and reporting — they just won't create tickets or land in agent queues.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">support_agent</span></span>
+          <div class="ab-aside-info-tx"><b>Digital Care</b><span>Turn it on to convert mentions into tickets and unlock the full Care workflow — assign, respond, and resolve.</span></div>
+        </div>
+      </div>
+
+      <div class="ab-aside-tip" *ngIf="ticketsEnabled">
+        <span class="msr">tips_and_updates</span>
+        <span><b>Pro tip:</b> since this brand is now part of Digital Care, explore the Care-specific features to streamline your workflow.</span>
+      </div>
+      <div class="ab-aside-tip" *ngIf="!ticketsEnabled">
+        <span class="msr">tips_and_updates</span>
+        <span>You can switch ticketing on or off for this brand later from Manage Brands.</span>
+      </div>
+    </ng-container>
+
+    <!-- Step · Assign users -->
+    <ng-container *ngSwitchCase="'users'">
+      <span class="ab-aside-eyebrow">Step {{ currentStep }} · Access</span>
+      <h3 class="ab-aside-title">Decide who gets in</h3>
+      <p class="ab-aside-lead">Only the users you assign can see and work on this brand. You can change this anytime later.</p>
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">lock_person</span></span>
+          <div class="ab-aside-info-tx"><b>Access control</b><span>Assigned users can view mentions, analytics, and — if enabled — tickets for this brand.</span></div>
+        </div>
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">group_add</span></span>
+          <div class="ab-aside-info-tx"><b>Invite later</b><span>No teammates yet? Create the brand now and invite them from Manage Users.</span></div>
+        </div>
+      </div>
+      <div class="ab-aside-tip">
+        <span class="msr">verified_user</span>
+        <span>You always keep admin access to brands you create.</span>
+      </div>
+    </ng-container>
+
+  </aside>
+  </div><!-- /.ab-shell -->
 </div>
