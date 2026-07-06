@@ -164,6 +164,10 @@ export class AddBrandWizardComponent {
   selectedUserIds = new Set<string>();
   usersDropdownOpen = false;
   userSearch = '';
+  /** The current account owner — the only user on a brand-new account. */
+  readonly selfUser: BrandUser = { id: 'self', name: 'you', fullName: 'You', role: 'Admin', team: 'Owner' };
+  /** When there are no other users, the owner assigns themselves (default on). */
+  selfAssigned = true;
   ticketsEnabled = this.planHasTicketing;   // off by default when the plan has no ticketing
 
   // ---- step 4 · categories -----------------------------------------------
@@ -240,7 +244,7 @@ export class AddBrandWizardComponent {
       // new accounts skip this step — the Default group is assigned automatically
       case 'categories': return this.userMode === 'new' || (!!this.categoryGroup && !!this.catchAll);
       case 'tickets': return true;                    // toggle always valid
-      case 'users': return this.selectedUserIds.size > 0 || this.allUsers.length === 0;
+      case 'users': return this.allUsers.length ? this.selectedUserIds.size > 0 : this.selfAssigned;
       default: return false;
     }
   }
@@ -339,6 +343,12 @@ export class AddBrandWizardComponent {
   // =======================================================================
   get selectedUsers(): BrandUser[] {
     return this.allUsers.filter(u => this.selectedUserIds.has(u.id));
+  }
+
+  /** Everyone assigned to the brand — picked users, or just the owner on a new account. */
+  get assignedUsers(): BrandUser[] {
+    if (this.allUsers.length) return this.selectedUsers;
+    return this.selfAssigned ? [this.selfUser] : [];
   }
 
   get filteredUsers(): BrandUser[] {
@@ -674,7 +684,7 @@ export class AddBrandWizardComponent {
 
   /** One-line recap of the brand's basics, shown on the success screen. */
   get brandSummary(): string {
-    const users = this.selectedUserIds.size;
+    const users = this.assignedUsers.length;
     const userPart = `${users} user${users === 1 ? '' : 's'}`;
     const tickets = this.ticketsEnabled ? 'ticket creation on' : 'ticket creation off';
     return `${this.brandName} (${this.country}) is ready — ${userPart} assigned, `
@@ -692,7 +702,7 @@ export class AddBrandWizardComponent {
       ticketsEnabled: this.ticketsEnabled,
       categoryGroup: this.categoryGroup,
       catchAll: this.catchAll,
-      users: this.selectedUsers.map(u => ({ id: u.id, name: u.fullName, role: u.role })),
+      users: this.assignedUsers.map(u => ({ id: u.id, name: u.fullName, role: u.role })),
       products: this.products.map(p => ({ name: p.name, synonyms: [...p.synonyms] })),
       competitors: [
         ...(this.useMappedCompetitors ? this.mappedCompetitors : []),
@@ -748,6 +758,7 @@ export class AddBrandWizardComponent {
 
     // assigned users
     this.selectedUserIds = new Set<string>();
+    this.selfAssigned = true;
     this.usersDropdownOpen = false;
     this.userSearch = '';
 
@@ -794,6 +805,7 @@ export class AddBrandWizardComponent {
     // step 5 / 6
     this.ticketsEnabled = this.planHasTicketing;
     this.selectedUserIds = new Set<string>();
+    this.selfAssigned = true;
     this.userSearch = '';
     this.usersDropdownOpen = false;
   }

@@ -40,7 +40,7 @@
       </div>
 
       <div class="ab-recap-grid">
-        <span class="ab-recap-fact"><span class="msr">group</span><b>{{ selectedUserIds.size }}</b> user{{ selectedUserIds.size === 1 ? '' : 's' }}</span>
+        <span class="ab-recap-fact"><span class="msr">group</span><b>{{ assignedUsers.length }}</b> user{{ assignedUsers.length === 1 ? '' : 's' }}</span>
         <span class="ab-recap-fact"><span class="msr">confirmation_number</span>Ticket creation {{ ticketsEnabled ? 'on' : 'off' }}</span>
         <span class="ab-recap-fact"><span class="msr">account_tree</span>{{ categoryGroup }}</span>
         <span class="ab-recap-fact" *ngIf="catchAll"><span class="msr">label</span>Catch-all: {{ catchAll }}</span>
@@ -681,16 +681,20 @@
       <h1 class="ab-pane-title">Assign Users</h1>
       <p class="ab-pane-sub">Choose who can access and work on this brand.</p>
 
-      <!-- no users on the account yet -->
-      <div class="ab-nousers" *ngIf="!allUsers.length">
-        <span class="ab-nousers-ic"><span class="msr">group_off</span></span>
-        <div class="ab-nousers-text">
-          <p class="ab-nousers-title">No team members to assign yet</p>
-          <p class="ab-nousers-sub">
-            Your account doesn't have any users besides you. You'll have access to this brand as the admin — invite team members
-            later from <b>Manage Users</b>, then come back to assign them here. You can go ahead and create the brand now.
-          </p>
-        </div>
+      <!-- first user on a new account — self-assign -->
+      <div class="ab-selfwrap" *ngIf="!allUsers.length">
+        <button type="button" class="ab-self" [class.on]="selfAssigned" (click)="selfAssigned = !selfAssigned">
+          <span class="ab-self-av">{{ userInitials(selfUser) }}</span>
+          <span class="ab-self-tx">
+            <span class="ab-self-name">{{ selfUser.fullName }} <span class="ab-self-you">(you)</span></span>
+            <span class="ab-self-sub">Account owner · you'll be the only user on this brand for now</span>
+          </span>
+          <span class="ab-check" [class.on]="selfAssigned"><span class="msr" *ngIf="selfAssigned">check</span></span>
+        </button>
+        <p class="ab-self-note">
+          <span class="msr">info</span>
+          <span>You're the first user on this account, so you can assign yourself to this brand. Invite team members later from <b>Manage Users</b> and assign them here.</span>
+        </p>
       </div>
 
       <div class="ab-field" *ngIf="allUsers.length">
