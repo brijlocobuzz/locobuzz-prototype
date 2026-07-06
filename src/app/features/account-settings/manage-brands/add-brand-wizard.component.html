@@ -567,6 +567,7 @@
             <div class="ab-cat4-block">
               <div class="ab-cat4-mini-row">
                 <p class="ab-cat4-mini">Category mapping <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span></p>
+                <!-- AI suggest / create-category actions disabled for now
                 <div class="ab-cat4-mini-actions">
                   <button type="button" class="ab-cat4-suggest" [disabled]="suggestingCats" (click)="suggestCategories()">
                     <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
@@ -577,6 +578,7 @@
                     <span class="msr">add</span> Create category
                   </button>
                 </div>
+                -->
               </div>
               <p class="ab-cat4-pickhint" *ngIf="!catchAll">
                 <span class="msr">touch_app</span>
@@ -595,22 +597,26 @@
               <div class="ab-cat4-tree">
                 <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
 
+                <!-- create-category input disabled for now
                 <div class="ab-cat4-newcat" *ngIf="addingCatRoot">
                   <input class="ab-input" type="text" placeholder="Category name" maxlength="50" [(ngModel)]="catDraft" />
                   <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
                   <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
                 </div>
+                -->
 
-                <p class="ab-cat4-empty" *ngIf="!displayTree.length && !addingCatRoot && categorySearch.trim()">No categories match your search.</p>
-                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !addingCatRoot && !categorySearch.trim()">
+                <p class="ab-cat4-empty" *ngIf="!displayTree.length && categorySearch.trim()">No categories match your search.</p>
+                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !categorySearch.trim()">
                   <span class="msr">account_tree</span>
                   <p>No categories yet</p>
-                  <span>Not sure where to start? Let AI suggest a starter taxonomy, or create your own.</span>
+                  <span>This group doesn't have any categories yet.</span>
+                  <!-- AI suggest disabled for now
                   <button type="button" class="ab-cat4-suggest lg" [disabled]="suggestingCats" (click)="suggestCategories()">
                     <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
                     <span class="ab-spinner" *ngIf="suggestingCats"></span>
                     {{ suggestingCats ? 'Suggesting categories…' : 'Suggest categories with AI' }}
                   </button>
+                  -->
                 </div>
               </div>
             </div>
@@ -640,21 +646,25 @@
               {{ n.name }}
               <span class="ab-cat4-chip-tag" *ngIf="catchAll === n.name">Catch-all</span>
             </button>
+            <!-- add sub-category disabled for now
             <button type="button" class="ab-cat4-addchild" (click)="startAddChildCat(n)" title="Add sub-category">
               <span class="msr">add</span>
             </button>
+            -->
           </div>
 
-          <div class="ab-cat4-children" *ngIf="(n.children?.length && isExpanded(n)) || addCatParent === n"
+          <div class="ab-cat4-children" *ngIf="n.children?.length && isExpanded(n)"
                [style.padding-left.px]="level * 18">
             <ng-container *ngIf="n.children?.length && isExpanded(n)">
               <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: n.children, level: level + 1 }"></ng-container>
             </ng-container>
+            <!-- add sub-category input disabled for now
             <div class="ab-cat4-newcat child" *ngIf="addCatParent === n">
               <input class="ab-input" type="text" placeholder="Sub-category name" maxlength="50" [(ngModel)]="catDraft" />
               <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
               <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
             </div>
+            -->
           </div>
         </div>
       </ng-template>
@@ -693,7 +703,7 @@
         </button>
         <p class="ab-self-note">
           <span class="msr">info</span>
-          <span>You're the first user on this account, so you can assign yourself to this brand. Invite team members later from <b>Manage Users</b> and assign them here.</span>
+          <span>You're the first user on this account, so you can assign yourself to this brand. Invite team members later from <b>Manage Users</b> in Account Settings and assign them here.</span>
         </p>
       </div>
 
@@ -901,10 +911,12 @@
           <span class="ab-aside-info-ic"><span class="msr">label</span></span>
           <div class="ab-aside-info-tx"><b>Catch-all category</b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
         </div>
+        <!-- AI suggest info disabled for now
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">auto_awesome</span></span>
           <div class="ab-aside-info-tx"><b>Not sure where to start?</b><span>Let AI suggest a starter taxonomy, then fine-tune it — add, rename, or nest categories anytime.</span></div>
         </div>
+        -->
       </div>
     </ng-container>
 
@@ -925,7 +937,6 @@
           <li><span class="msr">group_add</span>Assign tickets to team members</li>
           <li><span class="msr">forum</span>Respond and continue the conversation until it's resolved</li>
           <li><span class="msr">diversity_3</span>Collaborate with other team members</li>
-          <li><span class="msr">insights</span>Get ticketing access and ticketing analytics</li>
         </ul>
       </div>
 
