@@ -23,6 +23,9 @@ export class IncreaseLimitDialogComponent implements OnInit {
   sent = false;
   sending = false;
 
+  /** Whether the extra limit applies to the current cycle only, or permanently. */
+  scope: 'month' | 'all' = 'month';
+
   @ViewChild('addInput') set addInput(el: ElementRef<HTMLInputElement> | undefined) {
     if (el) setTimeout(() => { el.nativeElement.focus(); el.nativeElement.select(); });
   }
@@ -46,6 +49,11 @@ export class IncreaseLimitDialogComponent implements OnInit {
     return this.currentLimit > 0 ? ((Number(this.additional) || 0) / this.currentLimit) * 100 : 0;
   }
   get canSend(): boolean { return (Number(this.additional) || 0) > 0; }
+
+  /** Human-readable description of the selected scope, reused in copy. */
+  get scopeLabel(): string {
+    return this.scope === 'month' ? 'this month only' : 'all upcoming months';
+  }
 
   send() {
     if (!this.canSend || this.sending) return;
