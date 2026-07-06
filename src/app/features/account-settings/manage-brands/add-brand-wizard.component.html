@@ -109,6 +109,31 @@
       <h1 class="ab-pane-title">Brand identity</h1>
       <p class="ab-pane-sub">Name your brand and add a short description so your team and AI understand it.</p>
 
+      <!-- Auto-fill from the brand's website (domain enrichment) -->
+      <div class="ab-fetch" [class.done]="fetchedDomain && !fetching">
+        <span class="ab-fetch-ic"><span class="msr">travel_explore</span></span>
+        <div class="ab-fetch-body">
+          <p class="ab-fetch-title">Auto-fill from website <span class="ab-fetch-badge">Fast setup</span></p>
+          <p class="ab-fetch-sub">Enter the brand's domain — we'll pull its name, logo, colour, description and region for you.</p>
+          <div class="ab-fetch-row">
+            <div class="ab-fetch-field" [class.err]="fetchError">
+              <span class="ab-fetch-prefix">https://</span>
+              <input type="text" placeholder="nike.com" [(ngModel)]="domainInput"
+                     (ngModelChange)="fetchError = ''" (keyup.enter)="fetchFromDomain()" [disabled]="fetching" />
+            </div>
+            <button type="button" class="ab-fetch-btn" [disabled]="fetching || !domainInput.trim()" (click)="fetchFromDomain()">
+              <span class="ab-spinner" *ngIf="fetching"></span>
+              <span class="msr" *ngIf="!fetching">auto_awesome</span>
+              {{ fetching ? 'Fetching…' : 'Fetch details' }}
+            </button>
+          </div>
+          <p class="ab-fetch-err" *ngIf="fetchError"><span class="msr">error</span>{{ fetchError }}</p>
+          <p class="ab-fetch-ok" *ngIf="fetchedDomain && !fetching">
+            <span class="msr">check_circle</span>Pre-filled from <b>{{ fetchedDomain }}</b> — review and edit anything below.
+          </p>
+        </div>
+      </div>
+
       <!-- Brand Name + (optional) Recognised Brand Name -->
       <div class="ab-namerow">
         <div class="ab-field ab-field-name">
@@ -232,7 +257,7 @@
               <span class="ab2-live"><span class="ab2-live-dot"></span>Live preview</span>
             </div>
             <div class="ab2-avatar">
-              <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Brand logo" />
+              <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Brand logo" (error)="onLogoError()" />
               <span *ngIf="!logoDataUrl">{{ brandInitials }}</span>
             </div>
             <div class="ab2-card-body">
@@ -295,10 +320,10 @@
             </label>
 
             <div class="ab2-uploaded" *ngIf="logoDataUrl">
-              <span class="ab2-uploaded-thumb"><img [src]="logoDataUrl" alt="" /></span>
+              <span class="ab2-uploaded-thumb"><img [src]="logoDataUrl" alt="" (error)="onLogoError()" /></span>
               <span class="ab2-uploaded-meta">
-                <span class="ab2-uploaded-name">Logo uploaded</span>
-                <span class="ab2-uploaded-sub">PNG · 1:1 ratio</span>
+                <span class="ab2-uploaded-name">Logo added</span>
+                <span class="ab2-uploaded-sub">Colour auto-picked from it</span>
               </span>
               <label class="ab2-mini-btn">
                 <span class="msr">sync</span>Replace
@@ -314,6 +339,15 @@
           <div class="ab2-block">
             <p class="ab2-block-title">Brand Color</p>
             <p class="ab2-color-help">This color represents your brand in Analytics — used for its charts, graphs and maps.</p>
+
+            <div class="ab2-fromlogo" *ngIf="colorFromLogo">
+              <span class="msr">auto_awesome</span>
+              <span>Colour extracted from your logo. Pick another below to override.</span>
+            </div>
+            <button type="button" class="ab2-uselogo" *ngIf="logoDataUrl && !colorFromLogo" (click)="useLogoColor()">
+              <span class="msr">colorize</span> Use colour from logo
+            </button>
+
             <div class="ab2-palette">
               <button type="button" class="ab2-swatch" *ngFor="let c of brandColors"
                       [class.sel]="c === color" [style.background]="c" (click)="pickColor(c)">
@@ -817,7 +851,7 @@
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
-          <div class="ab-aside-info-tx"><b>Recognised name <span class="ab-aside-opt">Optional</span></b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
+          <div class="ab-aside-info-tx"><b>Recognised name</b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">description</span></span>
@@ -829,8 +863,8 @@
         </div>
       </div>
       <div class="ab-aside-tip">
-        <span class="msr">auto_awesome</span>
-        <span>Let AI draft the description for you from just the brand name.</span>
+        <span class="msr">bolt</span>
+        <span>In a hurry? Enter the brand's website above and we'll auto-fill every field for you.</span>
       </div>
     </ng-container>
 
@@ -846,7 +880,7 @@
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">palette</span></span>
-          <div class="ab-aside-info-tx"><b>Brand colour <span class="ab-aside-opt">Optional</span></b><span>Used to tint this brand's analytics charts and highlights across reports. A default is pre-selected.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand colour</b><span>Used to tint this brand's analytics charts and highlights across reports. A default is pre-selected.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -863,11 +897,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">deployed_code</span></span>
-          <div class="ab-aside-info-tx"><b>Products &amp; services <span class="ab-aside-opt">Optional</span></b><span>Add your key products so mentions link to them and sentiment is tracked per product, not just for the brand overall.</span></div>
+          <div class="ab-aside-info-tx"><b>Products &amp; services</b><span>Add your key products so mentions link to them and sentiment is tracked per product, not just for the brand overall.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">sell</span></span>
-          <div class="ab-aside-info-tx"><b>Synonyms <span class="ab-aside-opt">Optional</span></b><span>Add alternate names or spellings for each product so AI recognises every way people mention it.</span></div>
+          <div class="ab-aside-info-tx"><b>Synonyms</b><span>Add alternate names or spellings for each product so AI recognises every way people mention it.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -884,11 +918,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">flag</span></span>
-          <div class="ab-aside-info-tx"><b>Competitors <span class="ab-aside-opt">Optional</span></b><span>Add rival brands to benchmark share of voice and sentiment against yours over time.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitors</b><span>Add rival brands to benchmark share of voice and sentiment against yours over time.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">workspaces</span></span>
-          <div class="ab-aside-info-tx"><b>Competitor sets <span class="ab-aside-opt">Optional</span></b><span>Group rivals into sets to compare against a whole segment in one view.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals into sets to compare against a whole segment in one view.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -929,7 +963,7 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">confirmation_number</span></span>
-          <div class="ab-aside-info-tx"><b>Ticket creation <span class="ab-aside-opt">Optional</span></b><span>Off by default. Toggle it on to create tickets from mentions — you can change this anytime later.</span></div>
+          <div class="ab-aside-info-tx"><b>Ticket creation</b><span>Off by default. Toggle it on to create tickets from mentions — you can change this anytime later.</span></div>
         </div>
       </div>
 
@@ -993,6 +1027,15 @@
         <span>You always keep admin access to brands you create.</span>
       </div>
     </ng-container>
+
+    <!-- static "Good to know" — shown on every step, pinned to the bottom -->
+    <div class="ab-aside-safe">
+      <span class="ab-aside-safe-h"><span class="msr">verified_user</span>Good to know</span>
+      <ul>
+        <li><span class="msr">check</span>Nothing is saved until you click Save Brand on the last step.</li>
+        <li><span class="msr">check</span>You can jump back to any completed step to edit.</li>
+      </ul>
+    </div>
 
   </aside>
   </div><!-- /.ab-shell -->
