@@ -50,6 +50,8 @@
   </div>
 
   <ng-container *ngIf="!celebrating">
+  <div class="au-shell">
+  <div class="au-main">
   <!-- ===== Header ===== -->
   <header class="au-head">
     <div class="au-head-text">
@@ -724,5 +726,37 @@
       </button>
     </div>
   </footer>
+  </div>
+
+  <!-- ---- right: full-height, step-aware info panel ---- -->
+  <aside class="au-aside" *ngIf="stepInfo[currentStep] as info">
+    <span class="au-aside-eyebrow"><span class="msr">help</span>Step {{ currentStep }} · What to enter</span>
+    <h3 class="au-aside-title">{{ info.title }}</h3>
+    <p class="au-aside-lead">{{ info.lead }}</p>
+
+    <div class="au-aside-fields">
+      <div class="au-aside-field" *ngFor="let f of info.fields">
+        <span class="af-ic"><span class="msr">{{ f.icon }}</span></span>
+        <div class="af-tx">
+          <span class="af-name">{{ f.label }}<span class="af-req" *ngIf="f.required">Required</span></span>
+          <span class="af-desc">{{ f.desc }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="au-aside-tip" *ngIf="info.tip">
+      <span class="msr">lightbulb</span><span>{{ info.tip }}</span>
+    </div>
+
+    <div class="au-aside-safe">
+      <span class="au-aside-safe-h"><span class="msr">verified_user</span>Good to know</span>
+      <ul>
+        <li><span class="msr">check</span>Nothing is saved until you click Create on the last step.</li>
+        <li><span class="msr">check</span>You can jump back to any completed step to edit.</li>
+        <li><span class="msr">check</span>Permissions can be changed anytime from the user’s profile.</li>
+      </ul>
+    </div>
+  </aside>
+  </div>
   </ng-container>
 </div>

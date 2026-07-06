@@ -53,6 +53,69 @@ export class AddUserWizardComponent {
     { num: 6, label: 'Review',             subtitle: 'Final check',        icon: 'fact_check' },
   ];
 
+  /** Right-side contextual help — describes the important fields on each step. */
+  readonly stepInfo: Record<number, {
+    title: string; lead: string;
+    fields: { icon: string; label: string; desc: string; required?: boolean }[];
+    tip?: string;
+  }> = {
+    1: {
+      title: 'Who is this user?',
+      lead: 'Their identity and how they sign in. Get the name and email right — the email is their login and where the invite is sent.',
+      fields: [
+        { icon: 'badge', label: 'First & last name', desc: 'The person’s real name (3–20 characters). Shown across tickets and reports.', required: true },
+        { icon: 'alternate_email', label: 'Username', desc: 'A unique handle used to sign in. Choose carefully — it can’t be changed later.', required: true },
+        { icon: 'mail', label: 'Email', desc: 'Their login address and where the account invite is delivered.', required: true },
+        { icon: 'call', label: 'Contact number', desc: 'Optional — used for call/SMS escalations. Validated against the selected country.' },
+      ],
+      tip: 'A clear headshot helps teammates recognise them in the shared inbox.',
+    },
+    2: {
+      title: 'Role & permissions',
+      lead: 'The role presets a sensible baseline of access; fine-tune exactly what this user can do in each module.',
+      fields: [
+        { icon: 'shield_person', label: 'Role', desc: 'Sets the access level (e.g. Agent, Supervisor) and pre-selects the permissions below.', required: true },
+        { icon: 'tune', label: 'Platform permissions', desc: 'Toggle what the user can see and do per module. At least one permission is required.', required: true },
+        { icon: 'warning', label: 'Supervisor Admin', desc: 'Grants full, account-wide control — assign only to trusted owners.' },
+      ],
+      tip: 'Start from the role’s defaults, then remove anything this user shouldn’t have.',
+    },
+    3: {
+      title: 'Brand access',
+      lead: 'Choose which brands this user can see and work on. Only assigned brands appear in their inbox, analytics and reports.',
+      fields: [
+        { icon: 'storefront', label: 'Assigned brands', desc: 'Select one or more brands — the user is scoped strictly to these.', required: true },
+      ],
+      tip: 'Assign the fewest brands needed; you can always add more later.',
+    },
+    4: {
+      title: 'Reply signature',
+      lead: 'The sign-off appended to this user’s outgoing replies. Keep it short and on-brand.',
+      fields: [
+        { icon: 'draw', label: 'Signature', desc: 'Up to 30 characters appended to replies, e.g. “— Aarav, Acme Care”.' },
+        { icon: 'storefront', label: 'Per-brand signatures', desc: 'When the user works across brands, set a distinct sign-off for each one.' },
+      ],
+      tip: 'Signatures are optional — they can be set later from the user’s profile.',
+    },
+    5: {
+      title: 'Team & notifications',
+      lead: 'Place the user in a team for routing and reporting, and choose who is told about the new account.',
+      fields: [
+        { icon: 'group', label: 'Team', desc: 'Groups the user for ticket routing, reporting and bulk actions.' },
+        { icon: 'notifications', label: 'Notify', desc: 'Email the team and/or specific people that this account was created.' },
+      ],
+    },
+    6: {
+      title: 'Review & create',
+      lead: 'A final check before the account is created. Go back to any step to edit anything that looks off.',
+      fields: [
+        { icon: 'fact_check', label: 'Summary', desc: 'Confirm the name, role, brands and permissions are all correct.' },
+        { icon: 'mail', label: 'Invite', desc: 'On create, the user receives an email invite to set their password.' },
+      ],
+      tip: 'Need to add more people? The success screen offers “Add another user”.',
+    },
+  };
+
   // ---- reference data ----------------------------------------------------
   readonly roles = USER_ROLES;
   readonly countryCodes = COUNTRY_CODES;
