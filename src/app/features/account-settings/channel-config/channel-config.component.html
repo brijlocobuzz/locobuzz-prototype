@@ -1,15 +1,27 @@
 <!-- Toolbar -->
 <header class="cc-toolbar">
-  <button class="brand-pill">
-    <span class="lbl">Brands:</span>
-    <span class="val">singlestore1</span>
-    <span class="msr chev">expand_more</span>
-  </button>
+  <div class="brand-wrap">
+    <button class="brand-pill" (click)="brandMenuOpen = !brandMenuOpen" [class.on]="brandMenuOpen">
+      <span class="lbl">Brands:</span>
+      <span class="val">{{ currentBrand.name }}</span>
+      <span class="msr chev">expand_more</span>
+    </button>
+    <div class="brand-menu" *ngIf="brandMenuOpen">
+      <button class="brand-opt" *ngFor="let b of brands" [class.sel]="b === currentBrand" (click)="selectBrand(b)">
+        <span class="bo-av" [style.background]="b.color">{{ b.name.slice(0, 2) | uppercase }}</span>
+        <span class="bo-tx">
+          <span class="bo-name">{{ b.name }}</span>
+          <span class="bo-sub" [class.warn]="!b.hasChannels">{{ b.hasChannels ? b.category : 'No channels configured yet' }}</span>
+        </span>
+        <span class="msr bo-check" *ngIf="b === currentBrand">check</span>
+      </button>
+    </div>
+  </div>
 
   <div class="spacer"></div>
 
   <!-- compact pill -> full detail on hover -->
-  <div class="stat green" style="--pct:68">
+  <div class="stat green" style="--pct:68" *ngIf="!brandEmpty">
     <span class="ring"><i></i></span>
     <span class="stat-cap">Social <b>68%</b></span>
 
@@ -31,7 +43,7 @@
     </div>
   </div>
 
-  <div class="stat purple" style="--pct:70">
+  <div class="stat purple" style="--pct:70" *ngIf="!brandEmpty">
     <span class="ring"><i></i></span>
     <span class="stat-cap">Other <b>70%</b></span>
 
@@ -60,8 +72,73 @@
 <app-add-channel-wizard *ngIf="wizardOpen" [preselectId]="wizardPreselect"
                         (closed)="wizardOpen = false; wizardPreselect = null"></app-add-channel-wizard>
 
+<!-- ===== Brand-level empty state — no channels configured anywhere ===== -->
+<div class="cc-onboard" *ngIf="brandEmpty">
+  <div class="ob-hero">
+    <span class="ob-spark"><span class="msr">hub</span></span>
+    <span class="ob-eyebrow">Channel Configuration</span>
+    <h1>Let’s connect {{ currentBrand.name }}’s first channel</h1>
+    <p>This is where you plug in the platforms your customers talk on — social, reviews, messaging,
+      e-commerce and more — so every mention flows into one place to <b>listen, analyze and respond</b>.</p>
+    <button class="ob-cta" (click)="openAddWizard()"><span class="msr">add_circle</span>Add your first channel</button>
+    <span class="ob-cta-sub"><span class="msr">bolt</span>Takes ~30 seconds · connect owned accounts or track public sources</span>
+  </div>
+
+  <!-- how it works -->
+  <div class="ob-steps">
+    <div class="ob-step">
+      <span class="ob-n">1</span>
+      <div class="ob-step-tx"><b>Pick a channel</b><span>Choose from 24+ social, review, messaging & commerce sources.</span></div>
+    </div>
+    <span class="ob-arrow"><span class="msr">arrow_forward</span></span>
+    <div class="ob-step">
+      <span class="ob-n">2</span>
+      <div class="ob-step-tx"><b>Connect owned or public</b><span>Authenticate your account to engage, or track a public source to just listen.</span></div>
+    </div>
+    <span class="ob-arrow"><span class="msr">arrow_forward</span></span>
+    <div class="ob-step">
+      <span class="ob-n">3</span>
+      <div class="ob-step-tx"><b>Mentions start flowing</b><span>Everything lands in your unified inbox with sentiment & AI replies.</span></div>
+    </div>
+  </div>
+
+  <!-- popular channels teaser -->
+  <div class="ob-section">
+    <div class="ob-sec-head">
+      <h3>Popular channels</h3>
+      <button class="ob-viewall" (click)="openAddWizard()">Browse all<span class="msr">arrow_forward</span></button>
+    </div>
+    <div class="ob-channels">
+      <button class="ob-ch" *ngFor="let c of onboardChannels" (click)="openAddWizard(c.id)">
+        <span class="ob-ch-ic" [style.background]="tintColor(c.color)" [style.color]="c.color">
+          <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(c.id)"><path [attr.d]="brandSvg(c.id)"></path></svg>
+          <span class="msr" *ngIf="!brandSvg(c.id)">{{ c.icon }}</span>
+        </span>
+        <span class="ob-ch-name">{{ c.label }}</span>
+        <span class="ob-ch-add"><span class="msr">add</span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- why configure -->
+  <div class="ob-benefits">
+    <div class="ob-benefit">
+      <span class="ob-b-ic"><span class="msr">trending_up</span></span>
+      <b>Unified insights</b><span>See mentions, reach and sentiment from every channel in one feed.</span>
+    </div>
+    <div class="ob-benefit">
+      <span class="ob-b-ic"><span class="msr">auto_awesome</span></span>
+      <b>AI-powered replies</b><span>Draft on-brand responses in seconds, tuned to each platform.</span>
+    </div>
+    <div class="ob-benefit">
+      <span class="ob-b-ic"><span class="msr">timer</span></span>
+      <b>Save 6+ hours weekly</b><span>Engage from a single inbox instead of switching between tabs.</span>
+    </div>
+  </div>
+</div>
+
 <!-- Body -->
-<div class="cc-body">
+<div class="cc-body" *ngIf="!brandEmpty">
   <!-- Channels panel -->
   <aside class="cc-channels">
     <div class="ch-head">

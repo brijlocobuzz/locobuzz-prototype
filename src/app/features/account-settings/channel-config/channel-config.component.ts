@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+
+interface BrandOption { id: string; name: string; category: string; color: string; hasChannels: boolean; }
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
 import { PaginationBarComponent } from '../../../shared/pagination-bar/pagination-bar.component';
 
@@ -54,6 +56,30 @@ export class ChannelConfigComponent {
   openAddWizard(channelId?: string) {
     this.wizardPreselect = channelId ?? null;
     this.wizardOpen = true;
+  }
+
+  /* ---- brand picker + brand-level empty (no channels at all) state ---- */
+  brands: BrandOption[] = [
+    { id: 'singlestore1', name: 'singlestore1', category: 'Retail', color: '#4f46e5', hasChannels: true },
+    { id: 'acme-fresh',   name: 'Acme Fresh',   category: 'F&B · new brand', color: '#16b364', hasChannels: false },
+  ];
+  currentBrand: BrandOption = this.brands[0];
+  brandMenuOpen = false;
+  /** The active brand has no channels configured anywhere → full-screen onboarding. */
+  get brandEmpty(): boolean { return !this.currentBrand.hasChannels; }
+  selectBrand(b: BrandOption) {
+    this.currentBrand = b;
+    this.brandMenuOpen = false;
+    this.expiredMode = false;
+    this.clearSelection();
+    this.closeDetail();
+  }
+
+  /** A shortlist of popular channels teased on the onboarding screen. */
+  get onboardChannels(): CatalogChannel[] {
+    const ids = ['facebook', 'instagram', 'twitter', 'youtube', 'gmb', 'email', 'whatsapp', 'linkedin'];
+    const all = CHANNEL_CATALOG.flatMap(g => g.channels);
+    return ids.map(id => all.find(c => c.id === id)).filter((c): c is CatalogChannel => !!c);
   }
 
   /* ---- expandable grouped rows (GMB locations / Email directions) ---- */
