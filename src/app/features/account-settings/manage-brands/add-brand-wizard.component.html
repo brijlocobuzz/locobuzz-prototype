@@ -813,19 +813,19 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">badge</span></span>
-          <div class="ab-aside-info-tx"><b>Brand name</b><span>How your brand is represented in Locobuzz — you'll see this name in filters and analytics. Use the name you'll recognise it by.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>How your brand is represented in Locobuzz — you'll see this name in filters and analytics. Use the name you'll recognise it by.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
-          <div class="ab-aside-info-tx"><b>Recognised name</b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
+          <div class="ab-aside-info-tx"><b>Recognised name <span class="ab-aside-opt">Optional</span></b><span>An alternate name people use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">description</span></span>
-          <div class="ab-aside-info-tx"><b>Description</b><span>A short summary of what the brand does. AI uses it to enrich mentions from your point of view.</span></div>
+          <div class="ab-aside-info-tx"><b>Description <span class="ab-aside-req">Required</span></b><span>A short summary of what the brand does. AI uses it to enrich mentions from your point of view.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">public</span></span>
-          <div class="ab-aside-info-tx"><b>Country</b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
+          <div class="ab-aside-info-tx"><b>Country <span class="ab-aside-req">Required</span></b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -842,11 +842,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">image</span></span>
-          <div class="ab-aside-info-tx"><b>Brand logo</b><span>Shown next to the brand everywhere in the app, so it's easy to identify.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand logo <span class="ab-aside-req">Required</span></b><span>Shown next to the brand everywhere in the app, so it's easy to identify.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">palette</span></span>
-          <div class="ab-aside-info-tx"><b>Brand colour</b><span>Used to tint this brand's analytics charts and highlights across reports.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand colour <span class="ab-aside-opt">Optional</span></b><span>Used to tint this brand's analytics charts and highlights across reports. A default is pre-selected.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -863,11 +863,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">deployed_code</span></span>
-          <div class="ab-aside-info-tx"><b>Why products?</b><span>Understand what customers say about each product line separately.</span></div>
+          <div class="ab-aside-info-tx"><b>Products &amp; services <span class="ab-aside-opt">Optional</span></b><span>Add your key products so mentions link to them and sentiment is tracked per product, not just for the brand overall.</span></div>
         </div>
         <div class="ab-aside-info">
-          <span class="ab-aside-info-ic"><span class="msr">auto_awesome</span></span>
-          <div class="ab-aside-info-tx"><b>AI suggestions</b><span>AI can propose products it recognises for this brand — review and refine them.</span></div>
+          <span class="ab-aside-info-ic"><span class="msr">sell</span></span>
+          <div class="ab-aside-info-tx"><b>Synonyms <span class="ab-aside-opt">Optional</span></b><span>Add alternate names or spellings for each product so AI recognises every way people mention it.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -884,11 +884,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">flag</span></span>
-          <div class="ab-aside-info-tx"><b>Why competitors?</b><span>Compare how your brand performs against rivals over time.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitors <span class="ab-aside-opt">Optional</span></b><span>Add rival brands to benchmark share of voice and sentiment against yours over time.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">workspaces</span></span>
-          <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals into sets to compare against a segment in one view.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitor sets <span class="ab-aside-opt">Optional</span></b><span>Group rivals into sets to compare against a whole segment in one view.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -905,11 +905,11 @@
       <div class="ab-aside-infos">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">account_tree</span></span>
-          <div class="ab-aside-info-tx"><b>Category group</b><span>A ready-made set of categories your mentions are auto-sorted into. Brands in the same group share these categories.</span></div>
+          <div class="ab-aside-info-tx"><b>Category group <span class="ab-aside-req">Required</span></b><span>A ready-made set of categories your mentions are auto-sorted into. Brands in the same group share these categories.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">label</span></span>
-          <div class="ab-aside-info-tx"><b>Catch-all category</b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
+          <div class="ab-aside-info-tx"><b>Catch-all category <span class="ab-aside-req">Required</span></b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
         </div>
         <!-- AI suggest info disabled for now
         <div class="ab-aside-info">
@@ -925,6 +925,13 @@
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Ticketing</span>
       <h3 class="ab-aside-title">Turn mentions into action</h3>
       <p class="ab-aside-lead">Decide whether incoming mentions become tickets your team can pick up, assign, and resolve.</p>
+
+      <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">confirmation_number</span></span>
+          <div class="ab-aside-info-tx"><b>Ticket creation <span class="ab-aside-opt">Optional</span></b><span>Off by default. Toggle it on to create tickets from mentions — you can change this anytime later.</span></div>
+        </div>
+      </div>
 
       <!-- ON: what joining Digital Care unlocks -->
       <div class="ab-aside-infos" *ngIf="ticketsEnabled">
@@ -968,6 +975,10 @@
       <h3 class="ab-aside-title">Decide who gets in</h3>
       <p class="ab-aside-lead">Only the users you assign can see and work on this brand. You can change this anytime later.</p>
       <div class="ab-aside-infos">
+        <div class="ab-aside-info">
+          <span class="ab-aside-info-ic"><span class="msr">group</span></span>
+          <div class="ab-aside-info-tx"><b>Assign users <span class="ab-aside-req">Required</span></b><span>Pick who can access and work on this brand — at least one user. You can assign yourself if you're the only one.</span></div>
+        </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">lock_person</span></span>
           <div class="ab-aside-info-tx"><b>Access control</b><span>Assigned users can view mentions, analytics, and — if enabled — tickets for this brand.</span></div>
