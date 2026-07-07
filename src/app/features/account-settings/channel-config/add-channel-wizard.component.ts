@@ -40,6 +40,11 @@ export class AddChannelWizardComponent implements OnInit {
   selected: CatalogChannel | null = null;
   stepIndex = 0;
 
+  /** Aside highlight — the option block the user is hovering (e.g. 'owned' / 'public'). */
+  activeInfo: string | null = null;
+  setActiveInfo(key: string) { this.activeInfo = key; }
+  clearActiveInfo() { this.activeInfo = null; }
+
   /** Celebration screen shown after Finish. */
   celebrating = false;
   private completedOnce = false;

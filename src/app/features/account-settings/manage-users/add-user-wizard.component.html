@@ -25,18 +25,37 @@
     <h2 class="au-celebrate-title">{{ firstName }} {{ lastName }} is ready! 🎉</h2>
     <p class="au-celebrate-sub">The account is set up and good to go.</p>
 
-    <!-- summary statement of the new user -->
-    <div class="au-summary">
-      <span class="au-summary-avatar">
-        <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
-        <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
+    <!-- recap card -->
+    <div class="au-recap">
+      <div class="au-recap-head">
+        <span class="au-recap-logo">
+          <img *ngIf="photoDataUrl" [src]="photoDataUrl" alt="" />
+          <span *ngIf="!photoDataUrl">{{ userInitials }}</span>
+        </span>
+        <span class="au-recap-id">
+          <span class="au-recap-name">{{ firstName }} {{ lastName }}</span>
+          <span class="au-recap-meta"><span class="msr">alternate_email</span>{{ username }}</span>
+        </span>
+        <span class="au-recap-role" *ngIf="role">{{ role.label }}</span>
+      </div>
+
+      <div class="au-recap-grid">
+        <span class="au-recap-fact"><span class="msr">mail</span>{{ email }}</span>
+        <span class="au-recap-fact"><span class="msr">shield</span><b>{{ totalEnabledPermissions }}</b> permission{{ totalEnabledPermissions === 1 ? '' : 's' }}</span>
+        <span class="au-recap-fact"><span class="msr">storefront</span><b>{{ selectedBrandIds.size }}</b> brand{{ selectedBrandIds.size === 1 ? '' : 's' }}</span>
+        <span class="au-recap-fact"><span class="msr">hub</span><b>{{ selectedGroupIds.size }}</b> platform{{ selectedGroupIds.size === 1 ? '' : 's' }}</span>
+        <span class="au-recap-fact"><span class="msr">group</span>{{ selectedTeam?.name || 'No team' }}</span>
+        <span class="au-recap-fact"><span class="msr">notifications</span>{{ notifySummary }}</span>
+      </div>
+    </div>
+
+    <!-- welcome-email / password explainer -->
+    <div class="au-recap-note">
+      <span class="au-recap-note-ic"><span class="msr">mark_email_read</span></span>
+      <span class="au-recap-note-tx">
+        A welcome email is on its way to <strong>{{ email }}</strong>. For security we never send a password —
+        {{ firstName || 'the user' }} taps <strong>“Forgot password”</strong> in that email to set their own.
       </span>
-      <p class="au-summary-text">
-        <strong>{{ firstName }} {{ lastName }}</strong> ({{ '@' + username }}) has been added as {{ roleArticle }}
-        <strong>{{ role?.label }}</strong> with access to
-        <strong>{{ selectedBrandIds.size }} {{ selectedBrandIds.size === 1 ? 'brand' : 'brands' }}</strong>
-        and <strong>{{ selectedGroupIds.size }} {{ selectedGroupIds.size === 1 ? 'platform' : 'platforms' }}</strong>.
-      </p>
     </div>
 
     <div class="au-celebrate-actions">
@@ -138,15 +157,14 @@
       <div class="au-grid-2">
         <div class="au-field" (focusin)="setActiveInfo('username')" (focusout)="clearActiveInfo()">
           <label class="au-label">Username <i>*</i></label>
-          <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username"
-                 [class.is-invalid]="usernameTaken" [class.is-valid]="usernameAvailable" />
+          <div class="au-input-wrap">
+            <input class="au-input" type="text" placeholder="e.g. aarav_admin" maxlength="20" [(ngModel)]="username"
+                   [class.is-invalid]="usernameTaken" [class.has-check]="usernameAvailable" />
+            <span class="au-input-check" *ngIf="usernameAvailable"><span class="msr">check_circle</span></span>
+          </div>
           <p class="au-warn" *ngIf="usernameTaken">
             <span class="msr">error</span>
             <span class="au-warn-tx">This username is already taken — please choose another.</span>
-          </p>
-          <p class="au-ok" *ngIf="usernameAvailable">
-            <span class="msr">check_circle</span>
-            <span class="au-warn-tx"><b>{{ username.trim() }}</b> is available.</span>
           </p>
         </div>
         <div class="au-field" (focusin)="setActiveInfo('email')" (focusout)="clearActiveInfo()">
@@ -498,9 +516,12 @@
             <ng-container *ngIf="usePerBrand">
               <p class="au-option-empty" *ngIf="!selectedBrands.length">Assign brands in the Brands step to add per-brand signatures.</p>
               <div class="au-sig-brand-list" (focusin)="setActiveInfo('perbrand')" (focusout)="clearActiveInfo()">
-                <div class="au-sig-row" *ngFor="let b of selectedBrands">
+                <div class="au-sig-row" *ngFor="let b of selectedBrands" [class.done]="!!(brandSignatures[b.id] || '').trim()">
                   <span class="au-sig-brand">
                     <span class="au-pill-dot" [style.background]="b.color"></span> {{ b.name }}
+                    <span class="au-sig-done" *ngIf="(brandSignatures[b.id] || '').trim()">
+                      <span class="msr">check_circle</span> Added
+                    </span>
                   </span>
                   <input class="au-input" type="text" maxlength="30" placeholder="Signature…" [(ngModel)]="brandSignatures[b.id]" />
                 </div>
@@ -528,6 +549,82 @@
               </div>
             </div>
             <p class="au-sig-preview-note">This is how your signature appears at the end of a reply.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- email-channel signature (rich text, optional) -->
+      <label class="au-welcome-card compact" (focusin)="setActiveInfo('signature')" (focusout)="clearActiveInfo()">
+        <input type="checkbox" [(ngModel)]="emailSignatureEnabled" (ngModelChange)="onToggleEmailSig()" />
+        <span class="au-check-box"><span class="msr">check</span></span>
+        <span class="au-welcome-text">
+          <span class="au-welcome-title">Add a separate signature for the Email channel</span>
+          <span class="au-welcome-sub">Compose a rich HTML signature, or paste your existing email-signature HTML.</span>
+        </span>
+        <span class="au-welcome-ic"><span class="msr">mail</span></span>
+      </label>
+
+      <div class="au-card au-sig-card" *ngIf="emailSignatureEnabled">
+        <div class="au-card-head with-action">
+          <div>
+            <p class="au-card-title">Email Signature</p>
+            <p class="au-card-sub">Appended to the end of emails this user sends on the Email channel.</p>
+          </div>
+          <button type="button" class="au-link" (click)="clearEmailSignature()">Clear all</button>
+        </div>
+
+        <!-- per-brand toggle — only when more than one brand is assigned -->
+        <div class="au-seg-toggle" *ngIf="canPerBrand">
+          <button type="button" [class.on]="!emailPerBrand" (click)="emailPerBrand && toggleEmailPerBrand()">
+            <span class="msr">badge</span> One common signature across all brands
+          </button>
+          <button type="button" [class.on]="emailPerBrand" (click)="!emailPerBrand && toggleEmailPerBrand()">
+            <span class="msr">store</span> Per-brand signature
+          </button>
+        </div>
+
+        <!-- per-brand: pick which brand you're editing -->
+        <div class="au-email-brandtabs" *ngIf="useEmailPerBrand">
+          <button type="button" class="au-chip sm" *ngFor="let b of selectedBrands"
+                  [class.on]="b.id === emailActiveBrandId" (click)="setEmailBrand(b.id)">
+            <span class="msr au-chip-done" *ngIf="(emailBrandSignatures[b.id] || '').trim(); else brandDot">check_circle</span>
+            <ng-template #brandDot><span class="au-pill-dot" [style.background]="b.color"></span></ng-template>
+            {{ b.name }}
+          </button>
+        </div>
+
+        <div class="au-sig-layout">
+          <!-- editor -->
+          <div class="au-sig-editor">
+            <div class="au-rte-card">
+              <div class="au-rte-toolbar" (focusin)="setActiveInfo('signature')" (focusout)="clearActiveInfo()">
+                <button type="button" title="Bold" (mousedown)="execEmailCmd($event, 'bold')"><span class="msr">format_bold</span></button>
+                <button type="button" title="Italic" (mousedown)="execEmailCmd($event, 'italic')"><span class="msr">format_italic</span></button>
+                <button type="button" title="Underline" (mousedown)="execEmailCmd($event, 'underline')"><span class="msr">format_underlined</span></button>
+                <span class="au-rte-sep"></span>
+                <button type="button" title="Bulleted list" (mousedown)="execEmailCmd($event, 'insertUnorderedList')"><span class="msr">format_list_bulleted</span></button>
+                <button type="button" title="Numbered list" (mousedown)="execEmailCmd($event, 'insertOrderedList')"><span class="msr">format_list_numbered</span></button>
+                <span class="au-rte-sep"></span>
+                <button type="button" title="Insert link" (mousedown)="addEmailLink($event)"><span class="msr">link</span></button>
+                <button type="button" title="Clear formatting" (mousedown)="execEmailCmd($event, 'removeFormat')"><span class="msr">format_clear</span></button>
+              </div>
+              <div #emailEditor class="au-rte" contenteditable="true"
+                   data-placeholder="Type or paste HTML…"
+                   (input)="saveEmailEditor()"
+                   (focus)="setActiveInfo('signature')" (blur)="clearActiveInfo()"></div>
+            </div>
+            <p class="au-rte-hint"><span class="msr">code</span> Pasted HTML is preserved.</p>
+          </div>
+
+          <!-- live preview -->
+          <div class="au-sig-preview">
+            <span class="au-sig-preview-tag"><span class="msr">bolt</span> Live preview</span>
+            <div class="au-email-preview">
+              <p class="au-email-body">Hi there — thanks for reaching out, happy to help!</p>
+              <div class="au-email-sig" *ngIf="currentEmailHtml" [innerHTML]="currentEmailHtml"></div>
+              <p class="au-email-empty" *ngIf="!currentEmailHtml">Your email signature preview appears here.</p>
+            </div>
+            <p class="au-sig-preview-note">This is how the signature appears at the end of an email.</p>
           </div>
         </div>
       </div>
@@ -572,7 +669,6 @@
             <span class="au-team-detail-icon"><span class="msr">groups</span></span>
             <span class="au-team-detail-titles">
               <span class="au-team-detail-name">{{ selectedTeam.name }}</span>
-              <span class="au-team-detail-desc">{{ selectedTeam.description }}</span>
             </span>
             <button type="button" class="au-assigned-x" (click)="selectedTeam = null" aria-label="Clear team">
               <span class="msr">close</span>
@@ -606,12 +702,6 @@
               </span>
             </div>
           </div>
-
-          <p class="au-team-note">
-            <span class="msr">info</span>
-            {{ firstName || 'This user' }} will be added to <strong>{{ selectedTeam.name }}</strong>
-            and can collaborate with its {{ selectedTeam.members }} members across {{ selectedTeam.brands }} brands.
-          </p>
         </div>
       </div>
 

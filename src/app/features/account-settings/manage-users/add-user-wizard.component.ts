@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -179,6 +179,13 @@ export class AddUserWizardComponent {
   perBrandSignatures = false;
   signature = '';
   brandSignatures: Record<string, string> = {};
+  /** Separate rich-text signature for the Email channel (HTML). */
+  emailSignatureEnabled = false;
+  emailSignatureHtml = '';
+  emailPerBrand = false;
+  emailBrandSignatures: Record<string, string> = {};
+  emailActiveBrandId: string | null = null;
+  @ViewChild('emailEditor') emailEditor?: ElementRef<HTMLElement>;
   /** Email everyone on the selected team about the new account. */
   notifyTeamMembers = false;
   selectedNotifyEmails = new Set<string>();
@@ -484,6 +491,75 @@ export class AddUserWizardComponent {
     for (const k of Object.keys(this.brandSignatures)) this.brandSignatures[k] = '';
   }
 
+  // ---- email-channel rich-text signature ---------------------------------
+  /** Effective per-brand mode for the email signature. */
+  get useEmailPerBrand(): boolean { return this.emailPerBrand && this.canPerBrand; }
+
+  /** HTML currently shown in the editor / preview (common or active brand). */
+  get currentEmailHtml(): string {
+    if (this.useEmailPerBrand) {
+      return this.emailActiveBrandId ? (this.emailBrandSignatures[this.emailActiveBrandId] ?? '') : '';
+    }
+    return this.emailSignatureHtml;
+  }
+
+  /** Reveal/hide the editor — restore the saved HTML once it renders. */
+  onToggleEmailSig() {
+    if (this.emailSignatureEnabled) {
+      if (this.useEmailPerBrand && !this.emailActiveBrandId) this.emailActiveBrandId = this.selectedBrands[0]?.id ?? null;
+      setTimeout(() => this.loadEmailEditor());
+    }
+  }
+
+  toggleEmailPerBrand() {
+    this.saveEmailEditor();
+    this.emailPerBrand = !this.emailPerBrand;
+    if (this.useEmailPerBrand && !this.emailActiveBrandId) this.emailActiveBrandId = this.selectedBrands[0]?.id ?? null;
+    this.loadEmailEditor();
+  }
+
+  setEmailBrand(id: string) {
+    this.saveEmailEditor();
+    this.emailActiveBrandId = id;
+    this.loadEmailEditor();
+  }
+
+  /** Run a formatting command on the contenteditable editor, keeping focus. */
+  execEmailCmd(ev: Event, cmd: string, value?: string) {
+    ev.preventDefault();
+    document.execCommand(cmd, false, value);
+    this.emailEditor?.nativeElement.focus();
+    this.saveEmailEditor();
+  }
+
+  /** Insert a hyperlink into the email signature. */
+  addEmailLink(ev: Event) {
+    ev.preventDefault();
+    const url = window.prompt('Link URL', 'https://');
+    if (url) this.execEmailCmd(ev, 'createLink', url);
+  }
+
+  /** Persist the editor's HTML to the right target (common / active brand). */
+  saveEmailEditor() {
+    const html = this.emailEditor?.nativeElement.innerHTML ?? '';
+    if (this.useEmailPerBrand) {
+      if (this.emailActiveBrandId) this.emailBrandSignatures[this.emailActiveBrandId] = html;
+    } else {
+      this.emailSignatureHtml = html;
+    }
+  }
+
+  /** Load the current target's HTML into the editor element. */
+  private loadEmailEditor() {
+    if (this.emailEditor) this.emailEditor.nativeElement.innerHTML = this.currentEmailHtml;
+  }
+
+  clearEmailSignature() {
+    if (this.useEmailPerBrand && this.emailActiveBrandId) this.emailBrandSignatures[this.emailActiveBrandId] = '';
+    else this.emailSignatureHtml = '';
+    if (this.emailEditor) this.emailEditor.nativeElement.innerHTML = '';
+  }
+
   /** Emoji quick-inserts for the signature editor. */
   readonly signatureEmojis = ['🙌', '😊', '🙏', '✨', '💙'];
 
@@ -625,6 +701,12 @@ export class AddUserWizardComponent {
     this.perBrandSignatures = false;
     this.signature = '';
     this.brandSignatures = {};
+    this.emailSignatureEnabled = false;
+    this.emailSignatureHtml = '';
+    this.emailPerBrand = false;
+    this.emailBrandSignatures = {};
+    this.emailActiveBrandId = null;
+    if (this.emailEditor) this.emailEditor.nativeElement.innerHTML = '';
     // step 5 — team & notify
     this.selectedTeam = null;
     this.teamOpen = false;

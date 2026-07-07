@@ -486,7 +486,10 @@
 }
 .wz-aside-lead { margin: 10px 0 0; font-size: var(--font-size-14); color: var(--text-2); line-height: 1.5; }
 
-.wz-feat { display: flex; gap: 12px; align-items: flex-start; margin-top: 20px; }
+.wz-feat { display: flex; gap: 12px; align-items: flex-start; margin: 20px -12px 0; padding: 12px; border: 1px solid transparent; border-radius: 14px; transition: background .16s ease, border-color .16s ease, box-shadow .16s ease; }
+/* highlight the aside block matching the option selected on the left */
+.wz-feat.active { background: #fff; border-color: #b9c5f0; box-shadow: 0 6px 18px rgba(37, 99, 235, .14); }
+.wz-feat.active .wz-feat-ic { background: var(--wz); color: #fff; border-color: var(--wz); }
 .wz-feat-ic {
   width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px;
   display: grid; place-items: center; color: var(--wz-deep);
