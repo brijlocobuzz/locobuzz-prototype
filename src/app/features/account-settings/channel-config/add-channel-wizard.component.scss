@@ -942,10 +942,10 @@
 .wz-xbtn {
   margin-top: 10px; height: 44px; border: none; border-radius: 11px; cursor: pointer;
   font: inherit; font-size: var(--font-size-14); font-weight: 700; color: #fff;
-  background: #000; display: grid; place-items: center;
+  background: var(--wz); display: grid; place-items: center;
   transition: background .15s ease;
 }
-.wz-xbtn:hover:not(:disabled) { background: #1a1a1a; }
+.wz-xbtn:hover:not(:disabled) { background: var(--wz-deep); }
 .wz-xbtn:disabled { cursor: default; }
 .wz-xbtn.ok { background: #e7f6ee; color: #1f7a48; }
 .wz-xbtn-in { display: inline-flex; align-items: center; gap: 8px; }

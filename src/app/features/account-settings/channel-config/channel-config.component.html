@@ -91,7 +91,7 @@
         <div class="ads-bar">
           <span class="ads-count">
             <span class="msr">{{ adsDraft.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
-            <b>{{ adsDraft.size }}</b>&nbsp;of {{ adAccounts.length }} selected
+            <b>{{ adsDraft.size }}</b>&nbsp;of {{ adsDraftTotal }} selected
           </span>
           <button class="ads-selall" (click)="toggleAllAdsDraft()">
             <span class="msr">{{ allAdsDraftSelected ? 'remove_done' : 'done_all' }}</span>
@@ -99,16 +99,55 @@
           </button>
         </div>
 
+        <!-- own — on this login -->
+        <div class="ads-sec"><span class="msr">verified_user</span>On this login<span class="ads-sec-n">{{ adAccounts.length }}</span></div>
         <div class="ads-grid">
           <button class="ads-card" *ngFor="let a of adAccounts" [class.sel]="adsDraft.has(a.id)" (click)="toggleAdsDraft(a.id)">
             <span class="ads-check" [class.on]="adsDraft.has(a.id)"><span class="msr" *ngIf="adsDraft.has(a.id)">check</span></span>
             <span class="ads-av"><span class="msr">ads_click</span></span>
             <span class="ads-who">
               <span class="ads-name">{{ a.name }}</span>
-              <span class="ads-meta"><span class="msr">tag</span>{{ a.meta }}</span>
             </span>
           </button>
         </div>
+
+        <!-- external — another account / agency -->
+        <div class="ads-sec ext"><span class="msr">groups</span>Another account / agency</div>
+
+        <div class="ads-ext-connect" *ngIf="adsExternalStage === 'idle'">
+          <p class="ads-ext-lead">Ads for this handle can run on a <b>different X account</b> (an agency or partner).
+            Authenticate that account to pull in its ads accounts — you’re redirected to X to grant access, no password sharing.</p>
+          <button class="ads-ext-connect-btn" (click)="startExternalAuth()">
+            <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg('twitter')"><path [attr.d]="brandSvg('twitter')"></path></svg>
+            Authenticate another account
+          </button>
+        </div>
+
+        <div class="ads-ext-auth" *ngIf="adsExternalStage === 'authorizing'">
+          <span class="ads-spin"></span>
+          <div class="ads-ext-auth-tx">
+            <b>Authorizing &#64;{{ externalHandle }}…</b>
+            <span>Confirming access on X — this doesn’t share your password.</span>
+          </div>
+        </div>
+
+        <ng-container *ngIf="adsExternalStage === 'authorized'">
+          <div class="ads-ext-ok">
+            <span class="msr">verified</span>
+            <span class="ads-ext-ok-tx">Authorized <b>&#64;{{ externalHandle }}</b> — pick the ads accounts to link.</span>
+            <button class="ads-ext-change" (click)="resetExternalAuth()"><span class="msr">swap_horiz</span>Change</button>
+          </div>
+          <div class="ads-grid">
+            <button class="ads-card ext" *ngFor="let a of externalAccounts" [class.sel]="adsDraft.has(a.id)" (click)="toggleAdsDraft(a.id)">
+              <span class="ads-check" [class.on]="adsDraft.has(a.id)"><span class="msr" *ngIf="adsDraft.has(a.id)">check</span></span>
+              <span class="ads-av ext"><span class="msr">ads_click</span></span>
+              <span class="ads-who">
+                <span class="ads-name">{{ a.name }}<span class="ads-ext-tag">Agency</span></span>
+                <span class="ads-meta"><span class="msr">alternate_email</span>via &#64;{{ externalHandle }}</span>
+              </span>
+            </button>
+          </div>
+        </ng-container>
       </div>
 
       <footer class="ads-foot">
@@ -594,8 +633,12 @@
 
             <!-- ads account -->
             <td class="col-ads">
-              <button class="ads-badge on" *ngIf="p.adsActive" (click)="openAdsModal(p)" title="Manage linked ads accounts">
-                <span class="msr">ads_click</span>Active<span class="ads-n" *ngIf="p.adAccountIds?.length">{{ p.adAccountIds?.length }}</span>
+              <button class="ads-linked" *ngIf="p.adsActive" (click)="openAdsModal(p)" [title]="adNamesFor(p) + ' — click to manage'">
+                <span class="ads-linked-av"><span class="msr">ads_click</span></span>
+                <span class="ads-linked-tx">
+                  <span class="ads-linked-name">{{ firstAdName(p) }}<span class="ads-linked-more" *ngIf="(p.adAccountIds?.length || 0) > 1">+{{ (p.adAccountIds?.length || 0) - 1 }}</span></span>
+                  <span class="ads-linked-status"><span class="led"></span>Active<span class="ads-linked-agency" *ngIf="profileHasAgencyAds(p)"><span class="msr">groups</span>Agency</span></span>
+                </span>
               </button>
               <button class="ads-link-btn" *ngIf="!p.adsActive" (click)="openAdsModal(p)" title="Link an ads account">
                 <span class="msr">add_link</span>Link account

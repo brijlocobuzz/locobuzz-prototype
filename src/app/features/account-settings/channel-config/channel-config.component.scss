@@ -1315,6 +1315,21 @@ button.ads-badge.on:hover { background: #ece4ff; }
 .ads-link-btn:hover { background: #eef5ff; border-style: solid; border-color: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, .18); }
 .ads-link-btn:active { transform: translateY(1px); }
 
+/* Active = show which ads account is linked (avatar + name + status). */
+.ads-linked {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit;
+  padding: 4px 12px 4px 4px; border: 1px solid var(--border); border-radius: 22px; background: #fff;
+  transition: border-color .14s ease, box-shadow .14s ease;
+}
+.ads-linked:hover { border-color: #c9bdf3; box-shadow: 0 2px 8px rgba(124, 58, 237, .14); }
+.ads-linked-av { width: 27px; height: 27px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #7c3aed, #6366f1); color: #fff; }
+.ads-linked-av .msr { font-size: var(--font-size-15); }
+.ads-linked-tx { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+.ads-linked-name { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-12); font-weight: 700; color: var(--text-1); white-space: nowrap; }
+.ads-linked-more { display: inline-grid; place-items: center; min-width: 16px; height: 15px; padding: 0 4px; border-radius: 20px; background: #ede9fe; color: #6d28d9; font-size: var(--font-size-10); font-weight: 800; }
+.ads-linked-status { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-10); font-weight: 700; color: #1f7a48; }
+.ads-linked-status .led { width: 5px; height: 5px; border-radius: 50%; background: #1f9d5a; }
+
 /* ===================================================================
    Link-ads-account popover
    =================================================================== */
@@ -1397,3 +1412,51 @@ button.ads-badge.on:hover { background: #ece4ff; }
 .ads-tip .msr { font-size: var(--font-size-17); color: #f59e0b; flex: 0 0 auto; }
 
 @media (max-width: 760px) { .ads-aside { display: none; } .ads-grid { grid-template-columns: 1fr; } }
+
+/* ---- ads popover: own / external sections + auth flow ---- */
+.ads-sec { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; font-size: var(--font-size-12); font-weight: 800; letter-spacing: .3px; text-transform: uppercase; color: var(--text-3); }
+.ads-sec.ext { margin-top: 20px; }
+.ads-sec .msr { font-size: var(--font-size-16); color: #7c3aed; }
+.ads-sec.ext .msr { color: #2563eb; }
+.ads-sec-n { display: inline-grid; place-items: center; min-width: 18px; height: 16px; padding: 0 5px; border-radius: 20px; background: #f1f4f9; color: var(--text-3); font-size: var(--font-size-10); font-weight: 800; }
+
+.ads-ext-connect { border: 1px dashed #b9c6e8; border-radius: 13px; padding: 14px; background: #f7faff; }
+.ads-ext-lead { margin: 0 0 12px; font-size: var(--font-size-12); color: var(--text-2); line-height: 1.5; }
+.ads-ext-lead b { color: var(--text-1); }
+.ads-ext-connect-btn {
+  display: inline-flex; align-items: center; gap: 9px; height: 42px; padding: 0 18px;
+  border: none; border-radius: 11px; background: var(--brand); color: #fff; cursor: pointer;
+  font: inherit; font-size: var(--font-size-14); font-weight: 700;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, .28); transition: filter .14s ease, box-shadow .14s ease;
+}
+.ads-ext-connect-btn:hover { filter: brightness(.94); box-shadow: 0 8px 20px rgba(37, 99, 235, .34); }
+.ads-ext-connect-btn .brand-svg { width: 18px; height: 18px; fill: #fff; }
+.ads-ext-row { display: flex; align-items: stretch; }
+.ads-ext-at { display: grid; place-items: center; width: 36px; flex: 0 0 auto; border: 1px solid var(--border); border-right: none; border-radius: 10px 0 0 10px; background: #fff; color: var(--text-3); font-weight: 700; }
+.ads-ext-input { flex: 1; min-width: 0; height: 40px; border: 1px solid var(--border); border-right: none; padding: 0 12px; font: inherit; font-size: var(--font-size-14); color: var(--text-1); outline: none; }
+.ads-ext-input:focus { border-color: #2563eb; }
+.ads-btn.sm { height: 40px; padding: 0 14px; border-radius: 0 10px 10px 0; box-shadow: none; }
+
+.ads-ext-auth { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); border-radius: 13px; padding: 14px; background: #fff; }
+.ads-spin { width: 24px; height: 24px; flex: 0 0 auto; border-radius: 50%; border: 3px solid #e5e9f2; border-top-color: #2563eb; animation: adsspin .7s linear infinite; }
+@keyframes adsspin { to { transform: rotate(360deg); } }
+.ads-ext-auth-tx { display: flex; flex-direction: column; gap: 2px; }
+.ads-ext-auth-tx b { font-size: var(--font-size-14); color: var(--text-1); }
+.ads-ext-auth-tx span { font-size: var(--font-size-12); color: var(--text-3); }
+
+.ads-ext-ok { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 9px 12px; border-radius: 10px; background: #eef7ff; border: 1px solid #d6e6fb; }
+.ads-ext-ok > .msr { font-size: var(--font-size-18); color: #2563eb; flex: 0 0 auto; }
+.ads-ext-ok-tx { flex: 1; min-width: 0; font-size: var(--font-size-12); color: var(--text-2); }
+.ads-ext-ok-tx b { color: var(--text-1); }
+.ads-ext-change { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccd9ef; background: #fff; border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: var(--font-size-12); font-weight: 700; color: #2563eb; }
+.ads-ext-change .msr { font-size: var(--font-size-15); }
+
+.ads-card.ext.sel { border-color: #2563eb; background: #f5f9ff; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+.ads-card.ext .ads-check.on { background: #2563eb; border-color: #2563eb; }
+.ads-av.ext { background: linear-gradient(135deg, #2563eb, #0ea5e9); }
+.ads-ext-tag { margin-left: 7px; font-size: var(--font-size-10); font-weight: 800; letter-spacing: .3px; color: #1d4ed8; background: #e5efff; padding: 1px 7px; border-radius: 20px; vertical-align: middle; }
+.ads-cur { margin-left: 6px; font-size: var(--font-size-10); font-weight: 800; letter-spacing: .3px; color: #475569; background: #eef1f6; padding: 1px 7px; border-radius: 20px; }
+.ads-via { margin-left: 6px; font-size: var(--font-size-11); font-weight: 700; color: #1d4ed8; }
+
+.ads-linked-agency { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; color: #1d4ed8; font-weight: 800; }
+.ads-linked-agency .msr { font-size: var(--font-size-12); }

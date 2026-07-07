@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, AD_ACCOUNTS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, AdAccount, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, AD_ACCOUNTS, EXTERNAL_AD_ACCOUNTS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, AdAccount, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 
 interface BrandOption { id: string; name: string; category: string; color: string; hasChannels: boolean; }
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
@@ -303,21 +303,61 @@ export class ChannelConfigComponent {
   get adsCount(): number { return this.profiles.filter(p => !!p.adsActive).length; }
 
   /* ---- link-ads-account popover ---- */
-  adAccounts = AD_ACCOUNTS;
+  adAccounts = AD_ACCOUNTS;                       // own — on this login
+  externalAdAccounts = EXTERNAL_AD_ACCOUNTS;      // surfaced after external auth
   adsModalProfile: ChannelProfile | null = null;
   adsDraft = new Set<string>();
+
+  /** External (agency / partner) account authorization sub-flow. */
+  externalHandle = 'AcmeAgency';
+  adsExternalStage: 'idle' | 'authorizing' | 'authorized' = 'idle';
+
   openAdsModal(p: ChannelProfile) {
     this.adsModalProfile = p;
     this.adsDraft = new Set(p.adAccountIds ?? []);
+    // reopen straight to the external list if this profile already links agency accounts
+    this.adsExternalStage = (p.adAccountIds ?? []).some(id => this.isExternalId(id)) ? 'authorized' : 'idle';
   }
-  closeAdsModal() { this.adsModalProfile = null; }
+  closeAdsModal() { this.adsModalProfile = null; this.adsExternalStage = 'idle'; }
   toggleAdsDraft(id: string) { this.adsDraft.has(id) ? this.adsDraft.delete(id) : this.adsDraft.add(id); }
-  get allAdsDraftSelected(): boolean { return this.adsDraft.size === this.adAccounts.length; }
+
+  /** Every account currently offered (own + external once authorized). */
+  private get offeredAdAccounts(): AdAccount[] {
+    return this.adsExternalStage === 'authorized' ? [...this.adAccounts, ...this.externalAccounts] : this.adAccounts;
+  }
+  get allAdsDraftSelected(): boolean { return this.adsDraft.size === this.offeredAdAccounts.length && this.adsDraft.size > 0; }
   toggleAllAdsDraft() {
     if (this.allAdsDraftSelected) this.adsDraft.clear();
-    else this.adAccounts.forEach(a => this.adsDraft.add(a.id));
+    else this.offeredAdAccounts.forEach(a => this.adsDraft.add(a.id));
   }
-  adName(id: string): string { return this.adAccounts.find(a => a.id === id)?.name ?? id; }
+  get adsDraftTotal(): number { return this.offeredAdAccounts.length; }
+
+  // external auth (simulated OAuth handshake)
+  startExternalAuth() {
+    if (!this.externalHandle.trim()) return;
+    this.adsExternalStage = 'authorizing';
+    setTimeout(() => { this.adsExternalStage = 'authorized'; }, 1300);
+  }
+  resetExternalAuth() {
+    // drop any external picks and go back to the connect prompt
+    this.externalAccounts.forEach(a => this.adsDraft.delete(a.id));
+    this.adsExternalStage = 'idle';
+  }
+  isExternalId(id: string): boolean { return this.externalAdAccounts.some(a => a.id === id); }
+  /** External accounts, stamped with the authorized managing handle. */
+  get externalAccounts(): AdAccount[] {
+    return this.externalAdAccounts.map(a => ({ ...a, via: '@' + this.externalHandle.trim() }));
+  }
+
+  private allAdAccounts(): AdAccount[] { return [...this.adAccounts, ...this.externalAccounts]; }
+  adName(id: string): string { return this.allAdAccounts().find(a => a.id === id)?.name ?? id; }
+  /** Comma-joined names of a profile's linked ads accounts (for tooltips). */
+  adNamesFor(p: ChannelProfile): string { return (p.adAccountIds ?? []).map(id => this.adName(id)).join(', '); }
+  /** First linked ads account name (shown inline in the table cell). */
+  firstAdName(p: ChannelProfile): string { return p.adAccountIds?.length ? this.adName(p.adAccountIds[0]) : 'Linked'; }
+  /** True when any of a profile's linked ads accounts is run by an external account. */
+  profileHasAgencyAds(p: ChannelProfile): boolean { return (p.adAccountIds ?? []).some(id => this.isExternalId(id)); }
+
   saveAdsLink() {
     if (!this.adsModalProfile) return;
     this.adsModalProfile.adAccountIds = [...this.adsDraft];

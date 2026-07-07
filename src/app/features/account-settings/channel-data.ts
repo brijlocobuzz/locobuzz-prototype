@@ -86,7 +86,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Brandacca1', owner: 'Asish Locobuzz Brand', initials: 'B', avatarColor: '#7c4dff',
     status: 'Owned', addedOn: 'Jun 11, 2026 11:57 AM', updatedOn: 'Jun 26, 2026 6:07 PM',
     mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions', 'Reviews', 'Ratings'],
-    adsActive: true,
+    adsActive: true, adAccountIds: ['ad-brand', 'ad-perf'],
   },
   {
     name: 'Locouser', owner: 'Nani R', initials: 'L', avatarColor: '#f0a020',
@@ -98,7 +98,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Official', owner: 'Priya Menon', initials: 'A', avatarColor: '#2563eb',
     status: 'Owned', addedOn: 'May 03, 2026 9:21 AM', updatedOn: 'Jun 25, 2026 4:42 PM',
     mentionTypes: ['User Comments', 'Messages', 'User Posts', 'Mentions'],
-    adsActive: true,
+    adsActive: true, adAccountIds: ['ad-brand'],
   },
   {
     name: 'Acme India', owner: 'Ravi Shah', initials: 'A', avatarColor: '#e1306c',
@@ -120,7 +120,7 @@ export const FACEBOOK_PROFILES: ChannelProfile[] = [
     name: 'Acme Global', owner: 'Marcus Webb', initials: 'A', avatarColor: '#5c6bc0',
     status: 'Owned', addedOn: 'Nov 30, 2025 11:11 AM', updatedOn: 'Jun 12, 2026 6:48 PM',
     mentionTypes: ['User Comments', 'Messages', 'Visitor Posts', 'Mentions', 'Reviews', 'Recommendations'],
-    adsActive: true,
+    adsActive: true, adAccountIds: ['ad-brand', 'ad-perf', 'ad-retarget'],
   },
   {
     name: 'Acme Events', owner: 'Aria Tan', initials: 'A', avatarColor: '#ff7043',
@@ -394,14 +394,27 @@ export const FACEBOOK_PAGES: FacebookPage[] = [
 ];
 
 /** An advertising account the user can link (Meta / X / LinkedIn Ads). */
-export interface AdAccount { id: string; name: string; meta: string; }
+export interface AdAccount {
+  id: string; name: string;
+  meta: string;               // "Ad account ID 4471029" — the account's unique id
+  currency?: string;          // billing currency (USD / INR / EUR)
+  owner?: 'own' | 'agency';   // agency = runs on a different (external) account
+  via?: string;               // managing @handle, when owner is 'agency'
+}
 
-/** Ads accounts available for the demo (shown for Twitter, LinkedIn, Meta). */
+/** Ads accounts on the connected login (own). */
 export const AD_ACCOUNTS: AdAccount[] = [
-  { id: 'ad-brand',   name: 'Acme — Brand Ads',      meta: 'Act #4471029 · USD' },
-  { id: 'ad-perf',    name: 'Acme — Performance',    meta: 'Act #8820551 · USD' },
-  { id: 'ad-retarget',name: 'Acme — Retargeting',    meta: 'Act #1290337 · INR' },
-  { id: 'ad-intl',    name: 'Acme — International',   meta: 'Act #5563100 · EUR' },
+  { id: 'ad-brand',   name: 'Acme — Brand Ads',      meta: 'Ad account ID 4471029', currency: 'USD', owner: 'own' },
+  { id: 'ad-perf',    name: 'Acme — Performance',    meta: 'Ad account ID 8820551', currency: 'USD', owner: 'own' },
+  { id: 'ad-retarget',name: 'Acme — Retargeting',    meta: 'Ad account ID 1290337', currency: 'INR', owner: 'own' },
+  { id: 'ad-intl',    name: 'Acme — International',   meta: 'Ad account ID 5563100', currency: 'EUR', owner: 'own' },
+];
+
+/** Ads accounts surfaced after authorizing an external (agency / partner) account. */
+export const EXTERNAL_AD_ACCOUNTS: AdAccount[] = [
+  { id: 'ext-retainer', name: 'Always-On Retainer', meta: 'Ad account ID 9912004', currency: 'USD', owner: 'agency' },
+  { id: 'ext-launch',   name: 'Q3 Product Launch',  meta: 'Ad account ID 9913551', currency: 'USD', owner: 'agency' },
+  { id: 'ext-retarget', name: 'Web Retargeting',    meta: 'Ad account ID 9914820', currency: 'INR', owner: 'agency' },
 ];
 
 /** Channels that support linking an ads account (X, LinkedIn, Meta = FB/IG). */
