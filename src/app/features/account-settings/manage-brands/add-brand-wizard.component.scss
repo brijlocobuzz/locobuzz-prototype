@@ -88,7 +88,10 @@
   transition: background .18s ease, box-shadow .18s ease, opacity .18s ease;
 }
 
-/* field-focus highlight (matches add-user wizard): dim the rest, lift & accent the active block */
+/* field-focus highlight: grey out the whole panel, lift & accent only the active block */
+.ab-aside.has-active .ab-aside-eyebrow,
+.ab-aside.has-active .ab-aside-title,
+.ab-aside.has-active .ab-aside-lead,
 .ab-aside.has-active .ab-aside-info,
 .ab-aside.has-active .ab-aside-tip,
 .ab-aside.has-active .ab-aside-warn,
