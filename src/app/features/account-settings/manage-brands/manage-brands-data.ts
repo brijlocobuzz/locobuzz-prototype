@@ -305,24 +305,26 @@ export interface BrandUser {
   role: string;
   /** Team the user belongs to. */
   team: string;
+  /** Deactivated account — never shown for assignment. */
+  disabled?: boolean;
 }
 
 export const BRAND_USERS: BrandUser[] = [
   { id: 'u1', name: '8Sep_agent', fullName: 'Aditya Sen', role: 'Agent', team: 'Support' },
   { id: 'u2', name: 'Aakanksha_sup', fullName: 'Aakanksha Rao', role: 'Supervisor', team: 'Escalations' },
-  { id: 'u3', name: 'aakanshaTL', fullName: 'Aakansha Iyer', role: 'Team Leader', team: 'Social Care' },
+  { id: 'u3', name: 'aakanshaTL', fullName: 'Aakansha Iyer', role: 'Team Leader', team: 'Social Care', disabled: true },
   { id: 'u4', name: 'Aarav_admin', fullName: 'Aarav Mehta', role: 'Admin', team: 'Operations' },
   { id: 'u5', name: 'Bhavna_agent', fullName: 'Bhavna Kapoor', role: 'Agent', team: 'Support' },
   { id: 'u6', name: 'Chetan_sup', fullName: 'Chetan Malhotra', role: 'Supervisor', team: 'Social Care' },
   { id: 'u7', name: 'Deepak_admin', fullName: 'Deepak Nair', role: 'Admin', team: 'Operations' },
   { id: 'u8', name: 'Esha_agent', fullName: 'Esha Gupta', role: 'Agent', team: 'Escalations' },
   { id: 'u9', name: 'Farhan_TL', fullName: 'Farhan Sheikh', role: 'Team Leader', team: 'Support' },
-  { id: 'u10', name: 'Gauri_agent', fullName: 'Gauri Deshmukh', role: 'Agent', team: 'Social Care' },
+  { id: 'u10', name: 'Gauri_agent', fullName: 'Gauri Deshmukh', role: 'Agent', team: 'Social Care', disabled: true },
   { id: 'u11', name: 'Harish_sup', fullName: 'Harish Kumar', role: 'Supervisor', team: 'Operations' },
   { id: 'u12', name: 'Isha_admin', fullName: 'Isha Verma', role: 'Admin', team: 'Escalations' },
   { id: 'u13', name: 'Jatin_agent', fullName: 'Jatin Arora', role: 'Agent', team: 'Support' },
   { id: 'u14', name: 'Kavya_TL', fullName: 'Kavya Reddy', role: 'Team Leader', team: 'Social Care' },
-  { id: 'u15', name: 'Lokesh_agent', fullName: 'Lokesh Pillai', role: 'Agent', team: 'Escalations' },
+  { id: 'u15', name: 'Lokesh_agent', fullName: 'Lokesh Pillai', role: 'Agent', team: 'Escalations', disabled: true },
 ];
 
 /**

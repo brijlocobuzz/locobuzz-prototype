@@ -118,7 +118,8 @@ export class AddBrandWizardComponent {
   // ---- reference data ----------------------------------------------------
   readonly countries = COUNTRIES;
   /** Users an existing account can assign; a new account has none yet. */
-  get allUsers(): BrandUser[] { return this.userMode === 'new' ? [] : BRAND_USERS; }
+  /** Users available to assign — a new account has none, and disabled users are never shown. */
+  get allUsers(): BrandUser[] { return this.userMode === 'new' ? [] : BRAND_USERS.filter(u => !u.disabled); }
 
   /** Existing account's taxonomies vs a new account's single blank Default group. */
   private readonly existingGroups: CategoryGroupInfo[] =
@@ -185,6 +186,8 @@ export class AddBrandWizardComponent {
   /** Step-1 mode: Quick Setup (auto-fill from website) vs manual entry. */
   quickSetup = true;
   domainInput = '';
+  /** Bundled logo used by Quick Setup so colour extraction always works in the prototype. */
+  private readonly fetchedLogo = '/assets/images/locobuzz_logo.jfif';
   fetching = false;
   fetchError = '';
   fetchedDomain = '';             // set once details have been pulled for a domain
@@ -216,6 +219,7 @@ export class AddBrandWizardComponent {
   color = '#0f172a';
   customColorOpen = false;
   colorFromLogo = false;          // colour was auto-extracted from the uploaded logo
+  logoFromQuickSetup = false;     // logo was pulled in by Quick Setup
   /**
    * Donut showing every existing brand's colour plus the one being created (highlighted).
    * Uses stroke-dasharray on a normalised circle (pathLength = 100).
@@ -224,23 +228,31 @@ export class AddBrandWizardComponent {
   private readonly donutMax = 5;
   get donutMore(): number { return Math.max(0, this.otherBrands.length - this.donutMax); }
 
-  /** Filled-wedge donut segments; the brand being created is pulled out & emphasised. */
-  get donutArcs(): { name: string; color: string; current: boolean; d: string; tx: number; ty: number }[] {
-    const brands = [
-      ...this.otherBrands.slice(0, this.donutMax).map(b => ({ name: b.name, color: b.color, current: false })),
-      { name: this.brandName.trim() || 'Your brand', color: this.color, current: true },
+  /** Mock share-of-voice weights (descending); the brand being created gets a modest slice. */
+  private readonly sovWeights = [32, 23, 16, 10, 6];
+  /** The current brand's share, shown in the donut centre. */
+  get currentShare(): number { return this.donutArcs.find(a => a.current)?.pct ?? 0; }
+
+  /** Filled-wedge donut segments sized by share of voice; the new brand is pulled out & emphasised. */
+  get donutArcs(): { name: string; color: string; current: boolean; pct: number; d: string; tx: number; ty: number }[] {
+    const raw = [
+      ...this.otherBrands.slice(0, this.donutMax).map((b, i) => ({ name: b.name, color: b.color, current: false, w: this.sovWeights[i] ?? 5 })),
+      { name: this.brandName.trim() || 'Your brand', color: this.color, current: true, w: 12 },
     ];
-    const n = brands.length || 1;
+    const total = raw.reduce((a, b) => a + b.w, 0) || 1;
     const cx = 50, cy = 50, R = 44, r = 27;
-    const gapDeg = n > 1 ? 3 : 0;
-    const each = 360 / n;
-    return brands.map((b, i) => {
-      const start = -90 + i * each + gapDeg / 2;
-      const end = -90 + (i + 1) * each - gapDeg / 2;
+    const gapDeg = raw.length > 1 ? 2 : 0;
+    let angle = -90;
+    return raw.map(b => {
+      const sweep = (b.w / total) * 360;
+      const start = angle + gapDeg / 2;
+      const end = angle + sweep - gapDeg / 2;
+      angle += sweep;
       const mid = (start + end) / 2 * Math.PI / 180;
       const push = b.current ? 5 : 0;
       return {
-        ...b,
+        name: b.name, color: b.color, current: b.current,
+        pct: Math.round((b.w / total) * 100),
         d: this.annulusPath(cx, cy, R, r, start, end),
         tx: +(push * Math.cos(mid)).toFixed(2),
         ty: +(push * Math.sin(mid)).toFixed(2),
@@ -274,6 +286,7 @@ export class AddBrandWizardComponent {
   categoryGroup = '';                                 // selected group name (for payload/summary)
   selectedGroup: CategoryGroupInfo | null = null;     // selected group object
   catchAll = '';                                      // selected catch-all category name
+  catchAllMode = false;                               // catch-all selection mode (collapsed + checkboxes)
   addingGroup = false;
   groupDraft = '';
   // catch-all dropdown
@@ -434,8 +447,10 @@ export class AddBrandWizardComponent {
       this.colorFromLogo = false;
       this.brandWebsite = `https://${domain}`;
       if (data.industry) { this.industry = data.industry; this.industryOther = ''; }
-      this.logoDataUrl = `https://logo.clearbit.com/${domain}`;
-      this.extractColorFromLogo(this.logoDataUrl);   // …overridden by the fetched logo's colour when readable
+      // prototype: use the bundled Locobuzz logo and pull the brand colour from it
+      this.logoDataUrl = this.fetchedLogo;
+      this.logoFromQuickSetup = true;
+      this.extractColorFromLogo(this.logoDataUrl);
       this.fetchedDomain = domain;
       this.fetching = false;
     }, 1400);
@@ -449,6 +464,7 @@ export class AddBrandWizardComponent {
       name,
       country: 'India',
       color: '#007AFF',
+      industry: 'Technology / IT / SaaS',   // a sensible default (never "Others")
       description: `${name} is the brand behind ${domain}. Review this summary and refine it so your team and AI understand the brand.`,
     };
   }
@@ -478,6 +494,7 @@ export class AddBrandWizardComponent {
     reader.onload = () => {
       const dataUrl = reader.result as string;
       this.logoDataUrl = dataUrl;
+      this.logoFromQuickSetup = false;         // manual upload
       this.extractColorFromLogo(dataUrl);      // pull the dominant colour from the logo
     };
     reader.readAsDataURL(file);
@@ -493,6 +510,7 @@ export class AddBrandWizardComponent {
   removeLogo() {
     this.logoDataUrl = null;
     this.colorFromLogo = false;
+    this.logoFromQuickSetup = false;
   }
 
   /** Re-run colour extraction on demand (button in the colour block). */
@@ -630,17 +648,38 @@ export class AddBrandWizardComponent {
     this.selectedGroup = g;
     this.categoryGroup = g.name;
     this.catchAll = '';                 // catch-all belongs to the group
+    this.catchAllMode = true;           // start in catch-all selection (radios, collapsed)
     this.catchAllOpen = false;
     this.categorySearch = '';
     this.cancelAddCat();
-    // expand every parent node by default so the tree reads like the real page
-    this.expandedNodes = new Set(flattenCategories(g.tree).filter(n => n.children?.length));
+    this.expandedNodes = new Set<CategoryNode>();   // collapsed; user can expand to browse
+  }
+
+  // ---- catch-all selection mode ----
+  private expandAllCats() {
+    this.expandedNodes = this.selectedGroup
+      ? new Set(flattenCategories(this.selectedGroup.tree).filter(n => n.children?.length))
+      : new Set<CategoryNode>();
+  }
+  /** Enter selection mode: collapse to top level and reveal checkboxes. */
+  startCatchAllSelection() {
+    this.catchAllMode = true;
+    this.categorySearch = '';
+    this.expandedNodes = new Set<CategoryNode>();   // collapse everything to the top level
+  }
+  /** Leave selection mode without changing anything; re-expand for browsing. */
+  cancelCatchAllSelection() {
+    this.catchAllMode = false;
+    this.expandAllCats();
   }
 
   selectCatchAll(name: string) {
+    if (!this.catchAllMode) return;      // only selectable while in selection mode
     this.catchAll = name;
+    this.catchAllMode = false;
     this.catchAllOpen = false;
     this.catchAllSearch = '';
+    this.expandAllCats();
   }
 
   // ---- category tree ----
@@ -980,6 +1019,7 @@ export class AddBrandWizardComponent {
     this.selectedGroup = mode === 'new' ? this.newGroups[0] : null;
     this.categoryGroup = mode === 'new' ? 'Default' : '';
     this.catchAll = '';
+    this.catchAllMode = false;
     this.expandedNodes = new Set<CategoryNode>();
     this.suggestingCats = false;
     this.cancelAddGroup();
@@ -1021,6 +1061,7 @@ export class AddBrandWizardComponent {
     this.fetchedDomain = '';
     // step 2
     this.logoDataUrl = null;
+    this.logoFromQuickSetup = false;
     this.color = '#0f172a';
     this.customColorOpen = false;
     this.colorFromLogo = false;
@@ -1036,6 +1077,7 @@ export class AddBrandWizardComponent {
     this.selectedGroup = null;
     this.categoryGroup = '';
     this.catchAll = '';
+    this.catchAllMode = false;
     this.catchAllOpen = false;
     this.categorySearch = '';
     this.expandedNodes = new Set<CategoryNode>();

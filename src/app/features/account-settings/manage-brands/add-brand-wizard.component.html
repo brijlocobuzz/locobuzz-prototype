@@ -150,9 +150,9 @@
           <div class="ab-quick-row">
             <div class="ab-quick-field" [class.err]="fetchError">
               <span class="ab-quick-prefix">https://</span>
-              <input type="text" placeholder="Enter brand website to auto-fill — e.g. nike.com" [(ngModel)]="domainInput"
+              <input type="text" placeholder="Enter brand website to auto-fill — e.g. locobuzz.com" [(ngModel)]="domainInput"
                      (ngModelChange)="fetchError = ''" (keyup.enter)="fetchFromDomain()" [disabled]="fetching"
-                     (focus)="setActive('website')" (blur)="clearActive()" />
+                     (focus)="setActive('quicksetup')" (blur)="clearActive()" />
             </div>
             <button type="button" class="ab-quick-btn" [disabled]="fetching || !domainInput.trim()" (click)="fetchFromDomain()">
               <span class="ab-spinner" *ngIf="fetching"></span>
@@ -161,7 +161,7 @@
             </button>
           </div>
           <div class="ab-quick-foot">
-            <span class="ab-quick-msg" *ngIf="!fetchError && !fetchedDomain">Fills name, logo, colour, description, industry &amp; region for you.</span>
+            <span class="ab-quick-msg" *ngIf="!fetchError && !fetchedDomain">Auto-fills brand name, website, logo, brand colour, description, industry &amp; country.</span>
             <span class="ab-quick-msg err" *ngIf="fetchError"><span class="msr">error</span>{{ fetchError }}</span>
             <span class="ab-quick-msg ok" *ngIf="fetchedDomain && !fetching"><span class="msr">check_circle</span>Filled from <b>{{ fetchedDomain }}</b> — review below.</span>
             <span class="ab-quick-credit" title="This feature consumes AI credits"><span class="msr">toll</span>Uses AI credits</span>
@@ -173,24 +173,24 @@
       <div class="ab-tworow">
         <div class="ab-field">
           <label class="ab-label">Brand Name <i>*</i></label>
-          <input class="ab-input" type="text" placeholder="e.g. Tata Consultancy Services" maxlength="50" [(ngModel)]="brandName"
+          <input class="ab-input" type="text" placeholder="e.g. IHCL" maxlength="50" [(ngModel)]="brandName"
                  (focus)="setActive('brandName')" (blur)="clearActive()" />
         </div>
         <div class="ab-field">
           <label class="ab-label">Common Name</label>
-          <input class="ab-input" type="text" placeholder="e.g. TCS" maxlength="100" [(ngModel)]="aiFriendlyName"
+          <input class="ab-input" type="text" placeholder="e.g. Taj Hotels" maxlength="100" [(ngModel)]="aiFriendlyName"
                  (focus)="setActive('commonName')" (blur)="clearActive()" />
         </div>
       </div>
 
       <!-- Website · Industry · Country -->
-      <div class="ab-triorow" [class.two]="quickSetup">
-        <!-- Brand website (manual mode only — Quick Setup captures it from the domain) -->
-        <div class="ab-field" *ngIf="!quickSetup">
+      <div class="ab-triorow">
+        <!-- Brand website — filled from the Quick Setup domain, editable -->
+        <div class="ab-field">
           <label class="ab-label">Brand Website <i>*</i></label>
           <div class="ab-web">
             <span class="ab-web-ic"><span class="msr">language</span></span>
-            <input class="ab-input" type="text" placeholder="e.g. tcs.com" [(ngModel)]="brandWebsite"
+            <input class="ab-input" type="text" placeholder="e.g. ihcl.in" [(ngModel)]="brandWebsite"
                    (focus)="setActive('website')" (blur)="clearActive()" />
           </div>
         </div>
@@ -324,24 +324,33 @@
                 </ng-container>
                 <span *ngIf="!aiFriendlyName && !country">How your brand appears across the product</span>
               </p>
-              <!-- brand-colour donut — the brand being created is pulled out & highlighted -->
-              <p class="ab2-donut-title">Your colour across your brands</p>
-              <div class="ab2-donut">
-                <svg class="ab2-donut-svg" viewBox="0 0 100 100" aria-hidden="true">
-                  <path *ngFor="let s of donutArcs" [attr.d]="s.d" [attr.fill]="s.color"
-                        [attr.transform]="'translate(' + s.tx + ' ' + s.ty + ')'"
-                        [class.current]="s.current"></path>
-                </svg>
-                <div class="ab2-donut-center">
-                  <span class="ab2-donut-c1">New brand</span>
-                  <span class="ab2-donut-c2">{{ brandName || 'Your brand' }}</span>
-                </div>
+              <hr class="ab2-divider" />
+
+              <!-- Share-of-Voice donut — chart left, brands right -->
+              <div class="ab2-chart-head">
+                <p class="ab2-donut-title">Share of Voice</p>
+                <p class="ab2-donut-desc">How {{ brandName || 'your brand' }}'s colour reads next to your other brands in Analytics.</p>
               </div>
-              <div class="ab2-legend">
-                <span class="ab2-legend-item" *ngFor="let s of donutArcs" [class.current]="s.current">
-                  <span class="ab2-legend-dot" [style.background]="s.color"></span>{{ s.name }}
-                </span>
-                <span class="ab2-legend-item more" *ngIf="donutMore">+{{ donutMore }} more</span>
+              <div class="ab2-sov">
+                <div class="ab2-donut">
+                  <svg class="ab2-donut-svg" viewBox="0 0 100 100" aria-hidden="true">
+                    <path *ngFor="let s of donutArcs" [attr.d]="s.d" [attr.fill]="s.color"
+                          [attr.transform]="'translate(' + s.tx + ' ' + s.ty + ')'"
+                          [class.current]="s.current"></path>
+                  </svg>
+                  <div class="ab2-donut-center">
+                    <span class="ab2-donut-c1">{{ brandName || 'Your brand' }}</span>
+                    <span class="ab2-donut-c2">{{ currentShare }}%</span>
+                  </div>
+                </div>
+                <ul class="ab2-legend">
+                  <li class="ab2-legend-item" *ngFor="let s of donutArcs" [class.current]="s.current">
+                    <span class="ab2-legend-dot" [style.background]="s.color"></span>
+                    <span class="ab2-legend-nm">{{ s.name }}</span>
+                    <b class="ab2-legend-pct">{{ s.pct }}%</b>
+                  </li>
+                  <li class="ab2-legend-item more" *ngIf="donutMore">+{{ donutMore }} more brands</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -364,7 +373,7 @@
             <div class="ab2-uploaded" *ngIf="logoDataUrl">
               <span class="ab2-uploaded-thumb"><img [src]="logoDataUrl" alt="" (error)="onLogoError()" /></span>
               <span class="ab2-uploaded-meta">
-                <span class="ab2-uploaded-name">Logo added</span>
+                <span class="ab2-uploaded-name">{{ logoFromQuickSetup ? 'Logo added using Quick Setup' : 'Logo added' }}</span>
                 <span class="ab2-uploaded-sub">Colour auto-picked from it</span>
               </span>
               <label class="ab2-mini-btn">
@@ -487,19 +496,12 @@
             </button>
 
             <div class="ab-pc-editor" *ngIf="addingProduct">
-              <div class="ab-pc-fields">
-                <div class="ab-pc-field" (focusin)="setActive('products'); $event.stopPropagation()" (focusout)="clearActive()">
-                  <label class="ab-pc-flabel">Product name <i>*</i></label>
-                  <input class="ab-input" type="text" placeholder="e.g. Air Max, Jordan"
-                         [(ngModel)]="productDraftName" (keyup.enter)="saveProduct()" />
-                  <p class="ab-pc-fhint">Add multiple products separated by commas.</p>
-                </div>
-                <div class="ab-pc-field" (focusin)="setActive('synonyms'); $event.stopPropagation()" (focusout)="clearActive()">
-                  <label class="ab-pc-flabel">Synonyms</label>
-                  <input class="ab-input" type="text" placeholder="e.g. AM, Air-Max"
-                         [(ngModel)]="productDraftSynonyms" (keyup.enter)="saveProduct()" />
-                  <p class="ab-pc-fhint">Comma-separated alternate names or spellings.</p>
-                </div>
+              <div class="ab-pc-field" (focusin)="setActive('products'); $event.stopPropagation()" (focusout)="clearActive()">
+                <label class="ab-pc-flabel">{{ editingProductId ? 'Product name' : 'Product names' }} <i>*</i></label>
+                <textarea class="ab-textarea" rows="2"
+                          placeholder="Add products, comma separated — e.g. Air Max, Jordan, Pegasus"
+                          [(ngModel)]="productDraftName"></textarea>
+                <p class="ab-pc-fhint">Separate multiple products with commas. You can add synonyms afterwards.</p>
               </div>
               <div class="ab-pc-editor-actions">
                 <button type="button" class="ab-pc-ebtn ghost" (click)="cancelProduct()">Cancel</button>
@@ -664,15 +666,15 @@
 
         <!-- RIGHT · selected group detail -->
         <section class="ab-cat4-detail" *ngIf="selectedGroup; else pickGroup">
-          <div class="ab-cat4-detail-head">
-            <p class="ab-cat4-detail-name">{{ selectedGroup.name }}</p>
-            <p class="ab-cat4-detail-desc">{{ selectedGroup.description }}</p>
-          </div>
-
-          <div class="ab-cat4-scroll">
-            <!-- brands -->
-            <div class="ab-cat4-block">
-              <p class="ab-cat4-mini">Brands using this group <span class="ab-cat4-pill">{{ groupBrands(selectedGroup.name).length }}</span></p>
+          <!-- Card 1 · info about the selected group -->
+          <div class="ab-cat4-card ab-cat4-infocard" (focusin)="setActive('group')" (focusout)="clearActive()">
+            <div class="ab-cat4-info-head">
+              <span class="ab-cat4-info-ic"><span class="msr">account_tree</span></span>
+              <p class="ab-cat4-info-name">{{ selectedGroup.name }}</p>
+              <span class="ab-cat4-info-badge">{{ catCount(selectedGroup) }} categories</span>
+            </div>
+            <div class="ab-cat4-info-brands">
+              <span class="ab-cat4-info-blabel">Brands using this group</span>
               <div class="ab-cat4-brands" *ngIf="groupBrands(selectedGroup.name).length; else noB">
                 <span class="ab-cat4-bchip" *ngFor="let b of groupBrands(selectedGroup.name)" [title]="b.name">
                   <img [src]="brandLogo(b.domain)" [alt]="b.name" />{{ b.name }}
@@ -680,62 +682,38 @@
               </div>
               <ng-template #noB><p class="ab-cat4-empty">Yours will be the first brand in this group.</p></ng-template>
             </div>
+          </div>
 
-            <!-- category mapping (hierarchical tree) -->
-            <div class="ab-cat4-block">
-              <div class="ab-cat4-mini-row">
-                <p class="ab-cat4-mini">Category mapping <span class="ab-cat4-pill">{{ catchAllOptions.length }}</span></p>
-                <!-- AI suggest / create-category actions disabled for now
-                <div class="ab-cat4-mini-actions">
-                  <button type="button" class="ab-cat4-suggest" [disabled]="suggestingCats" (click)="suggestCategories()">
-                    <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
-                    <span class="ab-spinner dark" *ngIf="suggestingCats"></span>
-                    {{ suggestingCats ? 'Suggesting…' : 'Suggest with AI' }}
-                  </button>
-                  <button type="button" class="ab-cat4-createcat" *ngIf="!addingCatRoot" (click)="startAddRootCat()">
-                    <span class="msr">add</span> Create category
-                  </button>
-                </div>
-                -->
+          <!-- Card 2 · category mapping -->
+          <div class="ab-cat4-card ab-cat4-mapcard" (focusin)="setActive('catchall')" (focusout)="clearActive()">
+            <div class="ab-cat4-map-head">
+              <div class="ab-cat4-map-titlewrap">
+                <p class="ab-cat4-map-title">Category mapping</p>
+                <p class="ab-cat4-map-sub" *ngIf="catchAllMode">Select the <b>catch-all</b> — a top-level category that collects anything unmatched.</p>
+                <p class="ab-cat4-map-sub" *ngIf="!catchAllMode">Catch-all: <b class="ab-cat4-castag">{{ catchAll }}</b> · these categories auto-sort mentions.</p>
               </div>
-              <p class="ab-cat4-pickhint" *ngIf="!catchAll">
-                <span class="msr">touch_app</span>
-                <span>Click a <b>top-level category</b> to set the <b>catch-all</b> <i class="ab-req">*</i>.</span>
-              </p>
-              <p class="ab-cat4-pickhint sel" *ngIf="catchAll">
-                <span class="msr">check_circle</span>
-                <span>Catch-all: <b>{{ catchAll }}</b> · click another to change.</span>
-              </p>
+              <button type="button" class="ab-cat4-selbtn ghost" *ngIf="!catchAllMode && catchAll" (click)="startCatchAllSelection()">
+                <span class="msr">edit</span> Change catch-all
+              </button>
+              <button type="button" class="ab-cat4-selbtn ghost" *ngIf="catchAllMode && catchAll" (click)="cancelCatchAllSelection()">
+                Cancel
+              </button>
+            </div>
 
-              <div class="ab-cat4-toolbar">
-                <span class="msr">search</span>
-                <input type="text" placeholder="Search category" [(ngModel)]="categorySearch" />
-              </div>
+            <!-- search -->
+            <div class="ab-cat4-toolbar">
+              <span class="msr">search</span>
+              <input type="text" placeholder="Search category" [(ngModel)]="categorySearch" />
+            </div>
 
-              <div class="ab-cat4-tree" (focusin)="setActive('catchall')" (focusout)="clearActive()">
-                <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
+            <div class="ab-cat4-tree" [class.selecting]="catchAllMode">
+              <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: displayTree, level: 1 }"></ng-container>
 
-                <!-- create-category input disabled for now
-                <div class="ab-cat4-newcat" *ngIf="addingCatRoot">
-                  <input class="ab-input" type="text" placeholder="Category name" maxlength="50" [(ngModel)]="catDraft" />
-                  <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
-                  <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
-                </div>
-                -->
-
-                <p class="ab-cat4-empty" *ngIf="!displayTree.length && categorySearch.trim()">No categories match your search.</p>
-                <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !categorySearch.trim()">
-                  <span class="msr">account_tree</span>
-                  <p>No categories yet</p>
-                  <span>This group doesn't have any categories yet.</span>
-                  <!-- AI suggest disabled for now
-                  <button type="button" class="ab-cat4-suggest lg" [disabled]="suggestingCats" (click)="suggestCategories()">
-                    <span class="msr" *ngIf="!suggestingCats">auto_awesome</span>
-                    <span class="ab-spinner" *ngIf="suggestingCats"></span>
-                    {{ suggestingCats ? 'Suggesting categories…' : 'Suggest categories with AI' }}
-                  </button>
-                  -->
-                </div>
+              <p class="ab-cat4-empty pad" *ngIf="!displayTree.length && categorySearch.trim()">No categories match your search.</p>
+              <div class="ab-cat4-treeempty" *ngIf="!displayTree.length && !categorySearch.trim()">
+                <span class="msr">account_tree</span>
+                <p>No categories yet</p>
+                <span>This group doesn't have any categories yet.</span>
               </div>
             </div>
           </div>
@@ -752,37 +730,27 @@
       <!-- recursive category tree node template -->
       <ng-template #catNodes let-nodes let-level="level">
         <div class="ab-cat4-node" *ngFor="let n of nodes">
-          <div class="ab-cat4-noderow" [style.padding-left.px]="(level - 1) * 18">
+          <div class="ab-cat4-noderow" [class.picked]="catchAll === n.name">
+            <!-- expand / collapse (always available so you can browse while selecting) -->
             <button type="button" class="ab-cat4-toggle" *ngIf="n.children?.length" (click)="toggleNode(n)">
-              <span class="msr">{{ isExpanded(n) ? 'indeterminate_check_box' : 'add_box' }}</span>
+              <span class="msr">{{ isExpanded(n) ? 'expand_more' : 'chevron_right' }}</span>
             </button>
-            <span class="ab-cat4-toggle-sp" *ngIf="!n.children?.length"></span>
-            <button type="button" class="ab-cat4-chip" [class.sel]="catchAll === n.name"
-                    [disabled]="level > 1"
-                    [title]="level > 1 ? 'Only top-level categories can be the catch-all' : ''"
-                    (click)="selectCatchAll(n.name)">
+
+            <!-- selection mode: radio on top-level categories (the only catch-all candidates) -->
+            <label class="ab-cat4-radiorow" *ngIf="catchAllMode && level === 1" (click)="selectCatchAll(n.name)">
+              <span class="ab-cat4-radio" [class.on]="catchAll === n.name"></span>
+              <span class="ab-cat4-catname">{{ n.name }}</span>
+            </label>
+
+            <!-- browse label (or nested label while selecting), badge on the current catch-all -->
+            <span class="ab-cat4-catname" *ngIf="!catchAllMode || level > 1">
               {{ n.name }}
-              <span class="ab-cat4-chip-tag" *ngIf="catchAll === n.name">Catch-all</span>
-            </button>
-            <!-- add sub-category disabled for now
-            <button type="button" class="ab-cat4-addchild" (click)="startAddChildCat(n)" title="Add sub-category">
-              <span class="msr">add</span>
-            </button>
-            -->
+              <span class="ab-cat4-catbadge" *ngIf="!catchAllMode && catchAll === n.name"><span class="msr">label_important</span>Catch-all</span>
+            </span>
           </div>
 
-          <div class="ab-cat4-children" *ngIf="n.children?.length && isExpanded(n)"
-               [style.padding-left.px]="level * 18">
-            <ng-container *ngIf="n.children?.length && isExpanded(n)">
-              <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: n.children, level: level + 1 }"></ng-container>
-            </ng-container>
-            <!-- add sub-category input disabled for now
-            <div class="ab-cat4-newcat child" *ngIf="addCatParent === n">
-              <input class="ab-input" type="text" placeholder="Sub-category name" maxlength="50" [(ngModel)]="catDraft" />
-              <button type="button" class="ab-confirm" (click)="saveCat()"><span class="msr">check</span></button>
-              <button type="button" class="ab-cancel-x" (click)="cancelAddCat()"><span class="msr">close</span></button>
-            </div>
-            -->
+          <div class="ab-cat4-children" *ngIf="n.children?.length && isExpanded(n)">
+            <ng-container *ngTemplateOutlet="catNodes; context: { $implicit: n.children, level: level + 1 }"></ng-container>
           </div>
         </div>
       </ng-template>
@@ -871,24 +839,41 @@
         </div>
       </div>
 
-      <!-- selected users — basic info, fills the space below -->
+      <!-- selected users — grid, fills the space below -->
       <ng-container *ngIf="allUsers.length">
       <div class="ab-assigned" *ngIf="selectedUsers.length; else noAssigned">
         <div class="ab-assigned-head">
           <span class="ab-assigned-title">Assigned users</span>
           <span class="ab-assigned-count">{{ selectedUsers.length }}</span>
         </div>
-        <div class="ab-assigned-list">
-          <div class="ab-assigned-item" *ngFor="let u of selectedUsers">
-            <span class="ab-assigned-av">{{ userInitials(u) }}</span>
-            <span class="ab-assigned-info">
-              <span class="ab-assigned-name">{{ u.fullName }} <span class="ab-assigned-uname">({{ u.name }})</span></span>
-              <span class="ab-assigned-sub">{{ u.role }} • {{ u.team }}</span>
-            </span>
-            <button type="button" class="ab-assigned-x" (click)="removeUser(u.id)" aria-label="Remove user">
-              <span class="msr">close</span>
-            </button>
-          </div>
+        <div class="ab-ugrid-wrap">
+          <table class="ab-ugrid">
+            <thead>
+              <tr>
+                <th class="ug-c-user">User</th>
+                <th class="ug-c-uname">Username</th>
+                <th class="ug-c-role">Role</th>
+                <th class="ug-c-team">Team</th>
+                <th class="ug-c-act"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of selectedUsers">
+                <td class="ug-c-user">
+                  <span class="ug-av">{{ userInitials(u) }}</span>
+                  <span class="ug-name">{{ u.fullName }}</span>
+                </td>
+                <td class="ug-c-uname">{{ u.name }}</td>
+                <td class="ug-c-role"><span class="ug-role">{{ u.role }}</span></td>
+                <td class="ug-c-team">{{ u.team }}</td>
+                <td class="ug-c-act">
+                  <button type="button" class="ug-x" (click)="removeUser(u.id)" aria-label="Remove user">
+                    <span class="msr">close</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
       <ng-template #noAssigned>
@@ -930,13 +915,17 @@
       <h3 class="ab-aside-title">Start with the essentials</h3>
       <p class="ab-aside-lead">The name and description anchor everything — dashboards, reports, and how AI understands mentions about this brand.</p>
       <div class="ab-aside-infos">
+        <div class="ab-aside-info" *ngIf="quickSetup" [class.active]="activeField === 'quicksetup'">
+          <span class="ab-aside-info-ic"><span class="msr">bolt</span></span>
+          <div class="ab-aside-info-tx"><b>Quick Setup</b><span>Enter the brand's website and we'll auto-fill name, logo, colour, description, industry &amp; country.</span></div>
+        </div>
         <div class="ab-aside-info" [class.active]="activeField === 'brandName'">
           <span class="ab-aside-info-ic"><span class="msr">badge</span></span>
-          <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>How your brand is represented in Locobuzz — you'll see this name in filters and analytics. Use the name you'll recognise it by.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>The official/legal name you'll see in filters &amp; analytics — e.g. “IHCL”.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'commonName'">
           <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
-          <div class="ab-aside-info-tx"><b>Common name</b><span>The name people commonly use — nicknames or abbreviations. It's crucial for AI to make informed classification of mentions and sentiment.</span></div>
+          <div class="ab-aside-info-tx"><b>Common name</b><span>The name people actually use — e.g. “Taj Hotels” for IHCL. Crucial for AI to classify mentions &amp; sentiment.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'description'">
           <span class="ab-aside-info-ic"><span class="msr">description</span></span>
@@ -954,10 +943,6 @@
           <span class="ab-aside-info-ic"><span class="msr">public</span></span>
           <div class="ab-aside-info-tx"><b>Country <span class="ab-aside-req">Required</span></b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
         </div>
-      </div>
-      <div class="ab-aside-tip" *ngIf="quickSetup">
-        <span class="msr">bolt</span>
-        <span>In a hurry? Enter the brand's website above and we'll auto-fill every field for you.</span>
       </div>
     </ng-container>
 
