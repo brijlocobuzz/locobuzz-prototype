@@ -168,7 +168,7 @@
       <div class="ads-safe">
         <span class="ads-safe-h"><span class="msr">check_circle</span>What we’ll collect</span>
         <ul>
-          <li><span class="msr">check</span>Ad posts &amp; creatives</li>
+          <li><span class="msr">check</span>Ad posts</li>
           <li><span class="msr">check</span>Comments on your ads</li>
           <li><span class="msr">check</span>Paid metrics — spend, reach &amp; impressions</li>
         </ul>
@@ -634,14 +634,13 @@
             <!-- ads account -->
             <td class="col-ads">
               <button class="ads-linked" *ngIf="p.adsActive" (click)="openAdsModal(p)" [title]="adNamesFor(p) + ' — click to manage'">
-                <span class="ads-linked-av"><span class="msr">ads_click</span></span>
-                <span class="ads-linked-tx">
-                  <span class="ads-linked-name">{{ firstAdName(p) }}<span class="ads-linked-more" *ngIf="(p.adAccountIds?.length || 0) > 1">+{{ (p.adAccountIds?.length || 0) - 1 }}</span></span>
-                  <span class="ads-linked-status"><span class="led"></span>Active<span class="ads-linked-agency" *ngIf="profileHasAgencyAds(p)"><span class="msr">groups</span>Agency</span></span>
-                </span>
+                <span class="ads-linked-ic"><span class="msr">ads_click</span></span>
+                <span class="ads-linked-name">{{ firstAdName(p) }}</span>
+                <span class="ads-linked-more" *ngIf="(p.adAccountIds?.length || 0) > 1">+{{ (p.adAccountIds?.length || 0) - 1 }}</span>
+                <span class="ads-linked-agency" *ngIf="profileHasAgencyAds(p)" title="Runs on an agency / external account"><span class="msr">groups</span></span>
               </button>
               <button class="ads-link-btn" *ngIf="!p.adsActive" (click)="openAdsModal(p)" title="Link an ads account">
-                <span class="msr">add_link</span>Link account
+                <span class="msr">add_link</span>Link Ads Account
               </button>
             </td>
 
@@ -891,8 +890,18 @@
           </div>
         </ng-container>
 
-        <!-- ===== NORMAL body: mentions + dates ===== -->
+        <!-- ===== NORMAL body: ads account + mentions + dates ===== -->
         <ng-container *ngIf="!hasChildren(p)">
+          <!-- ads account (above mentions) — name(s) only; action lives in the footer -->
+          <div class="card-ads">
+            <span class="card-ads-lbl"><span class="msr">ads_click</span>Ads account:</span>
+            <span class="card-ads-names" *ngIf="p.adsActive" [title]="adNamesFor(p)">
+              {{ adNamesFor(p) }}
+              <span class="card-ads-agency" *ngIf="profileHasAgencyAds(p)"><span class="msr">groups</span>Agency</span>
+            </span>
+            <span class="card-ads-none" *ngIf="!p.adsActive">Not linked</span>
+          </div>
+
           <div class="card-mentions">
             <div class="cm-head">
               <span class="cm-title">Mentions types being collected</span>
@@ -930,7 +939,8 @@
             <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
           </ng-container>
           <ng-container *ngIf="!hasChildren(p)">
-            <button class="ca-btn"><span class="msr">autorenew</span>Reauthorize</button>
+            <button class="ca-btn" *ngIf="p.alert"><span class="msr">autorenew</span>Reauthorize</button>
+            <button class="ca-btn" *ngIf="!p.alert" (click)="openAdsModal(p)"><span class="msr">add_link</span>Link Ads Account</button>
             <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
             <button class="ca-btn"><span class="msr">pause</span>Pause</button>
           </ng-container>

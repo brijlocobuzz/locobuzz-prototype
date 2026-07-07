@@ -1315,20 +1315,38 @@ button.ads-badge.on:hover { background: #ece4ff; }
 .ads-link-btn:hover { background: #eef5ff; border-style: solid; border-color: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, .18); }
 .ads-link-btn:active { transform: translateY(1px); }
 
-/* Active = show which ads account is linked (avatar + name + status). */
+/* Active = compact single-line chip: small icon + account name + count + live dot. */
 .ads-linked {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit;
-  padding: 4px 12px 4px 4px; border: 1px solid var(--border); border-radius: 22px; background: #fff;
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font: inherit; max-width: 250px;
+  padding: 5px 11px 5px 6px; border: 1px solid var(--border); border-radius: 10px; background: #fff;
   transition: border-color .14s ease, box-shadow .14s ease;
 }
-.ads-linked:hover { border-color: #c9bdf3; box-shadow: 0 2px 8px rgba(124, 58, 237, .14); }
-.ads-linked-av { width: 27px; height: 27px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #7c3aed, #6366f1); color: #fff; }
-.ads-linked-av .msr { font-size: var(--font-size-15); }
-.ads-linked-tx { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-.ads-linked-name { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-12); font-weight: 700; color: var(--text-1); white-space: nowrap; }
-.ads-linked-more { display: inline-grid; place-items: center; min-width: 16px; height: 15px; padding: 0 4px; border-radius: 20px; background: #ede9fe; color: #6d28d9; font-size: var(--font-size-10); font-weight: 800; }
-.ads-linked-status { display: inline-flex; align-items: center; gap: 4px; font-size: var(--font-size-10); font-weight: 700; color: #1f7a48; }
-.ads-linked-status .led { width: 5px; height: 5px; border-radius: 50%; background: #1f9d5a; }
+.ads-linked:hover { border-color: #c9bdf3; box-shadow: 0 2px 10px rgba(124, 58, 237, .12); }
+.ads-linked-ic { width: 22px; height: 22px; flex: 0 0 auto; border-radius: 6px; display: grid; place-items: center; background: #f3efff; color: #7c3aed; }
+.ads-linked-ic .msr { font-size: var(--font-size-14); }
+.ads-linked-name { min-width: 0; font-size: var(--font-size-13); font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ads-linked-more { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 18px; height: 16px; padding: 0 5px; border-radius: 20px; background: #ede9fe; color: #6d28d9; font-size: var(--font-size-10); font-weight: 800; }
+.ads-linked-agency { flex: 0 0 auto; display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 5px; background: #e5efff; color: #1d4ed8; }
+.ads-linked-agency .msr { font-size: var(--font-size-13); }
+
+/* reauthorize (token expired) — shown instead of the link button */
+.ads-reauth-btn {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font: inherit;
+  font-size: var(--font-size-12); font-weight: 700; color: #b45309;
+  background: #fef3c7; border: 1px solid #fadf9a; border-radius: 8px; padding: 5px 11px;
+  transition: background .14s ease;
+}
+.ads-reauth-btn:hover { background: #fde9b8; }
+.ads-reauth-btn .msr { font-size: var(--font-size-15); }
+
+/* card view: ads-account row above the mentions section — name(s) left-aligned after the label */
+.card-ads { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
+.card-ads-lbl { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; font-size: var(--font-size-13); font-weight: 700; color: var(--text-1); }
+.card-ads-lbl .msr { font-size: var(--font-size-16); color: #7c3aed; }
+.card-ads-names { min-width: 0; font-size: var(--font-size-13); font-weight: 600; color: var(--text-2); }
+.card-ads-agency { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-size: var(--font-size-10); font-weight: 800; color: #1d4ed8; background: #e5efff; padding: 1px 7px; border-radius: 20px; vertical-align: middle; }
+.card-ads-agency .msr { font-size: var(--font-size-12); }
+.card-ads-none { font-size: var(--font-size-13); color: var(--text-3); }
 
 /* ===================================================================
    Link-ads-account popover
@@ -1458,5 +1476,3 @@ button.ads-badge.on:hover { background: #ece4ff; }
 .ads-cur { margin-left: 6px; font-size: var(--font-size-10); font-weight: 800; letter-spacing: .3px; color: #475569; background: #eef1f6; padding: 1px 7px; border-radius: 20px; }
 .ads-via { margin-left: 6px; font-size: var(--font-size-11); font-weight: 700; color: #1d4ed8; }
 
-.ads-linked-agency { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; color: #1d4ed8; font-weight: 800; }
-.ads-linked-agency .msr { font-size: var(--font-size-12); }

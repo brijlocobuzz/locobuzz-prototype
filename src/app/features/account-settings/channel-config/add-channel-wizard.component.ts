@@ -40,18 +40,10 @@ export class AddChannelWizardComponent implements OnInit {
   selected: CatalogChannel | null = null;
   stepIndex = 0;
 
-  /**
-   * The control the user is interacting with on the left; its matching block in the
-   * right aside is highlighted while the rest dims. Null = whole panel shows normally.
-   * (Same reusable pattern as the Add Brand wizard.)
-   */
-  activeField: string | null = null;
-  private focusToken = 0;
-  setActive(key: string) { this.activeField = key; this.focusToken++; }
-  clearActive() {
-    const token = ++this.focusToken;
-    setTimeout(() => { if (token === this.focusToken) this.activeField = null; }, 0);
-  }
+  /** Aside highlight — the option block the user is hovering (e.g. 'owned' / 'public'). */
+  activeInfo: string | null = null;
+  setActiveInfo(key: string) { this.activeInfo = key; }
+  clearActiveInfo() { this.activeInfo = null; }
 
   /** Celebration screen shown after Finish. */
   celebrating = false;
@@ -178,7 +170,7 @@ export class AddChannelWizardComponent implements OnInit {
   }
   get authNote(): string {
     return this.activeMode?.accessNote
-      ?? `You'll be redirected to ${this.selected?.label} to confirm. We never see or store your password.`;
+      ?? `You'll be redirected to ${this.selected?.label} to approve access. We never see or store your password.`;
   }
 
   // ---- dynamic step model ------------------------------------------------
@@ -513,8 +505,8 @@ export class AddChannelWizardComponent implements OnInit {
   }
   get reviewReadySub(): string {
     return this.isRealtime
-      ? "Ready to go — we'll start syncing data within a minute."
-      : 'First mentions appear after the next collection run.';
+      ? 'We start syncing within a minute.'
+      : 'First mentions arrive after the next collection run — usually within a few hours.';
   }
   get celebrationSub(): string {
     return this.activeMode?.celebration ?? `${this.selected?.label} is now configured.`;

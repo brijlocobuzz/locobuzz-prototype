@@ -913,7 +913,7 @@
     <ng-container *ngSwitchCase="'identity'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Identity</span>
       <h3 class="ab-aside-title">Start with the essentials</h3>
-      <p class="ab-aside-lead">The name and description anchor everything — dashboards, reports, and how AI understands mentions about this brand.</p>
+      <p class="ab-aside-lead">The name and description anchor everything — dashboards, reports, and how AI reads mentions of this brand.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" *ngIf="quickSetup" [class.active]="activeField === 'quicksetup'">
           <span class="ab-aside-info-ic"><span class="msr">bolt</span></span>
@@ -921,28 +921,32 @@
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'brandName'">
           <span class="ab-aside-info-ic"><span class="msr">badge</span></span>
-          <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>The official/legal name you'll see in filters &amp; analytics — e.g. “IHCL”.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand name <span class="ab-aside-req">Required</span></b><span>How this brand appears across Locobuzz — in filters, analytics and reports.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'commonName'">
           <span class="ab-aside-info-ic"><span class="msr">alternate_email</span></span>
-          <div class="ab-aside-info-tx"><b>Common name</b><span>The name people actually use — e.g. “Taj Hotels” for IHCL. Crucial for AI to classify mentions &amp; sentiment.</span></div>
+          <div class="ab-aside-info-tx"><b>Common name</b><span>What people actually call it eg. —  “Taj Hotels”, Helps AI catch every mention and judge sentiment correctly.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'description'">
           <span class="ab-aside-info-ic"><span class="msr">description</span></span>
-          <div class="ab-aside-info-tx"><b>Description <span class="ab-aside-req">Required</span></b><span>A short summary of what the brand does. AI uses it to enrich mentions from your point of view.</span></div>
+          <div class="ab-aside-info-tx"><b>Description <span class="ab-aside-req">Required</span></b><span>A short summary of what the brand does. AI uses it to understand mentions from your point of view.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'website'">
           <span class="ab-aside-info-ic"><span class="msr">language</span></span>
-          <div class="ab-aside-info-tx"><b>Brand website <span class="ab-aside-req">Required</span></b><span>The brand's official site — also used to auto-fill these details for you.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand website <span class="ab-aside-req">Required</span></b><span>The official site. We can also auto-fill the rest of this form from it.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'industry'">
           <span class="ab-aside-info-ic"><span class="msr">domain</span></span>
-          <div class="ab-aside-info-tx"><b>Industry <span class="ab-aside-req">Required</span></b><span>The sector the brand operates in. Pick “Others” to enter your own.</span></div>
+          <div class="ab-aside-info-tx"><b>Industry <span class="ab-aside-req">Required</span></b><span>The sector this brand operates in. Pick “Others” to type your own.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'country'">
           <span class="ab-aside-info-ic"><span class="msr">public</span></span>
-          <div class="ab-aside-info-tx"><b>Country <span class="ab-aside-req">Required</span></b><span>Sets the brand's home region so it maps correctly on the location charts in Analytics.</span></div>
+          <div class="ab-aside-info-tx"><b>Country <span class="ab-aside-req">Required</span></b><span>The home region — used for the location charts in Analytics.</span></div>
         </div>
+      </div>
+      <div class="ab-aside-tip" *ngIf="quickSetup">
+        <span class="msr">bolt</span>
+        <span>In a hurry? Enter the website above and we'll fill everything in for you.</span>
       </div>
     </ng-container>
 
@@ -950,15 +954,15 @@
     <ng-container *ngSwitchCase="'logo'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Visual identity</span>
       <h3 class="ab-aside-title">Make it instantly recognisable</h3>
-      <p class="ab-aside-lead">A logo and accent colour help you spot this brand at a glance across dashboards, reports, and charts.</p>
+      <p class="ab-aside-lead">A logo and colour help you spot this brand at a glance across dashboards and reports.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'logo'">
           <span class="ab-aside-info-ic"><span class="msr">image</span></span>
-          <div class="ab-aside-info-tx"><b>Brand logo <span class="ab-aside-req">Required</span></b><span>Shown next to the brand everywhere in the app, so it's easy to identify.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand logo <span class="ab-aside-req">Required</span></b><span>Shown beside the brand everywhere in the app.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'color'">
           <span class="ab-aside-info-ic"><span class="msr">palette</span></span>
-          <div class="ab-aside-info-tx"><b>Brand colour</b><span>Used to tint this brand's analytics charts and highlights across reports. A default is pre-selected.</span></div>
+          <div class="ab-aside-info-tx"><b>Brand colour</b><span>Tints this brand's charts and highlights. We pick one from your logo — override it anytime.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -971,15 +975,15 @@
     <ng-container *ngSwitchCase="'products'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Products</span>
       <h3 class="ab-aside-title">Tell us what you offer</h3>
-      <p class="ab-aside-lead">Add your key products so mentions can be linked to them — and sentiment tracked per product, not just for the brand overall.</p>
+      <p class="ab-aside-lead">Add your key products so sentiment can be tracked per product, not just for the brand overall.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'products'">
           <span class="ab-aside-info-ic"><span class="msr">deployed_code</span></span>
-          <div class="ab-aside-info-tx"><b>Products &amp; services</b><span>Add your key products so mentions link to them and sentiment is tracked per product, not just for the brand overall.</span></div>
+          <div class="ab-aside-info-tx"><b>Products &amp; services</b><span>What this brand sells. Mentions get linked to the product they're about.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'synonyms'">
           <span class="ab-aside-info-ic"><span class="msr">sell</span></span>
-          <div class="ab-aside-info-tx"><b>Synonyms</b><span>Add alternate names or spellings for each product so AI recognises every way people mention it.</span></div>
+          <div class="ab-aside-info-tx"><b>Synonyms</b><span>Alternate names and spellings, so AI catches every way people write it.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
@@ -992,20 +996,20 @@
     <ng-container *ngSwitchCase="'competitors'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Competitors</span>
       <h3 class="ab-aside-title">Keep an eye on the market</h3>
-      <p class="ab-aside-lead">Track the brands you compete with so you can benchmark share of voice and sentiment side by side.</p>
+      <p class="ab-aside-lead">Track the brands you compete with to benchmark share of voice and sentiment side by side.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'competitors'">
           <span class="ab-aside-info-ic"><span class="msr">flag</span></span>
-          <div class="ab-aside-info-tx"><b>Competitors</b><span>Add rival brands to benchmark share of voice and sentiment against yours over time.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitors</b><span>Rival brands to benchmark against yours over time.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'sets'">
           <span class="ab-aside-info-ic"><span class="msr">workspaces</span></span>
-          <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals into sets to compare against a whole segment in one view.</span></div>
+          <div class="ab-aside-info-tx"><b>Competitor sets</b><span>Group rivals to compare against a whole segment in one view.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">
-        <span class="msr">auto_awesome</span>
-        <span>AI can suggest well-known competitors in your space to get you started.</span>
+        <span class="msr">schedule</span>
+        <span>Add or edit competitors anytime after creating the brand.</span>
       </div>
     </ng-container>
 
@@ -1013,15 +1017,15 @@
     <ng-container *ngSwitchCase="'categories'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Taxonomy</span>
       <h3 class="ab-aside-title">How mentions get organised</h3>
-      <p class="ab-aside-lead">Every mention this brand receives is automatically sorted into a category. Set that structure up here.</p>
+      <p class="ab-aside-lead">Every mention this brand receives is auto-sorted into a category. Choose the structure here.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'group'">
           <span class="ab-aside-info-ic"><span class="msr">account_tree</span></span>
-          <div class="ab-aside-info-tx"><b>Category group <span class="ab-aside-req">Required</span></b><span>A ready-made set of categories your mentions are auto-sorted into. Brands in the same group share these categories.</span></div>
+          <div class="ab-aside-info-tx"><b>Category group <span class="ab-aside-req">Required</span></b><span>The set of categories mentions are sorted into. Brands in the same group share it — and it can't be changed after the brand is created.</span></div>
         </div>
         <div class="ab-aside-info" [class.active]="activeField === 'catchall'">
           <span class="ab-aside-info-ic"><span class="msr">label</span></span>
-          <div class="ab-aside-info-tx"><b>Catch-all category <span class="ab-aside-req">Required</span></b><span>The fallback for any mention that doesn't match a category, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
+          <div class="ab-aside-info-tx"><b>Catch-all category <span class="ab-aside-req">Required</span></b><span>The fallback for mentions that don't match anything, so nothing is missed. Only a top-level category can be the catch-all.</span></div>
         </div>
         <!-- AI suggest info disabled for now
         <div class="ab-aside-info">
@@ -1036,12 +1040,12 @@
     <ng-container *ngSwitchCase="'tickets'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Ticketing</span>
       <h3 class="ab-aside-title">Turn mentions into action</h3>
-      <p class="ab-aside-lead">Decide whether incoming mentions become tickets your team can pick up, assign, and resolve.</p>
+      <p class="ab-aside-lead">Decide whether incoming mentions become tickets your team can pick up, assign and resolve.</p>
 
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'tickets'">
           <span class="ab-aside-info-ic"><span class="msr">confirmation_number</span></span>
-          <div class="ab-aside-info-tx"><b>Ticket creation</b><span>Off by default. Toggle it on to create tickets from mentions — you can change this anytime later.</span></div>
+          <div class="ab-aside-info-tx"><b>Ticket creation</b><span>Off by default. Turn it on to create tickets from mentions — you can change this anytime.</span></div>
         </div>
       </div>
 
@@ -1049,13 +1053,13 @@
       <div class="ab-aside-infos" *ngIf="ticketsEnabled">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">support_agent</span></span>
-          <div class="ab-aside-info-tx"><b>This brand joins Digital Care</b><span>Ticket creation enables your full Care workflow for this brand.</span></div>
+          <div class="ab-aside-info-tx"><b>This brand joins Digital Care</b><span>Ticket creation switches on the full Care workflow for this brand.</span></div>
         </div>
         <ul class="ab-aside-care">
-          <li><span class="msr">move_to_inbox</span>Convert incoming mentions into tickets</li>
-          <li><span class="msr">group_add</span>Assign tickets to team members</li>
-          <li><span class="msr">forum</span>Respond and continue the conversation until it's resolved</li>
-          <li><span class="msr">diversity_3</span>Collaborate with other team members</li>
+          <li><span class="msr">move_to_inbox</span>Mentions become tickets</li>
+          <li><span class="msr">group_add</span>Assign to teammates</li>
+          <li><span class="msr">forum</span>Reply until resolved</li>
+          <li><span class="msr">diversity_3</span>Collaborate on tough cases</li>
         </ul>
       </div>
 
@@ -1063,17 +1067,17 @@
       <div class="ab-aside-infos" *ngIf="!ticketsEnabled">
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">visibility</span></span>
-          <div class="ab-aside-info-tx"><b>Listening only</b><span>Mentions are still collected for analytics and reporting — they just won't create tickets or land in agent queues.</span></div>
+          <div class="ab-aside-info-tx"><b>Listening only</b><span>Mentions are still collected for analytics and reports — they just won't create tickets or reach agent queues.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">support_agent</span></span>
-          <div class="ab-aside-info-tx"><b>Digital Care</b><span>Turn it on to convert mentions into tickets and unlock the full Care workflow — assign, respond, and resolve.</span></div>
+          <div class="ab-aside-info-tx"><b>Digital Care</b><span>Turn ticketing on to unlock assign, respond and resolve.</span></div>
         </div>
       </div>
 
       <div class="ab-aside-tip" *ngIf="ticketsEnabled">
         <span class="msr">tips_and_updates</span>
-        <span><b>Pro tip:</b> since this brand is now part of Digital Care, explore the Care-specific features to streamline your workflow.</span>
+        <span>Explore the Care features next — they're built around this workflow.</span>
       </div>
       <div class="ab-aside-tip" *ngIf="!ticketsEnabled">
         <span class="msr">tips_and_updates</span>
@@ -1085,19 +1089,19 @@
     <ng-container *ngSwitchCase="'users'">
       <span class="ab-aside-eyebrow">Step {{ currentStep }} · Access</span>
       <h3 class="ab-aside-title">Decide who gets in</h3>
-      <p class="ab-aside-lead">Only the users you assign can see and work on this brand. You can change this anytime later.</p>
+      <p class="ab-aside-lead">Only assigned users can see and work on this brand. You can change this anytime.</p>
       <div class="ab-aside-infos">
         <div class="ab-aside-info" [class.active]="activeField === 'users'">
           <span class="ab-aside-info-ic"><span class="msr">group</span></span>
-          <div class="ab-aside-info-tx"><b>Assign users <span class="ab-aside-req">Required</span></b><span>Pick who can access and work on this brand — at least one user. You can assign yourself if you're the only one.</span></div>
+          <div class="ab-aside-info-tx"><b>Assign users <span class="ab-aside-req">Required</span></b><span>Who can access this brand — at least one person. Assign yourself if you're the only one.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">lock_person</span></span>
-          <div class="ab-aside-info-tx"><b>Access control</b><span>Assigned users can view mentions, analytics, and — if enabled — tickets for this brand.</span></div>
+          <div class="ab-aside-info-tx"><b>Access control</b><span>Assigned users see this brand's mentions, analytics and — if enabled — tickets.</span></div>
         </div>
         <div class="ab-aside-info">
           <span class="ab-aside-info-ic"><span class="msr">group_add</span></span>
-          <div class="ab-aside-info-tx"><b>Invite later</b><span>No teammates yet? Create the brand now and invite them from Manage Users.</span></div>
+          <div class="ab-aside-info-tx"><b>Invite later</b><span>No teammates yet? Create the brand now and invite people from Manage Users.</span></div>
         </div>
       </div>
       <div class="ab-aside-tip">

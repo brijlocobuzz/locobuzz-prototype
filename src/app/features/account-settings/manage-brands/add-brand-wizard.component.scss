@@ -341,7 +341,7 @@
 
 /* step 1 · two-up (name + common name) and three-up (website + industry + country) rows */
 .ab-tworow, .ab-triorow { display: grid; gap: 10px 18px; margin-bottom: 12px; align-items: start; }
-.ab-tworow { grid-template-columns: 1fr 1fr; max-width: 700px; }
+.ab-tworow { grid-template-columns: 1fr 1fr; max-width: 630px; }
 .ab-triorow { grid-template-columns: 1fr 1fr 1fr; }
 /* Quick Setup mode hides the website field → only industry + country remain */
 .ab-triorow.two { grid-template-columns: 1fr 1fr; max-width: 700px; }
