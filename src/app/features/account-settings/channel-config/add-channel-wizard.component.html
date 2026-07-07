@@ -56,8 +56,8 @@
     </div>
 
     <div class="wz-done-acts">
-      <button class="wz-back" (click)="complete()"><span class="msr">check</span>Done</button>
       <button class="wz-next finish" (click)="addAnother()"><span class="msr">add</span>Add another channel</button>
+      <button class="wz-back" (click)="complete()"><span class="msr">check</span>Done</button>
     </div>
   </div>
 
@@ -161,7 +161,9 @@
           <div class="wz-choice-grid">
             <button class="wz-choice" *ngFor="let m of spec?.modes"
                     [class.owned]="m.key === 'owned'" [class.pub]="m.key === 'public'"
-                    [class.sel]="connectionType === m.key" (click)="connectionType = m.key">
+                    [class.sel]="connectionType === m.key" (click)="connectionType = m.key"
+                    (focus)="setActive(m.key)" (blur)="clearActive()"
+                    (mouseenter)="setActive(m.key)" (mouseleave)="clearActive()">
               <span class="wz-choice-check"><span class="msr">check</span></span>
               <span class="wz-choice-head">
                 <span class="wz-choice-ic" [class.pub]="m.key === 'public'">
@@ -708,7 +710,7 @@
     </div>
 
     <!-- ---- right: step-aware aside (re-renders per step → reveal animation re-runs) ---- -->
-    <aside class="wz-aside" [ngSwitch]="current">
+    <aside class="wz-aside" [class.has-active]="activeField" [ngSwitch]="current">
 
       <!-- choose: generic value props until a channel is picked, then a live preview
            (keyed by channel id so the reveal re-runs on every selection change) -->
@@ -782,11 +784,11 @@
         <span class="wz-aside-eyebrow">Which mode fits?</span>
         <h3 class="wz-aside-title">Owned to engage, Public to watch.</h3>
         <p class="wz-aside-lead">Same channel, two jobs. Pick by whether {{ selected?.label }} is yours to manage.</p>
-        <div class="wz-feat" *ngIf="modeFor('owned') as o">
+        <div class="wz-feat" *ngIf="modeFor('owned') as o" [class.active]="activeField === 'owned'">
           <span class="wz-feat-ic"><span class="msr">lock</span></span>
           <div class="wz-feat-text"><b>Choose Owned if it’s yours</b><span>{{ o.pickIf }}</span></div>
         </div>
-        <div class="wz-feat" *ngIf="modeFor('public') as p">
+        <div class="wz-feat" *ngIf="modeFor('public') as p" [class.active]="activeField === 'public'">
           <span class="wz-feat-ic"><span class="msr">public</span></span>
           <div class="wz-feat-text"><b>Choose Public to monitor</b><span>{{ p.pickIf }}</span></div>
         </div>

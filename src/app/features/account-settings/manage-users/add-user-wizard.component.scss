@@ -1781,7 +1781,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 22px;
+  padding: 8px 22px;
   border-top: 1px solid var(--au-line);
   background: #fcfcfd;
 }
@@ -1794,14 +1794,14 @@
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
-  padding: 10px 6px;
+  padding: 8px 6px;
 }
 .au-btn-text:hover { color: var(--au-dark); }
 .au-btn-stroked {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 11px 20px;
+  padding: 8px 18px;
   border: 1px solid var(--au-line);
   border-radius: 999px;
   background: #fff;
@@ -1818,7 +1818,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 11px 24px;
+  padding: 8px 22px;
   border: none;
   border-radius: 999px;
   /* same hue as the stepper node, a touch lighter for readability */

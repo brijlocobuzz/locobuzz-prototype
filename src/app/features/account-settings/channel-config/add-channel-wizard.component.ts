@@ -40,6 +40,19 @@ export class AddChannelWizardComponent implements OnInit {
   selected: CatalogChannel | null = null;
   stepIndex = 0;
 
+  /**
+   * The control the user is interacting with on the left; its matching block in the
+   * right aside is highlighted while the rest dims. Null = whole panel shows normally.
+   * (Same reusable pattern as the Add Brand wizard.)
+   */
+  activeField: string | null = null;
+  private focusToken = 0;
+  setActive(key: string) { this.activeField = key; this.focusToken++; }
+  clearActive() {
+    const token = ++this.focusToken;
+    setTimeout(() => { if (token === this.focusToken) this.activeField = null; }, 0);
+  }
+
   /** Celebration screen shown after Finish. */
   celebrating = false;
   private completedOnce = false;
