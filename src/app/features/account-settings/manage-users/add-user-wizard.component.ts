@@ -65,58 +65,59 @@ export class AddUserWizardComponent {
   }> = {
     1: {
       title: 'Who is this user?',
-      lead: 'Their identity and how they sign in. Get the name and email right — the email is their login and where the invite is sent.',
+      lead: 'Their identity and how they sign in. The email matters most — it’s their login and where the invite goes.',
       fields: [
-        { key: 'name', icon: 'badge', label: 'First & last name', desc: 'The person’s real name (3–20 characters). Shown across tickets and reports.', required: true },
-        { key: 'username', icon: 'alternate_email', label: 'Username', desc: 'A unique handle used to sign in. Choose carefully — it can’t be changed later.', required: true },
-        { key: 'email', icon: 'mail', label: 'Email', desc: 'Their login address and where the account invite is delivered.', required: true },
-        { key: 'contact', icon: 'call', label: 'Contact number', desc: 'Optional — used for call/SMS escalations. Validated against the selected country.' },
+        { key: 'name', icon: 'badge', label: 'First & last name', desc: 'Their real name (3–20 characters). Shown on tickets and reports.', required: true },
+        { key: 'username', icon: 'alternate_email', label: 'Username', desc: 'A unique sign-in handle. It can’t be changed later, so choose carefully.', required: true },
+        { key: 'email', icon: 'mail', label: 'Email', desc: 'Their login address, and where the invite is delivered.', required: true },
+        { key: 'contact', icon: 'call', label: 'Contact number', desc: 'Optional — for call or SMS escalations.' },
       ],
-      tip: 'A clear headshot helps teammates recognise them in the shared inbox.',
+      tip: 'A clear photo helps teammates recognise them in the shared inbox.',
     },
     2: {
       title: 'Role & permissions',
-      lead: 'The role presets a sensible baseline of access; fine-tune exactly what this user can do in each module.',
+      lead: 'The role sets a sensible baseline; fine-tune exactly what they can do in each module.',
       fields: [
-        { key: 'role', icon: 'shield_person', label: 'Role', desc: 'Sets the access level (e.g. Agent, Supervisor) and pre-selects the permissions below.', required: true },
-        { key: 'permissions', icon: 'tune', label: 'Platform permissions', desc: 'Toggle what the user can see and do per module. At least one permission is required.', required: true },
-        { key: 'admin', icon: 'warning', label: 'Supervisor Admin', desc: 'Grants full, account-wide control — assign only to trusted owners.' },
+        { key: 'role', icon: 'shield_person', label: 'Role', desc: 'Sets the access level and pre-selects the permissions below.', required: true },
+        { key: 'permissions', icon: 'tune', label: 'Platform permissions', desc: 'What they can see and do, per module. At least one is required.', required: true },
+        { key: 'admin', icon: 'warning', label: 'Supervisor Admin', desc: 'Full account-wide control. Grant only to trusted owners.' },
       ],
-      tip: 'Start from the role’s defaults, then remove anything this user shouldn’t have.',
+      tip: 'Start from the role’s defaults, then remove anything this person shouldn’t have.',
     },
     3: {
       title: 'Brand access',
-      lead: 'Choose which brands this user can see and work on. Only assigned brands appear in their inbox, analytics and reports.',
+      lead: 'Pick the brands this user works on. Only these appear in their inbox, analytics and reports.',
       fields: [
-        { key: 'brands', icon: 'storefront', label: 'Assigned brands', desc: 'Select one or more brands — the user is scoped strictly to these.', required: true },
+        { key: 'brands', icon: 'storefront', label: 'Assigned brands', desc: 'One or more brands. The user sees nothing outside them.', required: true },
       ],
-      tip: 'Assign the fewest brands needed; you can always add more later.',
+      tip: 'Assign the fewest brands needed — you can add more later.',
     },
     4: {
       title: 'Reply signature',
-      lead: 'The sign-off appended to this user’s outgoing replies. Keep it short and on-brand.',
+      lead: 'A short sign-off added to the end of this user’s replies.',
       fields: [
-        { key: 'signature', icon: 'draw', label: 'Signature', desc: 'Up to 30 characters appended to replies, e.g. “— Aarav, Acme Care”.' },
-        { key: 'perbrand', icon: 'storefront', label: 'Per-brand signatures', desc: 'When the user works across brands, set a distinct sign-off for each one.' },
+        { key: 'signature', icon: 'draw', label: 'Signature', desc: 'Up to 30 characters, e.g. “— Aarav, Acme Care”.' },
+        { key: 'perbrand', icon: 'storefront', label: 'Per-brand signatures', desc: 'A different sign-off for each brand they work on.' },
       ],
-      tip: 'Signatures are optional — they can be set later from the user’s profile.',
+      tip: 'Signatures are optional — set them later from the user’s profile if you like.',
     },
     5: {
       title: 'Team & notifications',
-      lead: 'Place the user in a team for routing and reporting, and choose who is told about the new account.',
+      lead: 'Place them on a team for routing and reporting, and choose who hears about the new account.',
       fields: [
         { key: 'team', icon: 'group', label: 'Team', desc: 'Groups the user for ticket routing, reporting and bulk actions.' },
-        { key: 'notify', icon: 'notifications', label: 'Notify', desc: 'Email the team and/or specific people that this account was created.' },
+        { key: 'notify', icon: 'notifications', label: 'Notify', desc: 'Email the team and/or specific people once the account is created.' },
       ],
+      tip: 'Teams are optional — you can assign one later.',
     },
     6: {
       title: 'Review & create',
-      lead: 'A final check before the account is created. Go back to any step to edit anything that looks off.',
+      lead: 'One last look before the account is created. Jump back to any step to fix something.',
       fields: [
-        { key: 'summary', icon: 'fact_check', label: 'Summary', desc: 'Confirm the name, role, brands and permissions are all correct.' },
-        { key: 'invite', icon: 'mail', label: 'Invite', desc: 'On create, the user receives an email invite to set their password.' },
+        { key: 'summary', icon: 'fact_check', label: 'Summary', desc: 'Check the name, role, brands and permissions.' },
+        { key: 'invite', icon: 'mail', label: 'Invite', desc: 'On create, they get an email invite to set their password.' },
       ],
-      tip: 'Need to add more people? The success screen offers “Add another user”.',
+      tip: 'Adding more people? The success screen has “Add another user”.',
     },
   };
 

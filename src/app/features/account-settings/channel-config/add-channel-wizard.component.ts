@@ -165,7 +165,7 @@ export class AddChannelWizardComponent implements OnInit {
   }
   get authNote(): string {
     return this.activeMode?.accessNote
-      ?? `You'll be redirected to ${this.selected?.label} to confirm. We never see or store your password.`;
+      ?? `You'll be redirected to ${this.selected?.label} to approve access. We never see or store your password.`;
   }
 
   // ---- dynamic step model ------------------------------------------------
@@ -500,8 +500,8 @@ export class AddChannelWizardComponent implements OnInit {
   }
   get reviewReadySub(): string {
     return this.isRealtime
-      ? "Ready to go — we'll start syncing data within a minute."
-      : 'First mentions appear after the next collection run.';
+      ? 'We start syncing within a minute.'
+      : 'First mentions arrive after the next collection run — usually within a few hours.';
   }
   get celebrationSub(): string {
     return this.activeMode?.celebration ?? `${this.selected?.label} is now configured.`;

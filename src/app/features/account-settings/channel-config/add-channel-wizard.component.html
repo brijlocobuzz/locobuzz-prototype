@@ -196,11 +196,11 @@
         <!-- X (Twitter) owned: connect API v1.1 and/or v2 independently -->
         <ng-container *ngIf="isXVersionAuth; else normalAuth">
           <div class="wz-xhead">
-            <h3 class="wz-q">Connect both X APIs</h3>
-            <p class="wz-sub">X splits access across two APIs — they’re <b>complementary, not the same</b>. v2 powers
-              listening, search &amp; analytics; v1.1 powers DMs, media &amp; real-time webhooks. <b>Both are required</b>
-              for full X coverage.</p>
-            <span class="wz-xreco"><span class="msr">check_circle</span>Both APIs are required to add X</span>
+            <h3 class="wz-q">Connect X twice — it’s how X works</h3>
+            <p class="wz-sub">X splits access into two authorisations. One lets us <b>read and reply</b> — posts,
+              mentions, DMs and analytics. The other switches on <b>real-time delivery</b>, so mentions and DMs hit
+              your inbox the moment they happen instead of on a schedule. You need both.</p>
+            <span class="wz-xreco"><span class="msr">check_circle</span>Both connections are required</span>
           </div>
 
           <div class="wz-xgrid">
@@ -229,9 +229,9 @@
 
           <div class="wz-xnote" *ngIf="xConnectedCount < 2">
             <span class="msr">info</span>
-            <span *ngIf="xConnectedCount === 0">Both APIs are required to continue — connect <b>v1.1</b> and <b>v2</b>.</span>
-            <span *ngIf="xConnectedCount === 1 && !xDone('v2')">Now connect <b>API v2</b> too — it powers tweet &amp; &#64;mention listening, keyword search and analytics that v1.1 can’t provide.</span>
-            <span *ngIf="xConnectedCount === 1 && !xDone('v1')">Now connect <b>API v1.1</b> too — it powers DMs, media uploads and real-time webhooks that v2 can’t provide.</span>
+            <span *ngIf="xConnectedCount === 0">Both connections are required — start with either.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v1')">Now switch on <b>real-time delivery</b> — without it, mentions arrive on a schedule instead of instantly.</span>
+            <span *ngIf="xConnectedCount === 1 && !xDone('v2')">Now connect <b>content &amp; analytics</b> — it’s what lets you read and reply.</span>
           </div>
         </ng-container>
 
@@ -752,25 +752,25 @@
         <ng-template #chooseIntro>
           <span class="wz-aside-eyebrow">{{ totalChannels }} channels · one inbox</span>
           <h3 class="wz-aside-title">Listen everywhere your customers talk.</h3>
-          <p class="wz-aside-lead">Select a channel on the left — this panel then shows exactly what it collects, how often it syncs, and what you’ll be able to do.</p>
+          <p class="wz-aside-lead">Pick a channel on the left — this panel shows what it collects, how often it syncs, and what you can do with it.</p>
           <div class="wz-feat">
             <span class="wz-feat-ic"><span class="msr">ads_click</span></span>
-            <div class="wz-feat-text"><b>1 · Pick a channel</b><span>Social, reviews, messaging, commerce &amp; more — grouped on the left.</span></div>
+            <div class="wz-feat-text"><b>1 · Pick a channel</b><span>Social, reviews, messaging, commerce and more.</span></div>
           </div>
           <div class="wz-feat">
             <span class="wz-feat-ic"><span class="msr">hub</span></span>
-            <div class="wz-feat-text"><b>2 · Connect owned or public</b><span>Authenticate to engage &amp; reply, or track a public source to just listen.</span></div>
+            <div class="wz-feat-text"><b>2 · Choose Owned or Public</b><span>Connect your account to reply, or track a public source to listen.</span></div>
           </div>
           <div class="wz-feat">
             <span class="wz-feat-ic"><span class="msr">inbox</span></span>
-            <div class="wz-feat-text"><b>3 · Mentions flow in</b><span>Everything lands in your unified inbox with AI replies &amp; sentiment.</span></div>
+            <div class="wz-feat-text"><b>3 · Mentions flow in</b><span>Everything lands in one inbox with sentiment and AI reply drafts.</span></div>
           </div>
           <div class="wz-safe">
-            <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; validated</span>
+            <span class="wz-safe-head"><span class="msr">verified_user</span>Safe &amp; secure</span>
             <ul>
-              <li><span class="msr">check</span>OAuth 2.0 — we never see your password</li>
-              <li><span class="msr">check</span>Read-only by default, granular scopes</li>
-              <li><span class="msr">check</span>Revoke access anytime in settings</li>
+              <li><span class="msr">check</span>OAuth sign-in — we never see your password</li>
+              <li><span class="msr">check</span>You approve exactly what we can access</li>
+              <li><span class="msr">check</span>Revoke access anytime</li>
               <li><span class="msr">check</span>SOC 2 Type II · GDPR compliant</li>
             </ul>
           </div>
@@ -781,7 +781,7 @@
       <ng-container *ngSwitchCase="'connection'">
         <span class="wz-aside-eyebrow">Which mode fits?</span>
         <h3 class="wz-aside-title">Owned to engage, Public to watch.</h3>
-        <p class="wz-aside-lead">Same channel, two jobs. Pick by whether {{ selected?.label }} is yours to manage.</p>
+        <p class="wz-aside-lead">Same channel, two jobs. Pick by whether this {{ selected?.label }} presence is yours to manage.</p>
         <div class="wz-feat" *ngIf="modeFor('owned') as o">
           <span class="wz-feat-ic"><span class="msr">lock</span></span>
           <div class="wz-feat-text"><b>Choose Owned if it’s yours</b><span>{{ o.pickIf }}</span></div>
@@ -792,7 +792,7 @@
         </div>
         <div class="wz-safe tip">
           <span class="wz-safe-head"><span class="msr">swap_horiz</span>You’re not locked in</span>
-          <p>Add the other mode later from Channel Configuration — many brands run both: Owned for their pages, Public for competitors.</p>
+          <p>You can add the other mode later. Many brands run both — Owned for their own pages, Public for competitors.</p>
         </div>
       </ng-container>
 
@@ -803,7 +803,7 @@
         <p class="wz-aside-lead">{{ authNote }}</p>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">shield</span></span>
-          <div class="wz-feat-text"><b>You stay in control</b><span>Read-only by default, granular scopes, revoke anytime.</span></div>
+          <div class="wz-feat-text"><b>You stay in control</b><span>You approve every permission, and you can revoke access anytime.</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">bolt</span></span>
@@ -828,8 +828,8 @@
       <!-- public source: what listen-only gets you, and what it won't -->
       <ng-container *ngSwitchCase="'public'">
         <span class="wz-aside-eyebrow">Public listening</span>
-        <h3 class="wz-aside-title">Track {{ selected?.label }} without logging in.</h3>
-        <p class="wz-aside-lead">We collect public mentions as they appear — no credentials needed.</p>
+        <h3 class="wz-aside-title">Track {{ selected?.label }} — no login needed.</h3>
+        <p class="wz-aside-lead">We collect public mentions as they appear. No credentials, nothing to maintain.</p>
         <div class="wz-safe" *ngIf="activeMode as m">
           <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
           <ul>
@@ -856,23 +856,23 @@
       <ng-container *ngSwitchCase="'pages'">
         <span class="wz-aside-eyebrow">Almost there</span>
         <h3 class="wz-aside-title">Pick the {{ pagesNoun }} to listen to.</h3>
-        <p class="wz-aside-lead">Each one you select becomes its own profile in the channel grid — with its own mentions, status and replies.</p>
+        <p class="wz-aside-lead">Each one becomes its own profile with its own mentions, status and replies.</p>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">checklist</span></span>
-          <div class="wz-feat-text"><b>Connect several at once</b><span>Select all the {{ pagesNoun }} you manage in one go.</span></div>
+          <div class="wz-feat-text"><b>Connect several at once</b><span>Select every {{ pagesNoun }} you manage in one go.</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">tune</span></span>
-          <div class="wz-feat-text"><b>Change anytime</b><span>Pause or remove any {{ pagesNoun }} later from Channel Configuration.</span></div>
+          <div class="wz-feat-text"><b>Change anytime</b><span>Pause or remove any of them later from Channel Configuration.</span></div>
         </div>
       </ng-container>
 
       <!-- ads account: what it adds + why it helps -->
       <ng-container *ngSwitchCase="'ads'">
         <span class="wz-aside-eyebrow">Ads account · optional</span>
-        <h3 class="wz-aside-title">Bring paid &amp; organic together.</h3>
-        <p class="wz-aside-lead">Link a {{ selected?.label }} ads account and Locobuzz pulls your paid activity in
-          alongside organic mentions — the full picture in one inbox.</p>
+        <h3 class="wz-aside-title">See paid and organic together.</h3>
+        <p class="wz-aside-lead">Link a {{ selected?.label }} ads account to pull ad posts, ad comments and paid
+          metrics into the same inbox as your organic mentions.</p>
         <div class="wz-safe">
           <span class="wz-safe-head"><span class="msr">check_circle</span>What we’ll collect</span>
           <ul>
@@ -883,15 +883,15 @@
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">forum</span></span>
-          <div class="wz-feat-text"><b>Never miss ad comments</b><span>Reply to comments on paid posts right from your inbox.</span></div>
+          <div class="wz-feat-text"><b>Never miss an ad comment</b><span>Reply to comments on paid posts from your inbox.</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">insights</span></span>
-          <div class="wz-feat-text"><b>Paid vs organic</b><span>Compare campaign performance next to organic reach & sentiment.</span></div>
+          <div class="wz-feat-text"><b>Paid vs organic</b><span>Compare campaign performance against organic reach and sentiment.</span></div>
         </div>
         <div class="wz-safe tip">
           <span class="wz-safe-head"><span class="msr">lightbulb</span>Good to know</span>
-          <p>This step is optional — skip it and link an ads account anytime from Channel Configuration.</p>
+          <p>This step is optional — link or change ads accounts anytime from Channel Configuration.</p>
         </div>
       </ng-container>
 
@@ -899,14 +899,14 @@
       <ng-container *ngSwitchCase="'review'">
         <span class="wz-aside-eyebrow">You’re all set</span>
         <h3 class="wz-aside-title">{{ selected?.label }} is ready to go.</h3>
-        <p class="wz-aside-lead">Here’s what happens the moment you complete setup.</p>
+        <p class="wz-aside-lead">Here’s what happens when you complete setup.</p>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">{{ isRealtime ? 'bolt' : 'schedule' }}</span></span>
           <div class="wz-feat-text"><b>Collection starts</b><span>{{ reviewReadySub }}</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">inbox</span></span>
-          <div class="wz-feat-text"><b>Mentions reach your inbox</b><span>New {{ selected?.label }} {{ isRealtime ? 'conversations' : 'mentions' }} flow into your unified inbox.</span></div>
+          <div class="wz-feat-text"><b>Mentions reach your inbox</b><span>New {{ selected?.label }} activity flows into your unified inbox.</span></div>
         </div>
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">auto_awesome</span></span>
