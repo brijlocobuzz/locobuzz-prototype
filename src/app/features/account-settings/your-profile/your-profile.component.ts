@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import {
   PERMISSION_GROUPS,
   BRANDS,
-  brandLogo,
   PermissionGroup,
   PermissionCapability,
   Brand,
@@ -22,7 +21,6 @@ type Role = 'admin' | 'agent';
 export class YourProfileComponent {
   readonly groups = PERMISSION_GROUPS;
   readonly allBrands = BRANDS;
-  readonly brandLogo = brandLogo;
 
   /** Role view switcher (Admin sees everything, Agent a granted subset). */
   role: Role = 'admin';
@@ -150,15 +148,49 @@ export class YourProfileComponent {
     this.role = role;
   }
 
+  // ---- manage-brands modal ----------------------------------------------
+
+  /** Search term inside the Manage brands dialog. */
+  modalSearch = '';
+
   openBrandsModal(): void {
     this.draftBrandIds = [...this.assignedBrandIds];
+    this.modalSearch = '';
     this.brandsModalOpen = true;
+  }
+
+  closeBrandsModal(): void {
+    this.brandsModalOpen = false;
+  }
+
+  /** Brands shown in the dialog, narrowed by the modal search. */
+  get modalBrands(): Brand[] {
+    const q = this.modalSearch.trim().toLowerCase();
+    if (!q) return this.allBrands;
+    return this.allBrands.filter((b) => b.name.toLowerCase().includes(q));
+  }
+
+  isDraftSelected(brand: Brand): boolean {
+    return this.draftBrandIds.includes(brand.id);
   }
 
   toggleDraftBrand(brand: Brand): void {
     this.draftBrandIds = this.draftBrandIds.includes(brand.id)
       ? this.draftBrandIds.filter((id) => id !== brand.id)
       : [...this.draftBrandIds, brand.id];
+  }
+
+  /** Select all currently-visible (filtered) brands. */
+  selectAllBrands(): void {
+    const ids = new Set(this.draftBrandIds);
+    this.modalBrands.forEach((b) => ids.add(b.id));
+    this.draftBrandIds = [...ids];
+  }
+
+  /** Clear the currently-visible (filtered) brands from the selection. */
+  clearAllBrands(): void {
+    const visible = new Set(this.modalBrands.map((b) => b.id));
+    this.draftBrandIds = this.draftBrandIds.filter((id) => !visible.has(id));
   }
 
   saveBrands(): void {
