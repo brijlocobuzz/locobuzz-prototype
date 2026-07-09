@@ -1,0 +1,188 @@
+<article class="pc" [class]="'pc pc--' + post.status">
+
+  <!-- Status strip -->
+  <header class="pc-status">
+    <span class="pc-status-label">
+      <span class="pc-status-dot" aria-hidden="true"></span>
+      {{ post.statusLabel }}
+    </span>
+    <time class="pc-status-time">{{ post.timestamp }}</time>
+  </header>
+
+  <div class="pc-body">
+
+    <!-- Multi-profile strip (replaces the account row, per approved design) -->
+    <div class="pc-profiles" *ngIf="post.channels?.length; else accountRow">
+      <button type="button" class="pc-profiles-nav" (click)="scrollProfiles(-1)" aria-label="Previous profiles">
+        <span class="msr">chevron_left</span>
+      </button>
+
+      <div class="pc-profiles-track" #profileTrack>
+        <button type="button" class="pc-profile" *ngFor="let ch of post.channels; let i = index; trackBy: trackChannel"
+                [class.pc-profile--on]="selectedProfile() === i"
+                (click)="selectedProfile.set(i)"
+                [matTooltip]="post.account.name + ' · ' + net(ch).label"
+                [attr.aria-pressed]="selectedProfile() === i"
+                [attr.aria-label]="'Preview on ' + net(ch).label">
+          <span class="pc-profile-avatar" [style.background]="post.account.avatarColor">
+            {{ post.account.initials }}
+            <span class="pc-net" [style.background]="net(ch).color">
+              <span *ngIf="net(ch).isIcon; else pText" class="msr">{{ net(ch).glyph }}</span>
+              <ng-template #pText>{{ net(ch).glyph }}</ng-template>
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <button type="button" class="pc-profiles-nav" (click)="scrollProfiles(1)" aria-label="Next profiles">
+        <span class="msr">chevron_right</span>
+      </button>
+    </div>
+
+    <!-- Single-profile account row -->
+    <ng-template #accountRow>
+      <div class="pc-account">
+        <div class="pc-avatar" [style.background]="post.account.avatarColor">
+          {{ post.account.initials }}
+          <span class="pc-net" [style.background]="net().color" [matTooltip]="net().label">
+            <span *ngIf="net().isIcon; else netText" class="msr">{{ net().glyph }}</span>
+            <ng-template #netText>{{ net().glyph }}</ng-template>
+          </span>
+        </div>
+        <div class="pc-account-tx">
+          <span class="pc-account-name">{{ post.account.name }}</span>
+          <span class="pc-account-sub">
+            {{ post.account.handle }}
+            <span class="pc-account-sep">·</span>
+            <span class="msr pc-followers-ic">group</span>
+            {{ post.account.followers }}
+          </span>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Failure / rejection banner -->
+    <div class="pc-error" *ngIf="post.error" role="alert">
+      <span class="msr">warning</span>
+      <p>{{ post.error }}</p>
+    </div>
+
+    <!-- Body caption (text & document posts only — visual posts overlay it on media) -->
+    <ng-container *ngIf="bodyCaption">
+      <p class="pc-caption">{{ post.caption }}</p>
+      <p class="pc-hashtags" *ngIf="post.hashtags?.length">
+        <a *ngFor="let tag of post.hashtags" href="javascript:void 0">{{ tag }}</a>
+      </p>
+    </ng-container>
+
+    <!-- Media + vertical stats rail -->
+    <div class="pc-media-row" [class.pc-media-row--textonly]="post.mediaType === 'text'">
+
+      <div class="pc-media" *ngIf="post.mediaType !== 'text'"
+           [class.pc-media--story]="post.mediaType === 'story'"
+           [class.pc-media--doc]="post.mediaType === 'document'">
+
+        <ng-container [ngSwitch]="post.mediaType">
+          <img *ngSwitchCase="'image'" [src]="mediaUrl()" alt="" loading="lazy" />
+          <img *ngSwitchCase="'carousel'" [src]="mediaUrl()" alt="" loading="lazy" />
+          <img *ngSwitchCase="'story'" [src]="mediaUrl(360, 560)" alt="" loading="lazy" />
+
+          <ng-container *ngSwitchCase="'video'">
+            <img [src]="mediaUrl()" alt="" loading="lazy" />
+            <span class="pc-media-play" aria-hidden="true"><span class="msr filled">play_arrow</span></span>
+          </ng-container>
+
+          <!-- document (PDF page with download glyph + flag) -->
+          <div *ngSwitchCase="'document'" class="pc-doc">
+            <div class="pc-doc-page">
+              <span class="msr pc-doc-dl">download</span>
+              <span class="pc-doc-flag">PDF</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- carousel controls -->
+        <ng-container *ngIf="post.mediaType === 'carousel' && slideCount > 1">
+          <span class="pc-media-badge">
+            <span class="msr">filter_none</span> {{ slide() + 1 }}/{{ slideCount }}
+          </span>
+          <button type="button" class="pc-media-nav pc-media-nav--prev" (click)="prevSlide()" aria-label="Previous media">
+            <span class="msr">chevron_left</span>
+          </button>
+          <button type="button" class="pc-media-nav pc-media-nav--next" (click)="nextSlide()" aria-label="Next media">
+            <span class="msr">chevron_right</span>
+          </button>
+        </ng-container>
+
+        <!-- video badges -->
+        <ng-container *ngIf="post.mediaType === 'video'">
+          <span class="pc-media-badge"><span class="msr">videocam</span> VIDEO</span>
+          <span class="pc-media-badge pc-media-badge--right" *ngIf="post.videoDuration">{{ post.videoDuration }}</span>
+        </ng-container>
+
+        <!-- caption overlaid on media (approved design) -->
+        <p class="pc-media-caption" *ngIf="overlayCaption">{{ post.caption }}</p>
+      </div>
+
+      <!-- Engagement rail -->
+      <aside class="pc-stats" *ngIf="post.stats as st" aria-label="Post engagement">
+        <div class="pc-stat" *ngFor="let s of stats; trackBy: trackStat" [matTooltip]="s.label">
+          <span class="pc-stat-bubble" [attr.data-tone]="s.tone"><span class="msr">{{ s.icon }}</span></span>
+          <span class="pc-stat-count">{{ st[s.key] }}</span>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Schedule breach note -->
+    <div class="pc-breach" *ngIf="post.breach">
+      <span class="msr">event_busy</span> {{ post.breach }}
+    </div>
+
+    <!-- Labels -->
+    <div class="pc-labels" *ngIf="post.labels as labels">
+      <ng-container *ngIf="labels.length; else noLabels">
+        <span class="msr pc-labels-ic">sell</span>
+        <span class="pc-labels-word">Label</span>
+        <span class="pc-label" *ngFor="let l of labels">{{ l }}</span>
+      </ng-container>
+      <ng-template #noLabels>
+        <div class="pc-labels-empty">
+          <span class="msr">sell</span>
+          <div>
+            <strong>No Labels added yet.</strong>
+            <span>Organise your post by adding relevant labels.</span>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- People + freshness meta -->
+    <div class="pc-meta">
+      <div class="pc-meta-person">
+        <span class="pc-meta-avatar" [style.background]="post.account.avatarColor">{{ post.postedBy.charAt(0) }}</span>
+        <span class="pc-meta-tx"><small>Posted by</small>{{ post.postedBy }}</span>
+      </div>
+      <div class="pc-meta-person" *ngIf="post.approvedBy">
+        <span class="pc-meta-avatar pc-meta-avatar--alt">{{ post.approvedBy.charAt(0) }}</span>
+        <span class="pc-meta-tx"><small>Approved by</small>{{ post.approvedBy }}</span>
+      </div>
+      <span class="pc-meta-updated" *ngIf="post.statsUpdated">
+        <small>Stats Updated <span class="msr pc-meta-info" matTooltip="Engagement stats are refreshed periodically">info</span></small>
+        {{ post.statsUpdated }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <footer class="pc-actions">
+    <div class="pc-actions-left">
+      <button type="button" class="pc-act" matTooltip="Delete" aria-label="Delete post"><span class="msr">delete</span></button>
+      <button type="button" class="pc-act" matTooltip="Add label" aria-label="Add label"><span class="msr">sell</span></button>
+      <button type="button" class="pc-act" matTooltip="Open on channel" aria-label="Open on channel"><span class="msr">open_in_new</span></button>
+      <button type="button" class="pc-act" matTooltip="Preview" aria-label="Preview post"><span class="msr">visibility</span></button>
+    </div>
+    <button type="button" class="pc-act pc-act--insights" matTooltip="View insights" aria-label="View insights">
+      <span class="msr">trending_up</span>
+    </button>
+  </footer>
+</article>

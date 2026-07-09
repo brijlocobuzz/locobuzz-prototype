@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { TicketsPageComponent } from './features/tickets/tickets-page.component';
 import { PlaceholderPageComponent } from './features/placeholder/placeholder-page.component';
+import { SocialSchedulePageComponent } from './features/social-schedule/social-schedule-page.component';
 import { AccountSettingsComponent } from './features/account-settings/account-settings.component';
 import { ChannelConfigComponent } from './features/account-settings/channel-config/channel-config.component';
 import { AiHubComponent } from './features/account-settings/ai-hub/ai-hub.component';
@@ -26,7 +27,7 @@ export const routes: Routes = [
       { path: 'mention-inbox', component: PlaceholderPageComponent },
       { path: 'analytics', component: PlaceholderPageComponent },
       { path: 'reports', component: PlaceholderPageComponent },
-      { path: 'social-schedule', component: PlaceholderPageComponent },
+      { path: 'social-schedule', component: SocialSchedulePageComponent },
       { path: 'ugc', component: PlaceholderPageComponent },
       { path: 'export-data', component: PlaceholderPageComponent },
       { path: 'bulk-action', component: PlaceholderPageComponent },
