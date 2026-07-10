@@ -29,6 +29,14 @@ export const CHANNEL_GROUPS: ChannelGroup[] = [
       { label: 'Facebook Groups', id: 'fbgroups', icon: 'groups', color: '#1877f2', empty: true },
     ],
   },
+  {
+    label: 'ADS ACCOUNTS', count: 3, expanded: true,
+    channels: [
+      { label: 'Meta Ads', id: 'meta-ads', icon: 'ads_click', color: '#1877f2', count: 2 },
+      { label: 'X Ads', id: 'x-ads', icon: 'ads_click', color: '#000000', empty: true },
+      { label: 'LinkedIn Ads', id: 'linkedin-ads', icon: 'ads_click', color: '#0a66c2', count: 1 },
+    ],
+  },
   { label: 'MESSAGING', count: 4 },
   {
     label: 'EMAIL', count: 1,
@@ -76,6 +84,8 @@ export interface ChannelProfile {
   adsActive?: boolean;
   /** Ids of the linked ads accounts (from AD_ACCOUNTS). */
   adAccountIds?: string[];
+  /** For ad-account rows: which channel the ads run on (facebook / instagram / …). */
+  adChannel?: string;
   /** Grouped channels (GMB, Email) expand into child rows. */
   childKind?: 'location' | 'mailbox';
   children?: SubProfile[];
@@ -400,6 +410,7 @@ export interface AdAccount {
   currency?: string;          // billing currency (USD / INR / EUR)
   owner?: 'own' | 'agency';   // agency = runs on a different (external) account
   via?: string;               // managing @handle, when owner is 'agency'
+  channel?: string;           // which channel the ads run on (Meta = facebook / instagram)
 }
 
 /** Ads accounts on the connected login (own). */
@@ -409,6 +420,18 @@ export const AD_ACCOUNTS: AdAccount[] = [
   { id: 'ad-retarget',name: 'Acme — Retargeting',    meta: 'Ad account ID 1290337', currency: 'INR', owner: 'own' },
   { id: 'ad-intl',    name: 'Acme — International',   meta: 'Ad account ID 5563100', currency: 'EUR', owner: 'own' },
 ];
+
+/** Linked ads accounts per platform — drives the "Ads Accounts" side-panel group. */
+export const ADS_PLATFORM_ACCOUNTS: Record<string, AdAccount[]> = {
+  'meta-ads': [
+    { id: 'meta-brand', name: 'Acme — Brand Ads',   meta: 'Ad account ID 4471029', currency: 'USD', owner: 'own', channel: 'facebook' },
+    { id: 'meta-perf',  name: 'Acme — Performance',  meta: 'Ad account ID 8820551', currency: 'USD', owner: 'own', channel: 'instagram' },
+  ],
+  'x-ads': [],   // none linked yet → empty state
+  'linkedin-ads': [
+    { id: 'li-demand', name: 'Acme — B2B Demand Gen', meta: 'Ad account ID 5099210', currency: 'USD', owner: 'own', channel: 'linkedin' },
+  ],
+};
 
 /** Ads accounts surfaced after authorizing an external (agency / partner) account. */
 export const EXTERNAL_AD_ACCOUNTS: AdAccount[] = [

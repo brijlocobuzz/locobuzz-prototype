@@ -1348,6 +1348,47 @@ button.ads-badge.on:hover { background: #ece4ff; }
 .card-ads-agency .msr { font-size: var(--font-size-12); }
 .card-ads-none { font-size: var(--font-size-13); color: var(--text-3); }
 
+/* channel badge on an ad-account name (Meta = Facebook / Instagram) */
+.ad-chan {
+  display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; margin-left: 8px;
+  padding: 2px 9px 2px 6px; border-radius: 20px; color: #fff;
+  font-size: var(--font-size-11); font-weight: 700; line-height: 1.4;
+}
+.ad-chan .brand-svg { width: 12px; height: 12px; fill: #fff; }
+
+/* "Add Ad Account" button beside the search box (ads platform toolbar) */
+.pf-add-ad {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; flex: 0 0 auto;
+  border: none; border-radius: 9px; background: var(--brand, #2563eb); color: #fff; cursor: pointer;
+  font: inherit; font-size: var(--font-size-13); font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, .28);
+}
+.pf-add-ad:hover { filter: brightness(.95); }
+.pf-add-ad .msr { font-size: var(--font-size-18); }
+
+/* ---- Ads Accounts side-panel group: linked accounts list ---- */
+.ads-plat { padding: 14px 16px 24px; }
+.ads-plat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ads-plat-h-tx { font-size: var(--font-size-13); font-weight: 700; color: var(--text-2); }
+.ads-plat-add { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 13px; border: none; border-radius: 9px; background: #4f46e5; color: #fff; cursor: pointer; font: inherit; font-size: var(--font-size-13); font-weight: 700; box-shadow: 0 4px 12px rgba(79, 70, 229, .28); }
+.ads-plat-add:hover { background: #4338ca; }
+.ads-plat-add .msr { font-size: var(--font-size-18); }
+.ads-plat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.ads-plat-card { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+.ads-plat-av { width: 42px; height: 42px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, #7c3aed, #6366f1); color: #fff; }
+.ads-plat-av .msr { font-size: var(--font-size-22); }
+.ads-plat-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ads-plat-name { font-size: var(--font-size-14); font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ads-plat-meta { display: inline-flex; align-items: center; gap: 6px; font-size: var(--font-size-12); color: var(--text-3); }
+.ads-plat-status { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-size-12); font-weight: 700; color: #1f7a48; }
+.ads-plat-status .led { width: 6px; height: 6px; border-radius: 50%; background: #1f9d5a; box-shadow: 0 0 0 3px rgba(31, 157, 90, .14); }
+.ads-plat-acts { display: inline-flex; gap: 2px; flex: 0 0 auto; }
+.ads-plat-acts button { width: 30px; height: 30px; border: none; border-radius: 8px; background: transparent; cursor: pointer; color: var(--text-3); display: grid; place-items: center; }
+.ads-plat-acts button:hover { background: #eef1f6; color: var(--text-1); }
+.ads-plat-acts button.danger:hover { background: #fdeaea; color: #c0392b; }
+.ads-plat-acts button .msr { font-size: var(--font-size-18); }
+
+@media (max-width: 720px) { .ads-plat-grid { grid-template-columns: 1fr; } }
+
 /* ===================================================================
    Link-ads-account popover
    =================================================================== */

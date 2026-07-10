@@ -316,14 +316,14 @@
         </button>
       </span>
 
-      <div class="pf-tools" *ngIf="!expiredMode && !isEmptyChannel">
+      <div class="pf-tools" *ngIf="!expiredMode && !isEmptyChannel && !adsEmpty">
         <div class="style-toggle" *ngIf="viewMode === 'card'">
           <button [class.active]="cardStyle === 'classic'" (click)="cardStyle = 'classic'">Classic</button>
           <button [class.active]="cardStyle === 'vibrant'" (click)="cardStyle = 'vibrant'">Vibrant</button>
         </div>
 
         <!-- Group by (fixed-value attributes only) -->
-        <div class="pf-group-wrap">
+        <div class="pf-group-wrap" *ngIf="!isAdsPlatform">
           <button class="pf-group-btn" [class.on]="groupBy" (click)="toggleGroupMenu()" title="Group profiles">
             <span class="msr">splitscreen</span>
             <span class="pf-group-lbl">{{ groupBy ? 'Grouped: ' + groupBy : 'Group' }}</span>
@@ -347,8 +347,11 @@
         </div>
         <div class="pf-search">
           <span class="msr">search</span>
-          <input type="text" placeholder="Search Page name" />
+          <input type="text" [placeholder]="isAdsPlatform ? 'Search ad account' : 'Search Page name'" />
         </div>
+        <button class="pf-add-ad" *ngIf="isAdsPlatform" (click)="openAddWizard(adsPlatformChannel(activeChannel.id))">
+          <span class="msr">add_circle</span>Add Ad Account
+        </button>
       </div>
     </div>
 
@@ -392,8 +395,41 @@
       </div>
     </div>
 
+    <!-- ================= ADS ACCOUNTS — empty state (no accounts linked) ================= -->
+    <div class="pf-empty" *ngIf="adsEmpty">
+      <div class="pfe-hero">
+        <span class="pfe-logo" [style.background]="activeChannel.color"><span class="msr">ads_click</span></span>
+        <h2 class="pfe-title">No {{ activeChannel.label }} accounts linked yet</h2>
+        <p class="pfe-sub">Link a {{ activeChannel.label }} account to pull ad posts, ad comments and paid
+          metrics into your unified inbox and analytics.</p>
+        <button class="pfe-add" (click)="openAddWizard(adsPlatformChannel(activeChannel.id))">
+          <span class="msr">add_circle</span>Add {{ activeChannel.label }} account
+        </button>
+      </div>
+      <div class="pfe-info">
+        <div class="pfe-card">
+          <h4><span class="msr">check_circle</span>What we’ll collect</h4>
+          <ul>
+            <li><span class="msr">check</span>Ad posts &amp; creatives</li>
+            <li><span class="msr">check</span>Comments on your ads</li>
+            <li><span class="msr">check</span>Paid metrics — spend, reach &amp; impressions</li>
+          </ul>
+        </div>
+        <div class="pfe-card facts">
+          <div class="pfe-fact">
+            <span class="pfe-fic"><span class="msr">forum</span></span>
+            <span class="pfe-ftx"><span class="pfe-fk">Engage</span><span class="pfe-fv">Reply to ad comments from your inbox</span></span>
+          </div>
+          <div class="pfe-fact">
+            <span class="pfe-fic"><span class="msr">insights</span></span>
+            <span class="pfe-ftx"><span class="pfe-fk">Measure</span><span class="pfe-fv">Paid vs organic performance side by side</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= VIEW TABS + CUSTOM-VIEW BUILDER ================= -->
-    <div class="pf-tabs" *ngIf="!expiredMode && !isEmptyChannel">
+    <div class="pf-tabs" *ngIf="!expiredMode && !isEmptyChannel && !isAdsPlatform">
       <button class="pf-tab" [class.active]="activeViewId === 'all'" (click)="setView('all')">
         All profiles <span class="pf-tab-count">{{ profiles.length }}</span>
       </button>
@@ -475,7 +511,7 @@
     </div>
 
     <!-- ================= LIST / DATA-GRID VIEW ================= -->
-    <div class="pf-table-wrap" *ngIf="(viewMode === 'list' && !isEmptyChannel) || expiredMode">
+    <div class="pf-table-wrap" *ngIf="(viewMode === 'list' && !isEmptyChannel && !adsEmpty) || expiredMode">
       <!-- shared header row -->
       <ng-template #headRow>
         <tr>
@@ -493,13 +529,13 @@
           <th class="sortable" (click)="sortBy('status')">
             <span class="th-in">Status <span class="msr sort-ic" [class.on]="sortKey==='status'">{{ sortIcon('status') }}</span></span>
           </th>
-          <th class="col-ads">Ads Account</th>
+          <th class="col-ads" *ngIf="!isAdsPlatform">Ads Account</th>
           <th class="col-act">Action</th>
         </tr>
       </ng-template>
 
       <!-- flat table -->
-      <table class="pf-table" *ngIf="!groupBy && !expiredMode">
+      <table class="pf-table" *ngIf="(!groupBy || isAdsPlatform) && !expiredMode">
         <thead><ng-container *ngTemplateOutlet="headRow"></ng-container></thead>
         <tbody>
           <ng-container *ngFor="let p of displayProfiles">
@@ -532,7 +568,7 @@
       </ng-container>
 
       <!-- grouped: a clear heading OUTSIDE the table, table repeated per group -->
-      <ng-container *ngIf="groupBy && !expiredMode">
+      <ng-container *ngIf="groupBy && !expiredMode && !isAdsPlatform">
         <div class="pf-group-block" *ngFor="let grp of groupedProfiles">
           <div class="pf-group-hd"
                [class.tone-ok]="grp.key === 'Active'"
@@ -578,9 +614,13 @@
                   <span class="t-net" [style.background]="(ch || activeChannel).color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"><path [attr.d]="brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)"></path></svg><span class="msr" *ngIf="!brandSvg((ch || activeChannel).id || (ch || activeChannel).channelId)">{{ (ch || activeChannel).icon }}</span></span>
                 </span>
                 <span class="t-who">
-                  <span class="t-name">{{ p.name }}  <span class="t-own" [class.public]="p.status === 'Public'">
+                  <span class="t-name">{{ p.name }}  <span class="t-own" *ngIf="!isAdsPlatform" [class.public]="p.status === 'Public'">
                   <span class="msr">{{ p.status === 'Public' ? 'public' : 'verified' }}</span>{{ p.status }}
                 </span>
+                  <span class="ad-chan" *ngIf="isAdsPlatform && p.adChannel" [style.background]="adChannelColor(p.adChannel)" [title]="adChannelLabel(p.adChannel) + ' ads'">
+                    <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(p.adChannel)"><path [attr.d]="brandSvg(p.adChannel)"></path></svg>
+                    {{ adChannelLabel(p.adChannel) }}
+                  </span>
                   <span class="t-subcount" *ngIf="hasChildren(p)" (click)="toggleProfileExpand(p.name, $event)"><span class="msr">{{ p.childKind === 'mailbox' ? 'mail' : 'place' }}</span>{{ childKindLabel(p) }}</span></span>
                   <span class="t-owner"><span class="msr">person</span>{{ p.owner }}</span>
                 </span>
@@ -632,7 +672,7 @@
             </td>
 
             <!-- ads account -->
-            <td class="col-ads">
+            <td class="col-ads" *ngIf="!isAdsPlatform">
               <button class="ads-linked" *ngIf="p.adsActive" (click)="openAdsModal(p)" [title]="adNamesFor(p) + ' — click to manage'">
                 <span class="ads-linked-ic"><span class="msr">ads_click</span></span>
                 <span class="ads-linked-name">{{ firstAdName(p) }}</span>
@@ -783,13 +823,13 @@
 
     <!-- ================= CARD GRID VIEW ================= -->
     <!-- flat -->
-    <div class="pf-grid" *ngIf="viewMode === 'card' && !groupBy && !expiredMode && !isEmptyChannel">
+    <div class="pf-grid" *ngIf="viewMode === 'card' && (!groupBy || isAdsPlatform) && !expiredMode && !isEmptyChannel && !adsEmpty">
       <ng-container *ngFor="let p of displayProfiles">
         <ng-container *ngTemplateOutlet="cardTpl; context: { $implicit: p }"></ng-container>
       </ng-container>
     </div>
     <!-- grouped by a fixed-value attribute -->
-    <div class="pf-grouped" *ngIf="viewMode === 'card' && groupBy && !expiredMode">
+    <div class="pf-grouped" *ngIf="viewMode === 'card' && groupBy && !expiredMode && !isAdsPlatform">
       <div class="pf-group-block" *ngFor="let grp of groupedProfiles">
         <div class="pf-group-hd"
              [class.tone-ok]="grp.key === 'Active'"
@@ -822,7 +862,12 @@
             <span class="card-net" [style.background]="activeChannel.color"><svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(activeChannel.id)"><path [attr.d]="brandSvg(activeChannel.id)"></path></svg><span class="msr" *ngIf="!brandSvg(activeChannel.id)">{{ activeChannel.icon }}</span></span>
           </div>
           <div class="card-who">
-            <span class="card-name">{{ p.name }}</span>
+            <span class="card-name">{{ p.name }}
+              <span class="ad-chan" *ngIf="isAdsPlatform && p.adChannel" [style.background]="adChannelColor(p.adChannel)" [title]="adChannelLabel(p.adChannel) + ' ads'">
+                <svg class="brand-svg" viewBox="0 0 24 24" *ngIf="brandSvg(p.adChannel)"><path [attr.d]="brandSvg(p.adChannel)"></path></svg>
+                {{ adChannelLabel(p.adChannel) }}
+              </span>
+            </span>
             <span class="card-owner"><span class="msr">person</span>{{ p.owner }}</span>
           </div>
           <!-- aggregate status for grouped, single badge otherwise -->
@@ -832,7 +877,8 @@
           </span>
           <ng-container *ngIf="!hasChildren(p)">
             <span class="card-status expired" *ngIf="p.alert"><span class="led"></span>Token Expired</span>
-            <span class="card-status" *ngIf="!p.alert"><span class="msr">verified</span>{{ p.status }}</span>
+            <span class="card-status" *ngIf="!p.alert && !isAdsPlatform"><span class="msr">verified</span>{{ p.status }}</span>
+            <span class="card-status" *ngIf="!p.alert && isAdsPlatform"><span class="led"></span>Active</span>
           </ng-container>
         </div>
 
@@ -893,7 +939,7 @@
         <!-- ===== NORMAL body: ads account + mentions + dates ===== -->
         <ng-container *ngIf="!hasChildren(p)">
           <!-- ads account (above mentions) — name(s) only; action lives in the footer -->
-          <div class="card-ads">
+          <div class="card-ads" *ngIf="!isAdsPlatform">
             <span class="card-ads-lbl"><span class="msr">ads_click</span>Ads account:</span>
             <span class="card-ads-names" *ngIf="p.adsActive" [title]="adNamesFor(p)">
               {{ adNamesFor(p) }}
@@ -924,7 +970,7 @@
             </div>
           </div>
 
-          <div class="card-dates">
+          <div class="card-dates" *ngIf="!isAdsPlatform">
             <span class="cd-item"><span class="msr">calendar_today</span>Added <b>{{ shortDate(p.addedOn) }}</b></span>
             <span class="cd-sep">·</span>
             <span class="cd-item"><span class="msr">schedule</span>Updated <b>{{ shortDate(p.updatedOn) }}</b></span>
@@ -940,7 +986,7 @@
           </ng-container>
           <ng-container *ngIf="!hasChildren(p)">
             <button class="ca-btn" *ngIf="p.alert"><span class="msr">autorenew</span>Reauthorize</button>
-            <button class="ca-btn" *ngIf="!p.alert" (click)="openAdsModal(p)"><span class="msr">add_link</span>Link Ads Account</button>
+            <button class="ca-btn" *ngIf="!p.alert && !isAdsPlatform" (click)="openAdsModal(p)"><span class="msr">add_link</span>Link Ads Account</button>
             <button class="ca-btn danger"><span class="msr">delete</span>Delete</button>
             <button class="ca-btn"><span class="msr">pause</span>Pause</button>
           </ng-container>

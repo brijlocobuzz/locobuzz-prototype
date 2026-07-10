@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, AD_ACCOUNTS, EXTERNAL_AD_ACCOUNTS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, AdAccount, ExpiredGroup, mentionTypeIcon } from '../channel-data';
+import { CHANNEL_GROUPS, FACEBOOK_PROFILES, GMB_PROFILES, EMAIL_PROFILES, EXPIRED_PROFILES, BRAND_ICONS, CHANNEL_SPECS, CHANNEL_CATALOG, AD_ACCOUNTS, EXTERNAL_AD_ACCOUNTS, ADS_PLATFORM_ACCOUNTS, Channel, ChannelGroup, ChannelProfile, ChannelSpec, CatalogChannel, AdAccount, ExpiredGroup, mentionTypeIcon } from '../channel-data';
 
 interface BrandOption { id: string; name: string; category: string; color: string; hasChannels: boolean; }
 import { AddChannelWizardComponent } from './add-channel-wizard.component';
@@ -36,7 +36,8 @@ export class ChannelConfigComponent {
 
   /** Profiles for the active channel — grouped channels (GMB, Email) use their own sets. */
   get profiles(): ChannelProfile[] {
-    if (this.activeChannel.empty) return [];   // not configured yet → empty state
+    if (this.isAdsPlatform) return this.platformProfiles;   // ad accounts rendered as rows
+    if (this.activeChannel.empty) return [];                // not configured yet → empty state
     switch (this.activeChannel.id) {
       case 'gmb': return GMB_PROFILES;
       case 'email': return EMAIL_PROFILES;
@@ -44,9 +45,39 @@ export class ChannelConfigComponent {
     }
   }
 
+  /* ---- Ads-Accounts side-panel group (Meta / X / LinkedIn) ---- */
+  private readonly adsPlatformIds = ['meta-ads', 'x-ads', 'linkedin-ads'];
+  get isAdsPlatform(): boolean { return this.adsPlatformIds.includes(this.activeChannel.id ?? ''); }
+  get platformAdAccounts(): AdAccount[] { return ADS_PLATFORM_ACCOUNTS[this.activeChannel.id ?? ''] ?? []; }
+  /** Ads platform selected but nothing linked yet → empty state. */
+  get adsEmpty(): boolean { return this.isAdsPlatform && this.platformAdAccounts.length === 0; }
+  /** Ad accounts shaped as profiles so the normal table/card renders them. */
+  get platformProfiles(): ChannelProfile[] {
+    return this.platformAdAccounts.map(a => ({
+      name: a.name,
+      owner: a.meta + (a.currency ? ' · ' + a.currency : ''),
+      initials: 'AD',
+      avatarColor: '#7c3aed',
+      status: 'Owned' as const,
+      addedOn: '', updatedOn: '',
+      mentionTypes: ['Ad posts', 'Ad comments', 'Paid metrics'],
+      adChannel: a.channel,
+    }));
+  }
+  /** Brand colour for the ad-account channel badge (Meta = Facebook / Instagram). */
+  private readonly adChannelColors: Record<string, string> = { facebook: '#1877f2', instagram: '#e1306c', linkedin: '#0a66c2', twitter: '#000000' };
+  adChannelColor(id: string | undefined): string { return this.adChannelColors[id ?? ''] ?? '#64748b'; }
+  adChannelLabel(id: string | undefined): string {
+    return ({ facebook: 'Facebook', instagram: 'Instagram', linkedin: 'LinkedIn', twitter: 'X' } as Record<string, string>)[id ?? ''] ?? '';
+  }
+  /** The social channel behind an ads platform (for the "Add account" CTA). */
+  adsPlatformChannel(id: string | undefined): string {
+    return ({ 'meta-ads': 'facebook', 'x-ads': 'twitter', 'linkedin-ads': 'linkedin' } as Record<string, string>)[id ?? ''] ?? '';
+  }
+
   /* ---- unconfigured (empty) channel state ---- */
   /** No profiles configured for the active channel yet. */
-  get isEmptyChannel(): boolean { return !this.expiredMode && this.profiles.length === 0; }
+  get isEmptyChannel(): boolean { return !this.expiredMode && !this.isAdsPlatform && this.profiles.length === 0; }
   /** The add-channel spec for the active channel (drives the empty-state info). */
   get activeSpec(): ChannelSpec | null { return this.activeChannel.id ? (CHANNEL_SPECS[this.activeChannel.id] ?? null) : null; }
 
@@ -116,6 +147,7 @@ export class ChannelConfigComponent {
     this.closeDetail();
     this.activeViewId = 'all';
     this.page = 1;
+    if (this.isAdsPlatform) this.groupBy = null;   // ads accounts are never grouped
   }
 
   /* ===================================================================
