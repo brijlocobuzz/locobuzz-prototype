@@ -105,7 +105,7 @@
       <div class="wz-body" [ngSwitch]="current">
 
         <!-- validation / planned banner (after a channel is chosen) -->
-        <div class="wz-flag" *ngIf="spec?.flag && current !== 'choose' && !isDelegate"
+        <div class="wz-flag" *ngIf="spec?.flag && current !== 'choose' && !isWhatsappAuth && !isVoiceAuth"
              [class.planned]="spec?.flag === 'planned'">
           <span class="msr">{{ spec?.flag === 'planned' ? 'schedule' : 'release_alert' }}</span>
           <span>{{ spec?.flagText }}</span>
@@ -193,17 +193,92 @@
         <!-- 3a · authenticate (OAuth / key) -->
         <section *ngSwitchCase="'authenticate'" class="wz-auth">
 
-        <!-- delegated channels (WhatsApp / Voice): hand off to a dedicated setup -->
-        <div class="wz-delegate" *ngIf="isDelegate">
-          <span class="wz-delegate-ic" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
-            <span class="msr">{{ selected?.icon }}</span>
-          </span>
-          <h3 class="wz-q">{{ selected?.label }} has a guided setup</h3>
-          <p class="wz-sub">{{ selected?.label }} connects through a dedicated setup (provider, credentials, and configuration). We'll open it next — it saves straight into your channel list.</p>
-          <button class="wz-authbtn" (click)="openExternalSetup()"><span class="msr">open_in_new</span>Open {{ selected?.label }} setup</button>
-        </div>
+        <!-- WhatsApp: pre-check, then (if no project) collect the business profile -->
+        <ng-container *ngIf="isWhatsappAuth">
+          <ng-container *ngIf="!waNeedsBusiness">
+            <div class="wz-conn-card">
+              <span class="wz-conn-av" [style.background]="selected?.color">
+                <svg *ngIf="brandSvg('whatsapp') as d" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path [attr.d]="d"></path></svg>
+              </span>
+              <div class="wz-conn-text">
+                <span class="wz-conn-eyebrow">WhatsApp Business</span>
+                <span class="wz-conn-name">Connect your WhatsApp Business number</span>
+              </div>
+            </div>
+            <div class="wz-access">
+              <h4>How it works</h4>
+              <ul>
+                <li><span class="msr">check</span>We check for an existing WhatsApp Business project</li>
+                <li><span class="msr">check</span>If none, you'll enter your business details here</li>
+                <li><span class="msr">check</span>Meta's secure signup opens to finish verification</li>
+              </ul>
+              <div class="wz-note"><span class="msr">shield</span>Continue runs the check — no data leaves this screen yet.</div>
+            </div>
+            <div class="wz-authbtn-loading dark" *ngIf="waChecking"><span class="wz-spinner dark"></span>Checking your WhatsApp Business account…</div>
+          </ng-container>
 
-        <ng-container *ngIf="!isDelegate">
+          <ng-container *ngIf="waNeedsBusiness">
+            <div class="wz-pages-titles">
+              <h3 class="wz-q left">Your business details</h3>
+              <p class="wz-sub left">Meta needs these to create your WhatsApp Business account.</p>
+            </div>
+            <div class="wz-grid2">
+              <div class="wz-field">
+                <label>Display name</label>
+                <div class="wz-url"><span class="msr">badge</span><input type="text" maxlength="50" placeholder="How the business appears" [(ngModel)]="waName" (focus)="setActive('waName')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Email</label>
+                <div class="wz-url"><span class="msr">mail</span><input type="email" maxlength="50" placeholder="you@business.com" [(ngModel)]="waEmail" (focus)="setActive('waEmail')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Company name</label>
+                <div class="wz-url"><span class="msr">business</span><input type="text" maxlength="50" [(ngModel)]="waCompany" (focus)="setActive('waCompany')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Company size</label>
+                <div class="wz-url"><span class="msr">groups</span><select [(ngModel)]="waSize" (focus)="setActive('waSize')" (blur)="clearActive()"><option value="" disabled>Select…</option><option *ngFor="let s of waSizes" [value]="s">{{ s }}</option></select></div>
+              </div>
+              <div class="wz-field">
+                <label>Country code</label>
+                <div class="wz-url"><span class="msr">public</span><select [(ngModel)]="waCountry" (focus)="setActive('waContact')" (blur)="clearActive()"><option *ngFor="let c of waCountries" [ngValue]="c">{{ c.country }} (+{{ c.code }})</option></select></div>
+              </div>
+              <div class="wz-field">
+                <label>WhatsApp number</label>
+                <div class="wz-url"><span class="msr">call</span><input type="tel" maxlength="10" placeholder="10-digit number" [(ngModel)]="waContact" (focus)="setActive('waContact')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Time zone</label>
+                <div class="wz-url"><span class="msr">schedule</span><select [(ngModel)]="waZone" (focus)="setActive('waZone')" (blur)="clearActive()"><option value="" disabled>Select…</option><option *ngFor="let z of waZones" [value]="z">{{ z }}</option></select></div>
+              </div>
+              <div class="wz-field">
+                <label>Currency</label>
+                <div class="wz-url"><span class="msr">payments</span><input type="text" [value]="waCurrency" disabled /></div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- Voice: pick a provider (credentials come on the next step) -->
+        <ng-container *ngIf="isVoiceAuth">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">Choose your voice provider</h3>
+            <p class="wz-sub left">Connect the telephony platform your calls run on.</p>
+          </div>
+          <div class="wz-pages-loading" *ngIf="voipLoadingProviders"><span class="wz-spinner dark"></span>Loading providers…</div>
+          <div class="wz-emailgrid" *ngIf="!voipLoadingProviders">
+            <div class="wz-emailcard" *ngFor="let p of voipProviders"
+                 [class.busy]="voipProvider === p.id" [class.disabled]="p.isDisabled" (click)="pickVoipProvider(p)">
+              <span class="wz-emailcard-ic adv"><span class="msr">call</span></span>
+              <span class="wz-emailcard-name">{{ p.name }}</span>
+              <span class="wz-emailcard-sub" *ngIf="p.isDisabled">Coming soon</span>
+              <span class="wz-emailcard-sub" *ngIf="!p.isDisabled">API credentials · quick setup</span>
+              <span class="wz-choice-check" *ngIf="voipProvider === p.id"><span class="msr">check</span></span>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!isWhatsappAuth && !isVoiceAuth">
 
         <!-- token-form channels (Telegram / LINE / Sitejabber) -->
         <ng-container *ngIf="tokenFormKind; else credOrNormal">
@@ -812,6 +887,74 @@
           </div>
         </section>
 
+        <!-- 3d · Voice: provider credentials -->
+        <section *ngSwitchCase="'voip'" class="wz-emailset">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">{{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }} credentials</h3>
+            <p class="wz-sub left">Find these in your {{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }} dashboard. Agents, skills and IVR can be set up after the channel is added.</p>
+          </div>
+
+          <!-- Exotel -->
+          <div class="wz-grid2" *ngIf="voipProvider === 1">
+            <div class="wz-field">
+              <label>App name</label>
+              <div class="wz-url"><span class="msr">apps</span><input type="text" [(ngModel)]="exAppName" (focus)="setActive('exAppName')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Account SID</label>
+              <div class="wz-url"><span class="msr">badge</span><input type="text" [(ngModel)]="exSID" (focus)="setActive('exSID')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>API token</label>
+              <div class="wz-url"><span class="msr">key</span><input type="text" [(ngModel)]="exToken" (focus)="setActive('exToken')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>API key</label>
+              <div class="wz-url"><span class="msr">vpn_key</span><input type="text" [(ngModel)]="exApiKey" (focus)="setActive('exApiKey')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Customer ID</label>
+              <div class="wz-url"><span class="msr">tag</span><input type="text" [(ngModel)]="exCustomerId" (focus)="setActive('exCustomerId')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Customer secret</label>
+              <div class="wz-url"><span class="msr">lock</span><input type="text" [(ngModel)]="exSecret" (focus)="setActive('exSecret')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Exophone number</label>
+              <div class="wz-url"><span class="msr">call</span><input type="text" [(ngModel)]="exNumber" (focus)="setActive('exNumber')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Domain</label>
+              <div class="wz-url"><span class="msr">dns</span><input type="text" placeholder="api.exotel.com" [(ngModel)]="exDomain" (focus)="setActive('exDomain')" (blur)="clearActive()" /></div>
+            </div>
+          </div>
+
+          <!-- Ozonetel -->
+          <div *ngIf="voipProvider === 2">
+            <div class="wz-grid2">
+              <div class="wz-field">
+                <label>Account name</label>
+                <div class="wz-url"><span class="msr">badge</span><input type="text" [(ngModel)]="ozAccount" (focus)="setActive('ozAccount')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>API key</label>
+                <div class="wz-url"><span class="msr">key</span><input type="text" [(ngModel)]="ozApiKey" (focus)="setActive('ozApiKey')" (blur)="clearActive()" /></div>
+              </div>
+            </div>
+            <div class="wz-field">
+              <label>Brand numbers</label>
+              <div class="wz-chipbox" (focusin)="setActive('ozNumbers')" (focusout)="clearActive()">
+                <span class="wz-chip" *ngFor="let n of ozNumbers; let i = index">{{ n }}
+                  <button type="button" (click)="removeOzNumber(i)"><span class="msr">close</span></button></span>
+                <input type="text" placeholder="Add a number, press Enter" [(ngModel)]="ozNumberDraft" (keyup.enter)="addOzNumber()" (blur)="addOzNumber()" />
+              </div>
+            </div>
+          </div>
+
+          <div class="wz-authbtn-loading dark" *ngIf="voipSaving"><span class="wz-spinner dark"></span>Connecting {{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }}…</div>
+        </section>
+
         <!-- 3d · Email (manual) — Incoming server -->
         <section *ngSwitchCase="'incoming'" class="wz-emailset">
           <div class="wz-pages-titles">
@@ -1410,6 +1553,21 @@
         <div class="wz-feat">
           <span class="wz-feat-ic"><span class="msr">tune</span></span>
           <div class="wz-feat-text"><b>Change anytime</b><span>Pause or remove any of them later from Channel Configuration.</span></div>
+        </div>
+      </ng-container>
+
+      <!-- voice credentials -->
+      <ng-container *ngSwitchCase="'voip'">
+        <span class="wz-aside-eyebrow">{{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }} · connection</span>
+        <h3 class="wz-aside-title">Just the credentials to start.</h3>
+        <p class="wz-aside-lead">This connects the channel. Agents, skills{{ voipProvider === 1 ? ', applet URLs and IVR' : ' and disposition mapping' }} are configured afterwards from Channel Configuration.</p>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">vpn_key</span></span>
+          <div class="wz-feat-text"><b>Where to find these</b><span>Your {{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }} dashboard → API / credentials settings.</span></div>
+        </div>
+        <div class="wz-safe tip">
+          <span class="wz-safe-head"><span class="msr">verified_user</span>Verified on connect</span>
+          <p>We validate the credentials with {{ voipProvider === 1 ? 'Exotel' : 'Ozonetel' }} before the channel is created.</p>
         </div>
       </ng-container>
 

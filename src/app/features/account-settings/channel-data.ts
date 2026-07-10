@@ -1341,6 +1341,28 @@ export function fbGroupPreview(url: string): FbGroupPreview {
 }
 
 /* ===================================================================
+   WhatsApp (inline business-details form) + Voice (inline VOIP
+   provider picker) — mock reference lists, mirroring app-data/ListData.
+   =================================================================== */
+export const WA_COMPANY_SIZES = ['1 - 10 Employees', '10 - 20 Employees', '20 - 50 Employees', '50 - 200 Employees', '200 + Employees'];
+export const WA_TIMEZONES = [
+  'Asia/Calcutta GMT+05:30', 'Asia/Dubai GMT+04:00', 'Asia/Singapore GMT+08:00',
+  'Europe/London GMT+00:00', 'America/New_York GMT-05:00', 'America/Los_Angeles GMT-08:00',
+  'Australia/Sydney GMT+11:00',
+];
+export interface WaCountry { country: string; code: number; }
+export const WA_COUNTRIES: WaCountry[] = [
+  { country: 'IND', code: 91 }, { country: 'USA', code: 1 }, { country: 'GBR', code: 44 },
+  { country: 'ARE', code: 971 }, { country: 'SGP', code: 65 }, { country: 'AUS', code: 61 },
+];
+
+export interface VoipProvider { id: 1 | 2; name: string; isDisabled?: boolean; }
+export const VOIP_PROVIDERS: VoipProvider[] = [
+  { id: 2, name: 'Ozonetel' },
+  { id: 1, name: 'Exotel' },
+];
+
+/* ===================================================================
    Per-field "where do I find / generate this?" help — shown in the
    right aside when a credential input is focused.
    =================================================================== */

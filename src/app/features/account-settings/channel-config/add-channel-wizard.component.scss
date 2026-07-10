@@ -1503,10 +1503,14 @@
 .wz-emailhead { margin-bottom: 18px; }
 .wz-emailgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: stretch; }
 .wz-emailcard {
+  position: relative;
   display: flex; flex-direction: column; gap: 8px;
   padding: 18px 16px; border: 1.5px solid var(--border); border-radius: 16px; background: #fff;
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
+/* Voice provider-pick cards (Exotel / Ozonetel): whole card is clickable */
+.wz-emailcard.busy .wz-choice-check { opacity: 1; transform: scale(1); }
+.wz-emailcard.disabled { opacity: .55; cursor: not-allowed; pointer-events: none; }
 .wz-emailcard:hover { border-color: color-mix(in srgb, var(--wz) 40%, var(--border)); box-shadow: 0 8px 22px rgba(0, 122, 255, .10); }
 .wz-emailcard.busy { border-color: var(--wz); box-shadow: 0 0 0 3px var(--wz-soft); }
 .wz-emailcard-ic {

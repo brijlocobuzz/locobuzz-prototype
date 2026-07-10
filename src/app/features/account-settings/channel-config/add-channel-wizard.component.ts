@@ -7,17 +7,16 @@ import {
   GMB_ACCOUNTS, GA_PROPERTIES, APPSTORE_APPS, emailFolders,
   tiktokPreview, fbGroupPreview, TiktokPreview, FbGroupPreview,
   FIELD_HELP, EMAIL_INCOMING_HELP, EMAIL_OUTGOING_HELP, FieldHelp,
+  WA_COMPANY_SIZES, WA_TIMEZONES, WA_COUNTRIES, WaCountry, VOIP_PROVIDERS, VoipProvider,
   CatalogChannel, CatalogGroup, FacebookPage, AdAccount, ChannelSpec, ChannelMode, EcomProduct,
   GmbAccountGroup, GmbLocation, GaProperty, EmailFolder, AppStoreApp,
 } from '../channel-data';
 
-type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'ads' | 'incoming' | 'outgoing' | 'settings' | 'review';
+type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'ads' | 'incoming' | 'outgoing' | 'settings' | 'voip' | 'review';
 interface Step { key: StepKey; label: string; }
 
 /** Channels whose "authenticate" step is a token/credential form instead of OAuth. */
 type TokenFormKind = 'telegram' | 'line' | 'sitejabber';
-/** Channels that hand off to a dedicated (out-of-wizard) setup instead of connecting here. */
-const DELEGATE_IDS = new Set(['whatsapp', 'voice']);
 const TOKEN_FORM_IDS: Record<string, TokenFormKind> = { telegram: 'telegram', line: 'line', sitejabber: 'sitejabber' };
 
 @Component({
@@ -145,6 +144,24 @@ export class AddChannelWizardComponent implements OnInit {
   readonly emailIncomingHelp = EMAIL_INCOMING_HELP;
   readonly emailOutgoingHelp = EMAIL_OUTGOING_HELP;
 
+  // ---- WhatsApp: inline pre-check + business-details form ----
+  waChecking = false;
+  waNeedsBusiness = false;
+  readonly waSizes = WA_COMPANY_SIZES;
+  readonly waZones = WA_TIMEZONES;
+  readonly waCountries = WA_COUNTRIES;
+  waName = ''; waEmail = ''; waCompany = ''; waSize = '';
+  waCountry: WaCountry = WA_COUNTRIES.find(c => c.code === 91) ?? WA_COUNTRIES[0];
+  waContact = ''; waCurrency = 'INR'; waZone = '';
+
+  // ---- Voice: VOIP provider pick + credentials ----
+  voipProviders: VoipProvider[] = [];
+  voipLoadingProviders = false;
+  voipProvider: 1 | 2 | null = null;
+  voipSaving = false;
+  exAppName = ''; exSID = ''; exToken = ''; exCustomerId = ''; exNumber = ''; exApiKey = ''; exDomain = ''; exSecret = '';
+  ozAccount = ''; ozApiKey = ''; ozNumbers: string[] = []; ozNumberDraft = '';
+
   /** Real brand logo path for the current channel, or null → use Material icon. */
   brandSvg(id: string | undefined): string | null {
     return id ? (BRAND_ICONS[id] ?? null) : null;
@@ -220,10 +237,10 @@ export class AddChannelWizardComponent implements OnInit {
   get keyFormKind(): 'playstore' | null { return this.selected?.id === 'playstore' ? 'playstore' : null; }
   get hasCredForm(): boolean { return !!this.tokenFormKind || !!this.credFormKind || !!this.keyFormKind; }
 
-  /** WhatsApp / Voice: hand off to a dedicated setup instead of connecting here. */
-  get isDelegate(): boolean { return !!this.selected && DELEGATE_IDS.has(this.selected.id); }
-  /** Closes the wizard — the real setup continues in its own dedicated step. */
-  openExternalSetup() { this.close(); }
+  /** WhatsApp: inline pre-check, then (if no project yet) collect business details. */
+  get isWhatsappAuth(): boolean { return this.selected?.id === 'whatsapp'; }
+  /** Voice: inline VOIP provider pick, then a dedicated credentials step. */
+  get isVoiceAuth(): boolean { return this.selected?.id === 'voice'; }
 
   get isGmbPicker(): boolean { return this.selected?.id === 'gmb'; }
   get isGaPicker(): boolean { return this.selected?.id === 'ganalytics'; }
@@ -299,6 +316,9 @@ export class AddChannelWizardComponent implements OnInit {
         if (this.emailMode) arr.push({ key: 'settings', label: 'Advanced settings' });
       } else if (m.pages || this.credFormKind || this.isGaPicker) {
         arr.push({ key: 'pages', label: this.isGaPicker ? 'Select properties' : this.credFormKind ? 'Select apps' : 'Select accounts' });
+      } else if (this.isVoiceAuth) {
+        // authenticate = pick provider; voip = provider credentials
+        arr.push({ key: 'voip', label: 'Credentials' });
       }
       if (this.showAdsStep) arr.push({ key: 'ads', label: 'Ads account' });
       arr.push(review);
@@ -335,6 +355,7 @@ export class AddChannelWizardComponent implements OnInit {
   pickChannel(c: CatalogChannel) {
     this.selected = c;
     this.resetPathState();
+    if (c.id === 'voice') this.loadVoipProviders();
   }
 
   /** Every field that belongs to a specific channel's flow — cleared on pick/re-add. */
@@ -371,6 +392,15 @@ export class AddChannelWizardComponent implements OnInit {
     this.outReplyTo = ''; this.outAlias = ''; this.outFooter = '';
     this.ccChips = []; this.bccChips = []; this.ccDraft = ''; this.bccDraft = '';
     this.testingIn = false; this.testingOut = false;
+
+    this.waChecking = false; this.waNeedsBusiness = false;
+    this.waName = ''; this.waEmail = ''; this.waCompany = ''; this.waSize = '';
+    this.waCountry = WA_COUNTRIES.find(c => c.code === 91) ?? WA_COUNTRIES[0];
+    this.waContact = ''; this.waCurrency = 'INR'; this.waZone = '';
+
+    this.voipProviders = []; this.voipLoadingProviders = false; this.voipProvider = null; this.voipSaving = false;
+    this.exAppName = ''; this.exSID = ''; this.exToken = ''; this.exCustomerId = ''; this.exNumber = ''; this.exApiKey = ''; this.exDomain = ''; this.exSecret = '';
+    this.ozAccount = ''; this.ozApiKey = ''; this.ozNumbers = []; this.ozNumberDraft = '';
   }
 
   /* ---- E-Commerce: add product sources by URL / CSV / search ---- */
@@ -627,6 +657,47 @@ export class AddChannelWizardComponent implements OnInit {
     this.emailFooter = (this.emailFooter ? this.emailFooter + ' ' : '') + token;
   }
 
+  // ---- WhatsApp: inline pre-check + business-details form ----------------
+  /** Continue on the WhatsApp auth step: pre-check, then either finish or show the business form. */
+  whatsappContinue() {
+    if (this.waNeedsBusiness) { this.saveWhatsappBusiness(); return; }
+    this.waChecking = true;
+    setTimeout(() => {
+      this.waChecking = false;
+      this.waNeedsBusiness = true;   // demo: simulate "no project yet" — collect business details inline
+    }, 1400);
+  }
+  private saveWhatsappBusiness() {
+    this.finish();
+  }
+
+  // ---- Voice: VOIP provider pick + credentials ----------------------------
+  loadVoipProviders() {
+    if (this.voipProviders.length || this.voipLoadingProviders) return;
+    this.voipLoadingProviders = true;
+    setTimeout(() => {
+      this.voipLoadingProviders = false;
+      this.voipProviders = VOIP_PROVIDERS;
+    }, 900);
+  }
+  pickVoipProvider(p: VoipProvider) { if (!p.isDisabled) this.voipProvider = p.id; }
+  addOzNumber() {
+    const n = this.ozNumberDraft.trim();
+    if (!n || this.ozNumbers.includes(n)) { this.ozNumberDraft = ''; return; }
+    this.ozNumbers.push(n);
+    this.ozNumberDraft = '';
+  }
+  removeOzNumber(i: number) { this.ozNumbers.splice(i, 1); }
+  /** Save the provider credentials — this is what actually registers the Voice channel. */
+  saveVoip() {
+    if (this.voipSaving) return;
+    this.voipSaving = true;
+    setTimeout(() => {
+      this.voipSaving = false;
+      this.finish();
+    }, 1600);
+  }
+
   // ---- ads accounts step -------------------------------------------------
   /** This channel + mode can link an ads account (owned X / LinkedIn / Meta). */
   get channelSupportsAds(): boolean {
@@ -648,19 +719,30 @@ export class AddChannelWizardComponent implements OnInit {
       case 'choose':       return !!this.selected;
       case 'connection':   return !!this.connectionType;
       case 'authenticate':
-        if (this.isDelegate) return false;   // the card's own button closes the wizard
         if (this.tokenFormKind === 'telegram') return this.telegramToken.trim().length > 0;
         if (this.tokenFormKind === 'line') return this.lineChannelId.trim().length > 0 && this.lineAccessToken.trim().length > 0 && this.lineSecret.trim().length > 0;
         if (this.tokenFormKind === 'sitejabber') return this.sjEmail.trim().length > 0 && this.sjPassword.trim().length > 0 && this.sjApiKey.trim().length > 0 && this.sjBusiness.trim().length > 0;
         if (this.credFormKind === 'appstore') return !this.authLoading && this.asKeyId.trim().length > 0 && this.asIssuerId.trim().length > 0 && this.asPrivateKey.trim().length > 0;
         if (this.keyFormKind === 'playstore') return !!this.psFile && this.psPackage.trim().length > 0 && this.psFriendly.trim().length > 0;
         if (this.isEmailAuth) return this.emailMode === 'manual' ? true : this.emailMode === 'oauth' ? this.authDone : false;
+        if (this.isWhatsappAuth) {
+          return this.waNeedsBusiness
+            ? (!this.waChecking && this.waName.trim().length > 0 && this.waEmail.trim().length > 0 && this.waCompany.trim().length > 0
+               && !!this.waSize && !!this.waCountry && /^\d{10}$/.test(this.waContact.trim()) && !!this.waZone)
+            : !this.waChecking;
+        }
+        if (this.isVoiceAuth) return !!this.voipProvider && !this.voipLoadingProviders;
         return this.isXVersionAuth ? this.xConnectedCount === 2 : this.authDone;
       case 'public':       return this.isEcommerce ? this.ecomTotal > 0 : this.publicHandle.trim().length > 0;
       case 'pages':         return this.isGmbPicker ? this.selectedGmbLocs.size > 0 : this.selectedPages.size > 0;
       case 'incoming':      return this.inName.trim().length > 0 && this.inEmail.trim().length > 0 && this.inPassword.trim().length > 0 && this.inServer.trim().length > 0;
       case 'outgoing':      return this.outName.trim().length > 0 && this.outEmail.trim().length > 0 && this.outPassword.trim().length > 0 && this.outServer.trim().length > 0 && this.outFooter.trim().length > 0;
       case 'settings':      return true;
+      case 'voip':
+        if (this.voipSaving) return false;
+        return this.voipProvider === 1
+          ? [this.exAppName, this.exSID, this.exToken, this.exCustomerId, this.exNumber, this.exApiKey, this.exDomain, this.exSecret].every(v => v.trim().length > 0)
+          : this.ozAccount.trim().length > 0 && this.ozApiKey.trim().length > 0 && this.ozNumbers.length > 0;
       case 'ads':          return true;   // optional — skippable
       case 'review':       return true;
       default:             return false;
@@ -679,6 +761,10 @@ export class AddChannelWizardComponent implements OnInit {
       this.outName = this.inName; this.outEmail = this.inEmail; this.outPassword = this.inPassword;
       this.outServer = this.inServer.replace(/^imap\.|^pop\./, 'smtp.'); this.outPort = 587; this.outSSL = true;
     }
+    // WhatsApp: Continue on the auth step runs the pre-check / saves the business form (may finish here).
+    if (this.current === 'authenticate' && this.isWhatsappAuth) { this.whatsappContinue(); return; }
+    // Voice: the credentials step IS the save.
+    if (this.current === 'voip') { this.saveVoip(); return; }
     if (this.onReview) { this.finish(); return; }
     this.stepIndex = Math.min(this.stepIndex + 1, this.totalSteps - 1);
   }
