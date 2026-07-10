@@ -1,0 +1,86 @@
+<div class="pf">
+
+  <!-- Trigger -->
+  <button type="button" class="pf-trigger" (click)="togglePanel()"
+          [class.pf-trigger--active]="appliedCount > 0 || open()"
+          aria-haspopup="dialog" [attr.aria-expanded]="open()">
+    <span class="msr">tune</span>
+    Filters
+    <span class="pf-trigger-badge" *ngIf="appliedCount > 0">{{ appliedCount }}</span>
+  </button>
+
+  <!-- Click-away backdrop (click outside = cancel) -->
+  <div class="pf-backdrop" *ngIf="open()" (click)="cancel()" aria-hidden="true"></div>
+
+  <!-- Panel -->
+  <section class="pf-panel" *ngIf="open()" role="dialog" aria-label="Filter posts"
+           (keydown.escape)="cancel()">
+
+    <header class="pf-head">
+      <h3><span class="msr">tune</span> Filter Posts</h3>
+      <button type="button" class="pf-clear" (click)="clearAll()" [disabled]="draftCount() === 0">
+        Clear all
+      </button>
+    </header>
+
+    <div class="pf-body">
+
+      <!-- Category rail -->
+      <nav class="pf-rail" aria-label="Filter categories">
+        <button type="button" class="pf-cat" *ngFor="let c of categories; trackBy: trackCat"
+                [class.pf-cat--on]="activeCat() === c.key"
+                (click)="selectCategory(c.key)">
+          <span class="msr">{{ c.icon }}</span>
+          <span class="pf-cat-label">{{ c.label }}</span>
+          <span class="pf-cat-count" *ngIf="draftCountFor(c.key)">{{ draftCountFor(c.key) }}</span>
+        </button>
+      </nav>
+
+      <!-- Options -->
+      <div class="pf-options">
+        <label class="pf-search">
+          <span class="msr">search</span>
+          <input type="search" [placeholder]="activeCategory().searchHint"
+                 [ngModel]="optionSearch()" (ngModelChange)="optionSearch.set($event)"
+                 [attr.aria-label]="activeCategory().searchHint" />
+        </label>
+
+        <div class="pf-list" role="group" [attr.aria-label]="activeCategory().label">
+          <button type="button" class="pf-opt" *ngFor="let o of options(); trackBy: trackOpt"
+                  (click)="toggleValue(o.value)"
+                  [attr.aria-pressed]="isSelected(o.value)">
+            <span class="pf-check" [class.pf-check--on]="isSelected(o.value)">
+              <span class="msr">check</span>
+            </span>
+
+            <span class="pf-opt-badge" *ngIf="o.badge" [style.background]="o.badge.color">
+              <span *ngIf="o.badge.isIcon; else badgeText" class="msr">{{ o.badge.glyph }}</span>
+              <ng-template #badgeText>{{ o.badge.glyph }}</ng-template>
+            </span>
+            <span class="pf-opt-badge pf-opt-badge--label" *ngIf="!o.badge">
+              <span class="msr">sell</span>
+            </span>
+
+            <span class="pf-opt-tx">
+              {{ o.label }}
+              <small *ngIf="o.sub">{{ o.sub }}</small>
+            </span>
+          </button>
+
+          <p class="pf-none" *ngIf="!options().length">
+            <span class="msr">search_off</span> No matches found
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="pf-foot">
+      <span class="pf-foot-summary" *ngIf="draftCount()">
+        {{ draftCount() }} filter{{ draftCount() === 1 ? '' : 's' }} selected
+      </span>
+      <span class="pf-foot-spacer"></span>
+      <button type="button" class="pf-btn" (click)="cancel()">Cancel</button>
+      <button type="button" class="pf-btn pf-btn--primary" (click)="apply()">Apply</button>
+    </footer>
+  </section>
+</div>

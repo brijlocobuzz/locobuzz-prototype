@@ -1,0 +1,358 @@
+:host { display: block; height: 100%; }
+
+.mp {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar — single 50px row: view switch · brand · duration · search · filters · CTA
+// ---------------------------------------------------------------------------
+.mp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.mp-toolbar-spacer { flex: 1; }
+
+.mp-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.mp-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  font: inherit;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .13s ease, background .13s ease;
+
+  &:hover { border-color: #cfd6e0; background: #fafbfd; }
+  &:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+}
+
+.mp-control-ic { font-size: 17px; color: var(--text-3); }
+.mp-caret { font-size: 17px; color: var(--text-3); }
+
+.mp-brand-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #22c55e 55%, #2563eb);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, .08);
+}
+
+// search
+.mp-search {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  width: clamp(200px, 24vw, 300px);
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  transition: border-color .13s ease, box-shadow .13s ease;
+
+  > .msr { font-size: 18px; color: var(--text-3); }
+
+  &:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-soft);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: var(--font-size-13);
+    color: var(--text-1);
+
+    &::placeholder { color: var(--text-3); }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+}
+
+.mp-search-clear {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--text-3);
+  cursor: pointer;
+
+  .msr { font-size: 15px; }
+  &:hover { color: var(--text-1); background: #eef1f6; }
+}
+
+// compose CTA
+.mp-compose {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 9px;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .13s ease, box-shadow .13s ease;
+
+  .msr { font-size: 16px; }
+
+  &:hover { background: var(--brand-strong); box-shadow: 0 6px 16px -8px rgba(37, 99, 235, .6); }
+  &:focus-visible { outline: 2px solid var(--brand-strong); outline-offset: 2px; }
+}
+
+// ---------------------------------------------------------------------------
+// Main area — vertical status rail + content column
+// ---------------------------------------------------------------------------
+.mp-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.mp-rail {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  overflow-y: auto;
+  transition: flex-basis .18s ease;
+
+  &--slim {
+    flex-basis: 52px;
+
+    .mp-rail-title,
+    .mp-rail-label,
+    .mp-rail-count { display: none; }
+
+    .mp-rail-head { justify-content: center; }
+    .mp-rail-item { justify-content: center; padding: 8px 0; }
+  }
+}
+
+.mp-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 8px 10px;
+}
+
+.mp-rail-title {
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--text-3);
+}
+
+.mp-rail-toggle {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  cursor: pointer;
+
+  .msr { font-size: 17px; }
+
+  &:hover { background: #eef1f6; color: var(--text-1); }
+  &:focus-visible { outline: 2px solid var(--brand); outline-offset: -1px; }
+}
+
+.mp-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background .13s ease, color .13s ease;
+
+  &:hover { background: #f4f6f9; }
+  &:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+  &--on {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+
+    .mp-rail-count { background: var(--brand); color: #fff; }
+  }
+}
+
+.mp-rail-ic { font-size: 17px; flex: 0 0 auto; }
+
+.mp-rail-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-rail-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eef1f6;
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+
+  &--zero { opacity: .55; }
+}
+
+.mp-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// applied filter chips (only rendered while filters are active)
+.mp-applied {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+.mp-applied-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px 0 10px;
+  border: 1px solid #d8e3f8;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  font: inherit;
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  color: var(--brand-strong);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .13s ease, border-color .13s ease;
+
+  &:hover { background: #dce9ff; border-color: #bcd2f7; }
+  &:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+}
+
+.mp-applied-dot { width: 8px; height: 8px; border-radius: 50%; }
+.mp-applied-ic { font-size: 13px; opacity: .8; }
+.mp-applied-x { font-size: 13px; opacity: .7; }
+.mp-applied-chip:hover .mp-applied-x { opacity: 1; }
+
+.mp-applied-clear {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover { background: #eef1f6; color: var(--text-1); }
+}
+
+// ---------------------------------------------------------------------------
+// Cards grid
+// ---------------------------------------------------------------------------
+.mp-grid-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
+  gap: 12px;
+  padding: 12px;
+  align-items: stretch;
+}
+
+// empty state
+.mp-empty {
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--text-3);
+
+  > .msr { font-size: 44px; color: var(--brand); opacity: .6; }
+  h3 { margin: 6px 0 0; font-size: var(--font-size-16); font-weight: 700; color: var(--text-1); }
+  p { margin: 0 0 10px; font-size: var(--font-size-13); }
+}
+
+// ---------------------------------------------------------------------------
+// Shared menu bits (mat-menu content lives in the overlay, ::ng-deep needed)
+// ---------------------------------------------------------------------------
+::ng-deep .mp-menu {
+  .mp-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .mp-menu-check { margin-left: auto; font-size: 17px; color: var(--brand); }
+}

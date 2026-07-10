@@ -266,7 +266,13 @@ export interface Brand {
   domain: string;
 }
 
-export const BRANDS: Brand[] = [
+/**
+ * A large, realistic-looking brand catalogue for the "Manage brands" dialog.
+ * The six real brands (with real ids + domains) keep the assigned-brands and
+ * sidebar views intact; the rest are generated quirky test-brand names so the
+ * list scrolls and the counter reads at real scale.
+ */
+const REAL_BRANDS: Brand[] = [
   { id: 'amazon', name: 'Amazon', domain: 'amazon.in' },
   { id: 'ajio', name: 'Ajio', domain: 'ajio.com' },
   { id: 'airindia', name: 'Air India', domain: 'airindia.com' },
@@ -275,7 +281,34 @@ export const BRANDS: Brand[] = [
   { id: 'tata', name: 'Tata Cliq', domain: 'tatacliq.com' },
 ];
 
-/** Google favicon service — same source the prototype used for brand logos. */
-export function brandLogo(domain: string): string {
-  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+const BRAND_SEED: string[] = [
+  '1 97 QA TEst brand', '23AugustBrand', 'abc brand', 'acchcawalabug', 'ACT UAT',
+  'Action', 'ActionabiltyTestBrand', 'Actiuonableeee', 'Ads Testing',
+  'Ak test77', 'akakak', 'Akash Test', 'Akashauto1', 'Flipkart', 'Swiggy',
+  'Nykaa', 'Ola Cabs', 'BigBasket', 'PhonePe', 'Paytm Retail', 'Croma',
+  'Reliance Digital', 'Blinkit Demo', 'Zepto QA', 'Meesho Labs',
+  'Urban Company', 'Lenskart Beta', 'BoAt Audio', 'Mamaearth',
+  'Sugar Cosmetics', 'Wow Skin', 'CureFit', 'Cred Test', 'Groww Sandbox',
+  'Zerodha UAT', 'Razorpay Demo', 'Dunzo Old',
+];
+
+const EXTRA_PREFIX = ['QA', 'UAT', 'Demo', 'Retail', 'Auto', 'Prod', 'Beta', 'Nova', 'Zeta', 'Acme', 'Metro', 'Prime', 'Insta', 'Hyper', 'Omni', 'Peak', 'Vivid', 'Urban', 'Bold', 'Swift'];
+const EXTRA_BASE = ['Brand', 'Store', 'Labs', 'Cart', 'Mart', 'Care', 'Media', 'Group', 'Works', 'Hub', 'Line', 'Buzz', 'Wave', 'Point', 'Nest', 'Kart', 'Zone', 'Bay', 'Craft', 'Pulse'];
+
+function slug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
+
+function buildBrands(): Brand[] {
+  const names: string[] = [...BRAND_SEED];
+  outer: for (let p = 0; p < EXTRA_PREFIX.length; p++) {
+    for (let b = 0; b < EXTRA_BASE.length; b++) {
+      names.push(`${EXTRA_PREFIX[p]} ${EXTRA_BASE[b]}`);
+      if (REAL_BRANDS.length + names.length >= 363) break outer;
+    }
+  }
+  const generated = names.map((name, i) => ({ id: `b${i}`, name, domain: `${slug(name)}.com` }));
+  return [...REAL_BRANDS, ...generated].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+}
+
+export const BRANDS: Brand[] = buildBrands();

@@ -1,0 +1,128 @@
+<div class="mp">
+
+  <!-- ======================= Toolbar (row 1) ======================= -->
+  <div class="mp-toolbar">
+
+    <!-- View switch projected from the page shell -->
+    <ng-content />
+
+    <span class="mp-divider" aria-hidden="true"></span>
+
+    <!-- Brand selector -->
+    <button type="button" class="mp-control" [matMenuTriggerFor]="brandMenu"
+            matTooltip="Brand" aria-label="Select brand">
+      <span class="mp-brand-dot"></span>
+      {{ brand() }}
+      <span class="msr mp-caret">expand_more</span>
+    </button>
+    <mat-menu #brandMenu="matMenu" class="mp-menu">
+      <button mat-menu-item *ngFor="let b of brands; trackBy: trackByValue" (click)="brand.set(b)">
+        <span class="mp-menu-row">
+          {{ b }}
+          <span class="msr mp-menu-check" *ngIf="brand() === b">check</span>
+        </span>
+      </button>
+    </mat-menu>
+
+    <!-- Duration -->
+    <button type="button" class="mp-control" [matMenuTriggerFor]="durationMenu"
+            matTooltip="Duration" aria-label="Select duration">
+      <span class="msr mp-control-ic">calendar_month</span>
+      {{ duration() }}
+      <span class="msr mp-caret">expand_more</span>
+    </button>
+    <mat-menu #durationMenu="matMenu" class="mp-menu">
+      <button mat-menu-item *ngFor="let d of durations; trackBy: trackByValue" (click)="duration.set(d)">
+        <span class="mp-menu-row">
+          {{ d }}
+          <span class="msr mp-menu-check" *ngIf="duration() === d">check</span>
+        </span>
+      </button>
+    </mat-menu>
+
+    <span class="mp-toolbar-spacer"></span>
+
+    <!-- Search -->
+    <label class="mp-search">
+      <span class="msr">search</span>
+      <input type="search" placeholder="Search post content, account or #tag"
+             [ngModel]="search()" (ngModelChange)="search.set($event)"
+             aria-label="Search posts" />
+      <button type="button" class="mp-search-clear" *ngIf="search()" (click)="search.set('')"
+              aria-label="Clear search">
+        <span class="msr">close</span>
+      </button>
+    </label>
+
+    <!-- Filters -->
+    <app-post-filter [posts]="posts" [applied]="filters()"
+                     (appliedChange)="filters.set($event)" />
+
+    <!-- Compose -->
+    <button type="button" class="mp-compose">
+      <span class="msr">edit_square</span>
+      Compose Post
+    </button>
+  </div>
+
+  <!-- ================= Status rail + content ================= -->
+  <div class="mp-main">
+
+    <!-- Vertical status rail (mirrors the Tickets folder panel pattern) -->
+    <aside class="mp-rail" [class.mp-rail--slim]="railSlim()" aria-label="Filter posts by status">
+      <div class="mp-rail-head">
+        <span class="mp-rail-title">Post Status</span>
+        <button type="button" class="mp-rail-toggle" (click)="railSlim.set(!railSlim())"
+                [matTooltip]="railSlim() ? 'Expand' : 'Collapse'"
+                [attr.aria-label]="railSlim() ? 'Expand status rail' : 'Collapse status rail'">
+          <span class="msr">{{ railSlim() ? 'right_panel_open' : 'left_panel_close' }}</span>
+        </button>
+      </div>
+
+      <button type="button" class="mp-rail-item" *ngFor="let t of tabs; trackBy: trackTab"
+              [class.mp-rail-item--on]="activeTab() === t.key"
+              (click)="activeTab.set(t.key)"
+              [matTooltip]="railSlim() ? t.label + ' (' + counts()[t.key] + ')' : ''"
+              matTooltipPosition="right">
+        <span class="msr mp-rail-ic" [style.color]="t.color">{{ t.icon }}</span>
+        <span class="mp-rail-label">{{ t.label }}</span>
+        <span class="mp-rail-count" [class.mp-rail-count--zero]="!counts()[t.key]">{{ counts()[t.key] }}</span>
+      </button>
+    </aside>
+
+    <!-- Content column -->
+    <div class="mp-content">
+
+      <!-- Applied filter chips — only occupies space when filters are active -->
+      <div class="mp-applied" *ngIf="filterChips().length">
+        <button type="button" class="mp-applied-chip" *ngFor="let chip of filterChips(); trackBy: trackChip"
+                (click)="removeFilter(chip)" [attr.aria-label]="'Remove filter ' + chip.label"
+                matTooltip="Remove filter">
+          <span class="mp-applied-dot" *ngIf="chip.color" [style.background]="chip.color"></span>
+          <span class="msr mp-applied-ic" *ngIf="!chip.color">{{ chip.icon }}</span>
+          {{ chip.label }}
+          <span class="msr mp-applied-x">close</span>
+        </button>
+        <button type="button" class="mp-applied-clear" (click)="clearFilters()">Clear all</button>
+      </div>
+
+      <div class="mp-grid-wrap">
+        <div class="mp-grid" *ngIf="filtered().length; else empty">
+          <app-post-card *ngFor="let post of filtered(); trackBy: trackPost" [post]="post" />
+        </div>
+
+        <ng-template #empty>
+          <div class="mp-empty">
+            <span class="msr">content_paste_search</span>
+            <h3>No posts match your filters</h3>
+            <p>Try a different status, brand or search term — or compose a new post.</p>
+            <button type="button" class="mp-compose">
+              <span class="msr">edit_square</span>
+              Compose Post
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

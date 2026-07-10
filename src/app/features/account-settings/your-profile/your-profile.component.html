@@ -123,38 +123,104 @@
   </div>
 </div>
 
-<!-- ===== Assign brands modal ===== -->
-<div class="yp-backdrop" *ngIf="brandsModalOpen" (click)="brandsModalOpen = false">
-  <section class="yp-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Assign brands">
-    <header class="modal-head">
-      <div>
-        <h2>Assign brands</h2>
-        <p>{{ draftBrandIds.length }} brands selected</p>
+<!-- ===== Manage brands modal ===== -->
+<div class="mb-backdrop" *ngIf="brandsModalOpen" (click)="closeBrandsModal()">
+  <section class="mb-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Manage brands">
+
+    <!-- ── Left column: header + picker + footer ── -->
+    <div class="mb-left">
+
+      <header class="mb-head">
+        <div class="mb-head-left">
+          <h2>Manage brands</h2>
+          <p>Select the brands you want access to</p>
+        </div>
+        <button type="button" class="mb-close" (click)="closeBrandsModal()" aria-label="Close">
+          <span class="msr">close</span>
+        </button>
+      </header>
+
+      <!-- Picker body (scrollable middle) -->
+      <div class="mb-picker">
+        <label class="mb-search">
+          <span class="msr">search</span>
+          <input type="text" [(ngModel)]="modalSearch" placeholder="Search brands…" autocomplete="off" />
+        </label>
+
+        <div class="mb-assign-count">
+          <p>{{ draftBrandIds.length }} / {{ allBrands.length }} Brands Assigned</p>
+        </div>
+
+        <div class="mb-list-head">
+          <button type="button" class="mb-link" (click)="selectAllBrands()">Select all</button>
+          <button type="button" class="mb-link mb-link--red" (click)="clearAllBrands()"
+                  [disabled]="draftBrandIds.length === 0">Clear all</button>
+        </div>
+
+        <div class="mb-grid">
+          <button type="button" class="mb-card" [class.on]="isDraftSelected(b)"
+                  *ngFor="let b of modalBrands" (click)="toggleDraftBrand(b)">
+            <span class="mb-logo" [style.background]="brandColor(b.name)">{{ brandInitials(b.name) }}</span>
+            <span class="mb-card-name">{{ b.name }}</span>
+            <span class="mb-check" [class.on]="isDraftSelected(b)">
+              <span class="msr" *ngIf="isDraftSelected(b)">check</span>
+            </span>
+          </button>
+
+          <p class="mb-empty" *ngIf="!modalBrands.length">
+            <span class="msr">search_off</span>
+            No brands found
+          </p>
+        </div>
       </div>
-      <button type="button" class="modal-close" (click)="brandsModalOpen = false" aria-label="Close">
-        <span class="msr">close</span>
-      </button>
-    </header>
 
-    <label class="modal-search">
-      <span class="msr">search</span>
-      <input type="text" placeholder="Search brands" />
-    </label>
+      <footer class="mb-footer">
+        <div class="mb-footer-actions">
+          <button type="button" class="mb-btn ghost" (click)="closeBrandsModal()">Cancel</button>
+          <button type="button" class="mb-btn primary" (click)="saveBrands()">Save brands</button>
+        </div>
+      </footer>
 
-    <div class="modal-brand-grid">
-      <button type="button" class="brand-select" *ngFor="let b of allBrands"
-              [class.selected]="draftBrandIds.includes(b.id)" (click)="toggleDraftBrand(b)">
-        <img [src]="brandLogo(b.domain)" alt="" />
-        <span>{{ b.name }}</span>
-        <span class="select-mark" [class.on]="draftBrandIds.includes(b.id)">
-          <span class="msr" *ngIf="draftBrandIds.includes(b.id)">check</span>
-        </span>
-      </button>
     </div>
 
-    <footer class="modal-actions">
-      <button type="button" class="btn-ghost" (click)="brandsModalOpen = false">Cancel</button>
-      <button type="button" class="btn-primary" (click)="saveBrands()">Save brands</button>
-    </footer>
+    <!-- ── Right column: full-height info aside ── -->
+    <aside class="mb-aside">
+      <span class="mb-aside-eyebrow"><span class="msr">storefront</span>Brand assignment</span>
+      <h3 class="mb-aside-title">Assign brands to you</h3>
+      <p class="mb-aside-lead">Control which brands you can access. Only assigned brands will appear in your Social Inbox, analytics and reports.</p>
+
+      <div class="mb-aside-fields">
+        <div class="mb-aside-field">
+          <span class="mb-af-ic"><span class="msr">visibility</span></span>
+          <div class="mb-af-tx">
+            <span class="mb-af-name">Brand visibility</span>
+            <span class="mb-af-desc">Only brands assigned to you appear in your inbox and reports — data from unassigned brands is completely hidden from your account.</span>
+          </div>
+        </div>
+        <div class="mb-aside-field">
+          <span class="mb-af-ic"><span class="msr">sync</span></span>
+          <div class="mb-af-tx">
+            <span class="mb-af-name">Takes effect on save</span>
+            <span class="mb-af-desc">Changes apply the next time you log in or refresh your session.</span>
+          </div>
+        </div>
+        <div class="mb-aside-field">
+          <span class="mb-af-ic"><span class="msr">indeterminate_check_box</span></span>
+          <div class="mb-af-tx">
+            <span class="mb-af-name">Unassigning a brand</span>
+            <span class="mb-af-desc">Removes your access to that brand's inbox, reports and channel data.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-aside-safe">
+        <span class="mb-aside-safe-h"><span class="msr">verified_user</span>Good to know</span>
+        <ul>
+          <li><span class="msr">check</span>Nothing changes until you click Save brands.</li>
+          <li><span class="msr">check</span>Use Select all / Clear all to bulk-assign or reset.</li>
+        </ul>
+      </div>
+    </aside>
+
   </section>
 </div>
