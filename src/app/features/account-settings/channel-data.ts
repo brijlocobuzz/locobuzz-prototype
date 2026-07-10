@@ -392,6 +392,8 @@ export interface FacebookPage {
    *  connection). When set, this Page also pulls Instagram content + DMs. */
   igHandle?: string;
   igMessages?: boolean;   // Instagram messages (DMs) are included for this account
+  /** Not selectable (e.g. Gmail folders that can't be collected — Drafts/Trash/Chat). */
+  disabled?: boolean;
 }
 
 export const FACEBOOK_PAGES: FacebookPage[] = [
@@ -401,6 +403,12 @@ export const FACEBOOK_PAGES: FacebookPage[] = [
   { id: 'labs',     name: 'Acme Labs',     followers: '5.6k followers',  initials: 'A', color: '#e37400', igHandle: '@acme.labs' },
   { id: 'india',    name: 'Acme India',    followers: '8.2k followers',  initials: 'A', color: '#e1306c', igHandle: '@acme.india', igMessages: true },
   { id: 'store',    name: 'Acme Store',    followers: '2.7k followers',  initials: 'A', color: '#00bcd4' },
+];
+
+export const LINKEDIN_PAGES: FacebookPage[] = [
+  { id: 'li-official', name: 'Acme Inc.',          followers: '48.2k followers', initials: 'A', color: '#0a66c2' },
+  { id: 'li-careers',  name: 'Acme Careers',        followers: '9.6k followers',  initials: 'A', color: '#0a66c2' },
+  { id: 'li-india',    name: 'Acme India',          followers: '14.1k followers', initials: 'A', color: '#0a66c2' },
 ];
 
 /** An advertising account the user can link (Meta / X / LinkedIn Ads). */
@@ -1240,3 +1248,241 @@ export function searchEcom(q: string): EcomProduct[] {
     return tokens.every(t => hay.includes(t));
   });
 }
+
+/* ===================================================================
+   Google My Business — nested account → locations picker.
+   =================================================================== */
+export interface GmbLocation { id: string; name: string; locality?: string; rating?: string; }
+export interface GmbAccountGroup { id: string; name: string; overCap?: boolean; locations: GmbLocation[]; }
+
+export const GMB_ACCOUNTS: GmbAccountGroup[] = [
+  {
+    id: 'acct-retail', name: 'Acme Retail (Business Profile)',
+    locations: [
+      { id: 'loc-mg', name: 'Acme Store — MG Road', locality: 'MG Road, Bengaluru', rating: '4.6★' },
+      { id: 'loc-indira', name: 'Acme Store — Indiranagar', locality: 'Indiranagar, Bengaluru', rating: '4.4★' },
+      { id: 'loc-white', name: 'Acme Store — Whitefield', locality: 'Whitefield, Bengaluru', rating: '4.7★' },
+    ],
+  },
+  {
+    id: 'acct-cafe', name: 'Acme Cafe (Business Profile)',
+    locations: [
+      { id: 'loc-kor', name: 'Acme Cafe — Koramangala', locality: 'Koramangala, Bengaluru', rating: '4.5★' },
+      { id: 'loc-hsr', name: 'Acme Cafe — HSR Layout', locality: 'HSR Layout, Bengaluru', rating: '4.3★' },
+    ],
+  },
+  {
+    id: 'acct-labs', name: 'Acme Labs (Business Profile)', overCap: true,
+    locations: [
+      { id: 'loc-labs-hq', name: 'Acme Labs — Head Office', locality: 'Electronic City, Bengaluru', rating: '4.2★' },
+    ],
+  },
+];
+
+/* ===================================================================
+   Google Analytics — accounts flattened to web properties.
+   =================================================================== */
+export interface GaProperty { id: string; name: string; account: string; propertyId: string; }
+export const GA_PROPERTIES: GaProperty[] = [
+  { id: 'ga-web', name: 'Acme — Website (GA4)', account: 'Acme Retail Pvt Ltd', propertyId: '349102771' },
+  { id: 'ga-app', name: 'Acme — Mobile App', account: 'Acme Retail Pvt Ltd', propertyId: '349102908' },
+  { id: 'ga-blog', name: 'Acme — Blog', account: 'Acme Retail Pvt Ltd', propertyId: '349103015' },
+  { id: 'ga-store', name: 'Acme Store — Web', account: 'Acme Store Ops', propertyId: '349109933' },
+];
+
+/* ===================================================================
+   Email — mailbox folders/labels offered after OAuth (Gmail blocks
+   Drafts/Trash/Chat; Outlook has no such restriction).
+   =================================================================== */
+export interface EmailFolder { id: string; name: string; count?: string; disabled?: boolean; }
+export function emailFolders(gmail: boolean): EmailFolder[] {
+  return gmail
+    ? [
+        { id: 'inbox', name: 'Inbox', count: '128 unread' },
+        { id: 'sent', name: 'Sent' },
+        { id: 'important', name: 'Important', count: '12 unread' },
+        { id: 'starred', name: 'Starred' },
+        { id: 'draft', name: 'Drafts', disabled: true },
+        { id: 'trash', name: 'Trash', disabled: true },
+        { id: 'chat', name: 'Chat', disabled: true },
+      ]
+    : [
+        { id: 'inbox', name: 'Inbox', count: '94 unread' },
+        { id: 'sentitems', name: 'Sent Items' },
+        { id: 'junk', name: 'Junk Email', count: '6 unread' },
+        { id: 'archive', name: 'Archive' },
+        { id: 'drafts', name: 'Drafts' },
+      ];
+}
+
+/* ===================================================================
+   App Store — apps returned after verifying the Connect API key.
+   =================================================================== */
+export interface AppStoreApp { id: string; name: string; bundleId: string; }
+export const APPSTORE_APPS: AppStoreApp[] = [
+  { id: 'app-main', name: 'Acme — Shop & Track', bundleId: 'com.acme.shop' },
+  { id: 'app-lite', name: 'Acme Lite', bundleId: 'com.acme.shop.lite' },
+  { id: 'app-biz', name: 'Acme for Business', bundleId: 'com.acme.biz' },
+];
+
+/* ===================================================================
+   TikTok / FB Groups — simulated "fetch a preview" results, keyed
+   loosely off whatever the user typed so the demo feels responsive.
+   =================================================================== */
+export interface TiktokPreview { name: string; handle: string; avatarEmoji: string; }
+export function tiktokPreview(handle: string): TiktokPreview {
+  const clean = handle.replace(/^@/, '').replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/, '').split(/[/?]/)[0] || 'brand';
+  return { name: 'Acme — ' + (clean.charAt(0).toUpperCase() + clean.slice(1)), handle: clean, avatarEmoji: '🎵' };
+}
+export interface FbGroupPreview { groupName: string; memberCount: number; isPrivate: boolean; }
+export function fbGroupPreview(url: string): FbGroupPreview {
+  const isPrivate = /private/i.test(url) || Math.random() < 0.15;
+  return { groupName: 'Acme Community & Support', memberCount: 8600 + Math.floor(Math.random() * 4000), isPrivate };
+}
+
+/* ===================================================================
+   Per-field "where do I find / generate this?" help — shown in the
+   right aside when a credential input is focused.
+   =================================================================== */
+export interface FieldHelp { field: string; label: string; icon: string; lead?: string; steps: string[]; note?: string; }
+
+export const FIELD_HELP: Record<string, FieldHelp[]> = {
+  appstore: [
+    {
+      field: 'keyId', label: 'Key ID', icon: 'key',
+      lead: 'A short identifier for your App Store Connect API key.',
+      steps: [
+        'Log in to App Store Connect.',
+        'Select Users and Access, then the API Keys tab.',
+        'Key IDs appear in a column under the Active heading.',
+        'Hover next to a key ID and click "Copy Key ID".',
+      ],
+    },
+    {
+      field: 'issuerId', label: 'Issuer ID', icon: 'badge',
+      lead: 'A single ID shared by all API keys in your account.',
+      steps: [
+        'Log in to App Store Connect.',
+        'Select Users and Access, then the API Keys tab.',
+        'The Issuer ID is shown near the top of the Keys tab.',
+        'Copy the Issuer ID.',
+      ],
+      note: 'You need an Admin account in App Store Connect to manage keys.',
+    },
+    {
+      field: 'privateKey', label: 'Private key (.p8)', icon: 'lock',
+      lead: 'The private half of the API key — paste its full contents.',
+      steps: [
+        'App Store Connect → Users and Access → API Keys.',
+        'Click Generate API Key (or the + button).',
+        'Enter a name, pick a role under Access, then click Generate.',
+        'Click "Download API Key" to download the .p8 file, then paste its contents here.',
+      ],
+      note: 'The private key can be downloaded only once — Apple keeps no copy, so store it safely.',
+    },
+  ],
+  playstore: [
+    {
+      field: 'serviceKey', label: 'Service-account key (.json)', icon: 'upload_file',
+      lead: 'A JSON key that lets Locobuzz read your app’s reviews.',
+      steps: [
+        'Open Google Play Console → Setup → API access.',
+        'Create (or pick) a Google Cloud service account and grant it access.',
+        'Under Service accounts, create a key of type JSON and download it.',
+        'Upload that .json file here.',
+      ],
+      note: 'Keep the key file safe — anyone with it can access your Play data.',
+    },
+    {
+      field: 'packageName', label: 'App package name', icon: 'inventory_2',
+      lead: 'The unique id of your app on Google Play.',
+      steps: [
+        'It’s the app’s Play Store URL after id=, e.g. com.yourcompany.app.',
+        'Or find it in Play Console → your app → Dashboard.',
+      ],
+    },
+    {
+      field: 'friendlyName', label: 'App friendly name', icon: 'badge',
+      steps: ['A display name for this app inside Locobuzz — your choice.'],
+    },
+  ],
+  telegram: [
+    {
+      field: 'token', label: 'Bot token', icon: 'key',
+      lead: 'An HTTP API token that lets Locobuzz operate your bot.',
+      steps: [
+        'Open Telegram and start a chat with @BotFather.',
+        'Send /newbot and follow the prompts (bot name + username).',
+        'BotFather replies with an HTTP API token — copy it here.',
+      ],
+    },
+  ],
+  line: [
+    {
+      field: 'channelId', label: 'Channel ID', icon: 'tag',
+      steps: [
+        'Open the LINE Developers Console and pick your provider.',
+        'Open your Messaging API channel.',
+        'Copy the Channel ID from the Basic settings tab.',
+      ],
+    },
+    {
+      field: 'accessToken', label: 'Channel access token', icon: 'key',
+      steps: [
+        'In your Messaging API channel, open the Messaging API tab.',
+        'Under "Channel access token (long-lived)", click Issue.',
+        'Copy the generated token here.',
+      ],
+    },
+    {
+      field: 'secret', label: 'Channel secret', icon: 'lock',
+      steps: [
+        'Open your Messaging API channel in the LINE Developers Console.',
+        'Copy the Channel secret from the Basic settings tab.',
+      ],
+    },
+  ],
+  sitejabber: [
+    { field: 'email', label: 'Business email', icon: 'mail', steps: ['Use the email you sign in to your Sitejabber business account with.'] },
+    { field: 'password', label: 'Password', icon: 'lock', steps: ['Your Sitejabber business-account password.'], note: 'Stored securely and only used to connect the account.' },
+    { field: 'apiKey', label: 'API key', icon: 'key', steps: ['Open your Sitejabber business dashboard.', 'Go to the API / integrations settings.', 'Copy the API key issued for your business.'] },
+    { field: 'business', label: 'Business name', icon: 'business', steps: ['Enter the business / domain name exactly as it appears on your Sitejabber profile.'] },
+  ],
+};
+
+/** Field help for the manual Email steps — shown as one block per input in the right aside. */
+export const EMAIL_INCOMING_HELP: FieldHelp[] = [
+  {
+    field: 'forwarding', label: 'Forwarding method', icon: 'swap_horiz',
+    lead: 'How we read mail from your server.',
+    steps: [
+      'IMAP — mail stays on the server and folders stay in sync. Recommended.',
+      'POP — mail is downloaded; some servers delete it afterwards.',
+      'MAPI — for Microsoft Exchange servers.',
+    ],
+  },
+  { field: 'inName', label: 'Name', icon: 'badge', steps: ['A label for this mailbox inside Locobuzz — e.g. "Support".'] },
+  { field: 'inEmail', label: 'Email address', icon: 'mail', steps: ['The mailbox we listen to. Every mail landing here becomes a ticket.'] },
+  {
+    field: 'inPassword', label: 'Password', icon: 'lock',
+    steps: ['The mailbox password.', 'Gmail / Outlook with 2FA need an app password, not your normal one.'],
+    note: 'Stored encrypted and only used to connect to your mail server.',
+  },
+  { field: 'inPort', label: 'Port', icon: 'tag', steps: ['IMAP over SSL → 993', 'POP over SSL → 995', 'Leave the default unless your provider says otherwise.'] },
+  { field: 'inServer', label: 'Incoming server', icon: 'dns', steps: ['Gmail → imap.gmail.com', 'Office 365 → outlook.office365.com', 'Otherwise ask your mail admin.'] },
+  { field: 'inSSL', label: 'SSL', icon: 'shield', steps: ['Keep this on — it encrypts the connection to your mail server.'] },
+];
+
+export const EMAIL_OUTGOING_HELP: FieldHelp[] = [
+  { field: 'outName', label: 'Name', icon: 'badge', steps: ['The sender name your customers see on replies.'] },
+  { field: 'outEmail', label: 'Email address', icon: 'mail', steps: ['The address replies are sent from. Usually the same as incoming.'] },
+  { field: 'outPassword', label: 'Password', icon: 'lock', steps: ['The SMTP password — normally the same as the incoming one.'], note: 'With 2FA, use an app password.' },
+  { field: 'outPort', label: 'Port', icon: 'tag', steps: ['STARTTLS → 587 (most common)', 'SSL → 465'] },
+  { field: 'outServer', label: 'Outgoing server', icon: 'dns', steps: ['Gmail → smtp.gmail.com', 'Office 365 → smtp.office365.com'] },
+  { field: 'outSSL', label: 'SSL', icon: 'shield', steps: ['Encrypts replies on the way out. Keep it on.'] },
+  { field: 'outReplyTo', label: 'Reply-to address', icon: 'reply', steps: ['Where customer responses should land, if that differs from the sending address.'], note: 'Optional.' },
+  { field: 'outAlias', label: 'Email alias', icon: 'alternate_email', steps: ['Send as a friendlier address your mailbox is allowed to send from.'], note: 'Optional.' },
+  { field: 'cc', label: 'Cc', icon: 'group', steps: ['Every reply is copied to these addresses, visibly.', 'Press Enter after each address.'], note: 'Optional.' },
+  { field: 'bcc', label: 'Bcc', icon: 'visibility_off', steps: ['Copies every reply silently — useful for an archive mailbox.'], note: 'Optional.' },
+  { field: 'outFooter', label: 'Email footer', icon: 'edit_note', steps: ['Appended to every reply sent from this mailbox.', 'Add your signature, support hours or a disclaimer.'], note: 'Required.' },
+];

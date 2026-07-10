@@ -2,13 +2,23 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  CHANNEL_CATALOG, FACEBOOK_PAGES, BRAND_ICONS, CHANNEL_SPECS, WIZARD_COPY, X_API_VERSIONS,
+  CHANNEL_CATALOG, FACEBOOK_PAGES, LINKEDIN_PAGES, BRAND_ICONS, CHANNEL_SPECS, WIZARD_COPY, X_API_VERSIONS,
   AD_ACCOUNTS, ADS_SUPPORTED_IDS, ECOM_PRODUCTS, searchEcom,
+  GMB_ACCOUNTS, GA_PROPERTIES, APPSTORE_APPS, emailFolders,
+  tiktokPreview, fbGroupPreview, TiktokPreview, FbGroupPreview,
+  FIELD_HELP, EMAIL_INCOMING_HELP, EMAIL_OUTGOING_HELP, FieldHelp,
   CatalogChannel, CatalogGroup, FacebookPage, AdAccount, ChannelSpec, ChannelMode, EcomProduct,
+  GmbAccountGroup, GmbLocation, GaProperty, EmailFolder, AppStoreApp,
 } from '../channel-data';
 
-type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'ads' | 'review';
+type StepKey = 'choose' | 'connection' | 'authenticate' | 'public' | 'pages' | 'ads' | 'incoming' | 'outgoing' | 'settings' | 'review';
 interface Step { key: StepKey; label: string; }
+
+/** Channels whose "authenticate" step is a token/credential form instead of OAuth. */
+type TokenFormKind = 'telegram' | 'line' | 'sitejabber';
+/** Channels that hand off to a dedicated (out-of-wizard) setup instead of connecting here. */
+const DELEGATE_IDS = new Set(['whatsapp', 'voice']);
+const TOKEN_FORM_IDS: Record<string, TokenFormKind> = { telegram: 'telegram', line: 'line', sitejabber: 'sitejabber' };
 
 @Component({
   selector: 'app-add-channel-wizard',
@@ -33,9 +43,17 @@ export class AddChannelWizardComponent implements OnInit {
   }
 
   catalog = CHANNEL_CATALOG;
-  pages = FACEBOOK_PAGES;
   copy = WIZARD_COPY;
   search = '';
+
+  /** Field currently focused — highlights the matching block in the right aside. */
+  activeField: string | null = null;
+  setActive(field: string) { this.activeField = field; }
+  clearActive() { this.activeField = null; }
+  get fieldHelps(): FieldHelp[] {
+    const id = this.selected?.id;
+    return id && FIELD_HELP[id] ? FIELD_HELP[id] : [];
+  }
 
   selected: CatalogChannel | null = null;
   stepIndex = 0;
@@ -88,6 +106,44 @@ export class AddChannelWizardComponent implements OnInit {
   hasSearched = false;
   private searchTimer: any;
   selectedProducts = new Set<string>();
+
+  // ---- token / credential / key-upload channels (Telegram, LINE, Sitejabber, App Store, Play Store) ----
+  telegramToken = '';
+  lineChannelId = ''; lineAccessToken = ''; lineSecret = '';
+  sjEmail = ''; sjPassword = ''; sjApiKey = ''; sjBusiness = '';
+  asKeyId = ''; asIssuerId = ''; asPrivateKey = '';
+  appsFetched = false;
+  selectedApps = new Set<string>();
+  psFile: File | null = null; psFileName = ''; psPackage = ''; psFriendly = '';
+
+  // ---- TikTok / FB Groups public: simulated preview fetch ----
+  ttFetching = false; ttData: TiktokPreview | null = null; ttComments = true; ttReplies = false;
+  fbgFetching = false; fbgData: FbGroupPreview | null = null; fbgComments = true;
+
+  // ---- GMB: nested account → locations tree ----
+  gmbAccounts = GMB_ACCOUNTS;
+  gmbOpen = new Set<string>([GMB_ACCOUNTS[0]?.id]);
+  selectedGmbLocs = new Set<string>();
+  gmbGroupName = '';
+
+  // ---- Google Analytics: accounts flattened to properties ----
+  gaProperties = GA_PROPERTIES;
+
+  // ---- Email: OAuth (folders) or manual (IMAP/SMTP) ----
+  emailMode: 'oauth' | 'manual' | null = null;
+  emailProvider: 'gmail' | 'outlook' | null = null;
+  emailAddress = '';
+  emailFolderList: EmailFolder[] = [];
+  emailPrevTrail = true; emailAutoAck = false; emailAliasReply = false; emailFooter = '';
+  showPw = false;
+  inType: '1' | '2' | '3' = '1';
+  inName = ''; inEmail = ''; inPassword = ''; inPort = 993; inServer = 'imap.gmail.com'; inSSL = true;
+  outName = ''; outEmail = ''; outPassword = ''; outPort = 587; outServer = 'smtp.gmail.com'; outSSL = true;
+  outReplyTo = ''; outAlias = ''; outFooter = '';
+  ccChips: string[] = []; bccChips: string[] = []; ccDraft = ''; bccDraft = '';
+  testingIn = false; testingOut = false;
+  readonly emailIncomingHelp = EMAIL_INCOMING_HELP;
+  readonly emailOutgoingHelp = EMAIL_OUTGOING_HELP;
 
   /** Real brand logo path for the current channel, or null → use Material icon. */
   brandSvg(id: string | undefined): string | null {
@@ -155,12 +211,60 @@ export class AddChannelWizardComponent implements OnInit {
     return sub.slice(b.length).replace(/^\s*·\s*/, '');
   }
 
+  /* ---- token / credential / key-upload channels ----------------------- */
+  get tokenFormKind(): TokenFormKind | null {
+    const id = this.selected?.id;
+    return id ? (TOKEN_FORM_IDS[id] ?? null) : null;
+  }
+  get credFormKind(): 'appstore' | null { return this.selected?.id === 'appstore' ? 'appstore' : null; }
+  get keyFormKind(): 'playstore' | null { return this.selected?.id === 'playstore' ? 'playstore' : null; }
+  get hasCredForm(): boolean { return !!this.tokenFormKind || !!this.credFormKind || !!this.keyFormKind; }
+
+  /** WhatsApp / Voice: hand off to a dedicated setup instead of connecting here. */
+  get isDelegate(): boolean { return !!this.selected && DELEGATE_IDS.has(this.selected.id); }
+  /** Closes the wizard — the real setup continues in its own dedicated step. */
+  openExternalSetup() { this.close(); }
+
+  get isGmbPicker(): boolean { return this.selected?.id === 'gmb'; }
+  get isGaPicker(): boolean { return this.selected?.id === 'ganalytics'; }
+  get isEmailAuth(): boolean { return this.selected?.id === 'email'; }
+  get isEmailManual(): boolean { return this.emailMode === 'manual'; }
+  get isTiktokPublic(): boolean { return this.selected?.id === 'tiktok' && this.activeMode?.key === 'public'; }
+  get isFbGroupPublic(): boolean { return this.selected?.id === 'fbgroups'; }
+
+  /** The picker list for the flat (non-GMB) "pages" step — swaps per channel. */
+  get pages(): FacebookPage[] {
+    switch (this.selected?.id) {
+      case 'facebook':
+      case 'instagram': return FACEBOOK_PAGES;
+      case 'linkedin': return LINKEDIN_PAGES;
+      case 'appstore': return APPSTORE_APPS.map(a => ({
+        id: a.id, name: a.name, followers: a.bundleId, initials: a.name.charAt(0), color: '#0d96f6',
+      }));
+      case 'ganalytics': return GA_PROPERTIES.map(p => ({
+        id: p.id, name: p.name, followers: 'Property ID ' + p.propertyId, initials: p.name.charAt(0), color: '#e37400',
+      }));
+      case 'email': return this.emailFolderList.map(f => ({
+        id: f.id, name: f.name, followers: f.count ?? '', initials: f.name.charAt(0), color: '#ea4335', disabled: f.disabled,
+      }));
+      default: return FACEBOOK_PAGES;
+    }
+  }
+
   /* ---- "Select accounts" wording ------------------------------------- */
-  get pagesNoun(): string { return this.activeMode?.pagesNoun ?? 'pages'; }
+  get pagesNoun(): string {
+    if (this.credFormKind === 'appstore') return 'apps';
+    if (this.isGaPicker) return 'properties';
+    if (this.isEmailAuth) return 'folders';
+    return this.activeMode?.pagesNoun ?? 'pages';
+  }
   get selectHeading(): string {
     const noun = this.pagesNoun === 'Organisation Pages' ? 'Organisation Pages'
       : this.pagesNoun === 'locations' ? 'locations'
-      : this.pagesNoun === 'accounts' ? 'accounts' : 'pages';
+      : this.pagesNoun === 'accounts' ? 'accounts'
+      : this.pagesNoun === 'apps' ? 'apps'
+      : this.pagesNoun === 'properties' ? 'properties'
+      : this.pagesNoun === 'folders' ? 'folders' : 'pages';
     return 'Select ' + noun + ' to connect';
   }
 
@@ -186,7 +290,16 @@ export class AddChannelWizardComponent implements OnInit {
       const arr: Step[] = [choose];
       if (withConnection) arr.push({ key: 'connection', label: 'Account Type' });
       arr.push({ key: 'authenticate', label: 'Authenticate' });
-      if (m.pages) arr.push({ key: 'pages', label: 'Select accounts' });
+      if (this.isEmailAuth) {
+        if (this.emailMode === 'manual') {
+          arr.push({ key: 'incoming', label: 'Incoming' }, { key: 'outgoing', label: 'Outgoing' });
+        } else if (this.emailMode === 'oauth') {
+          arr.push({ key: 'pages', label: 'Select folders' });
+        }
+        if (this.emailMode) arr.push({ key: 'settings', label: 'Advanced settings' });
+      } else if (m.pages || this.credFormKind || this.isGaPicker) {
+        arr.push({ key: 'pages', label: this.isGaPicker ? 'Select properties' : this.credFormKind ? 'Select apps' : 'Select accounts' });
+      }
       if (this.showAdsStep) arr.push({ key: 'ads', label: 'Ads account' });
       arr.push(review);
       return arr;
@@ -221,11 +334,16 @@ export class AddChannelWizardComponent implements OnInit {
 
   pickChannel(c: CatalogChannel) {
     this.selected = c;
-    // reset any path state from a previous selection
+    this.resetPathState();
+  }
+
+  /** Every field that belongs to a specific channel's flow — cleared on pick/re-add. */
+  private resetPathState() {
     this.connectionType = null;
     this.publicHandle = '';
     this.authDone = false;
     this.authLoading = false;
+    this.activeField = null;
     this.selectedPages.clear();
     this.selectedAds.clear();
     this.xState = { v1: { loading: false, done: false }, v2: { loading: false, done: false } };
@@ -234,6 +352,25 @@ export class AddChannelWizardComponent implements OnInit {
     this.csvName = ''; this.csvCols = []; this.csvRows = [];
     this.searchQuery = ''; this.searchResults = []; this.selectedProducts.clear();
     this.searchLoading = false; this.hasSearched = false; clearTimeout(this.searchTimer);
+
+    this.telegramToken = '';
+    this.lineChannelId = ''; this.lineAccessToken = ''; this.lineSecret = '';
+    this.sjEmail = ''; this.sjPassword = ''; this.sjApiKey = ''; this.sjBusiness = '';
+    this.asKeyId = ''; this.asIssuerId = ''; this.asPrivateKey = ''; this.appsFetched = false; this.selectedApps.clear();
+    this.psFile = null; this.psFileName = ''; this.psPackage = ''; this.psFriendly = '';
+
+    this.ttFetching = false; this.ttData = null; this.ttComments = true; this.ttReplies = false;
+    this.fbgFetching = false; this.fbgData = null; this.fbgComments = true;
+
+    this.selectedGmbLocs.clear(); this.gmbOpen = new Set<string>([GMB_ACCOUNTS[0]?.id]); this.gmbGroupName = '';
+
+    this.emailMode = null; this.emailProvider = null; this.emailAddress = ''; this.emailFolderList = [];
+    this.emailPrevTrail = true; this.emailAutoAck = false; this.emailAliasReply = false; this.emailFooter = ''; this.showPw = false;
+    this.inType = '1'; this.inName = ''; this.inEmail = ''; this.inPassword = ''; this.inPort = 993; this.inServer = 'imap.gmail.com'; this.inSSL = true;
+    this.outName = ''; this.outEmail = ''; this.outPassword = ''; this.outPort = 587; this.outServer = 'smtp.gmail.com'; this.outSSL = true;
+    this.outReplyTo = ''; this.outAlias = ''; this.outFooter = '';
+    this.ccChips = []; this.bccChips = []; this.ccDraft = ''; this.bccDraft = '';
+    this.testingIn = false; this.testingOut = false;
   }
 
   /* ---- E-Commerce: add product sources by URL / CSV / search ---- */
@@ -374,15 +511,120 @@ export class AddChannelWizardComponent implements OnInit {
 
   // ---- pages step --------------------------------------------------------
   togglePage(id: string) {
+    if (this.pages.find(p => p.id === id)?.disabled) return;
     this.selectedPages.has(id) ? this.selectedPages.delete(id) : this.selectedPages.add(id);
   }
-  get allPagesSelected(): boolean { return this.selectedPages.size === this.pages.length; }
+  get allPagesSelected(): boolean {
+    const selectable = this.pages.filter(p => !p.disabled);
+    return selectable.length > 0 && selectable.every(p => this.selectedPages.has(p.id));
+  }
   toggleAllPages() {
     if (this.allPagesSelected) this.selectedPages.clear();
-    else this.pages.forEach(p => this.selectedPages.add(p.id));
+    else this.pages.forEach(p => { if (!p.disabled) this.selectedPages.add(p.id); });
   }
   get selectedPageList(): FacebookPage[] {
     return this.pages.filter(p => this.selectedPages.has(p.id));
+  }
+
+  // ---- token / credential / key-upload channels --------------------------
+  onPsFile(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.psFile = file;
+    this.psFileName = file.name;
+  }
+  /** App Store: verify the API key, then fetch the app list (before the picker step). */
+  verifyAppStoreKey() {
+    if (this.authLoading) return;
+    this.authLoading = true;
+    setTimeout(() => { this.authLoading = false; this.appsFetched = true; }, 1600);
+  }
+
+  // ---- TikTok / FB Groups public: simulated preview fetch ---------------
+  fetchTiktok() {
+    if (this.ttFetching || !this.publicHandle.trim()) return;
+    this.ttFetching = true;
+    setTimeout(() => { this.ttFetching = false; this.ttData = tiktokPreview(this.publicHandle); }, 1300);
+  }
+  fetchFbGroup() {
+    if (this.fbgFetching || !this.publicHandle.trim()) return;
+    this.fbgFetching = true;
+    setTimeout(() => { this.fbgFetching = false; this.fbgData = fbGroupPreview(this.publicHandle); }, 1300);
+  }
+
+  // ---- GMB: nested account → locations tree ------------------------------
+  gmbToggleOpen(id: string) { this.gmbOpen.has(id) ? this.gmbOpen.delete(id) : this.gmbOpen.add(id); }
+  gmbIsOpen(id: string): boolean { return this.gmbOpen.has(id); }
+  gmbAccountCount(acct: GmbAccountGroup): number {
+    return acct.locations.filter(l => this.selectedGmbLocs.has(l.id)).length;
+  }
+  gmbAccountChecked(acct: GmbAccountGroup): boolean {
+    return acct.locations.length > 0 && this.gmbAccountCount(acct) === acct.locations.length;
+  }
+  gmbAccountPartial(acct: GmbAccountGroup): boolean {
+    const n = this.gmbAccountCount(acct);
+    return n > 0 && n < acct.locations.length;
+  }
+  gmbToggleAccount(acct: GmbAccountGroup) {
+    const allOn = this.gmbAccountChecked(acct);
+    acct.locations.forEach(l => allOn ? this.selectedGmbLocs.delete(l.id) : this.selectedGmbLocs.add(l.id));
+  }
+  gmbLocChecked(loc: GmbLocation): boolean { return this.selectedGmbLocs.has(loc.id); }
+  gmbToggleLoc(loc: GmbLocation) {
+    this.selectedGmbLocs.has(loc.id) ? this.selectedGmbLocs.delete(loc.id) : this.selectedGmbLocs.add(loc.id);
+  }
+  get selectedGmbLocList(): GmbLocation[] {
+    return this.gmbAccounts.flatMap(a => a.locations).filter(l => this.selectedGmbLocs.has(l.id));
+  }
+
+  // ---- Email: OAuth (folders) or manual (IMAP/SMTP) ----------------------
+  startEmailOAuth(gmail: boolean) {
+    if (this.authLoading) return;
+    this.emailProvider = gmail ? 'gmail' : 'outlook';
+    this.authLoading = true;
+    setTimeout(() => {
+      this.authLoading = false;
+      this.authDone = true;
+      this.emailMode = 'oauth';
+      this.emailAddress = gmail ? 'support@acme.com' : 'care@acme.com';
+      this.emailFolderList = emailFolders(gmail);
+      this.selectedPages.clear();
+      this.selectedPages.add('inbox');
+    }, 1800);
+  }
+  chooseEmailManual() {
+    this.emailMode = 'manual';
+    this.next();
+  }
+  onIncomingTypeChange() {
+    if (this.inType === '1') { this.inPort = 993; this.inServer = 'imap.gmail.com'; }
+    else if (this.inType === '2') { this.inPort = 995; this.inServer = 'pop.gmail.com'; }
+    else { this.inPort = 0; this.inServer = 'outlook.office365.com'; }
+  }
+  testIncoming() {
+    if (this.testingIn) return;
+    this.testingIn = true;
+    setTimeout(() => { this.testingIn = false; }, 1400);
+  }
+  testOutgoing(_mode: string) {
+    if (this.testingOut) return;
+    this.testingOut = true;
+    setTimeout(() => { this.testingOut = false; }, 1400);
+  }
+  addChip(kind: 'cc' | 'bcc') {
+    const draft = kind === 'cc' ? this.ccDraft : this.bccDraft;
+    const v = draft.trim();
+    if (!v) return;
+    const list = kind === 'cc' ? this.ccChips : this.bccChips;
+    if (!list.includes(v)) list.push(v);
+    if (kind === 'cc') this.ccDraft = ''; else this.bccDraft = '';
+  }
+  removeChip(kind: 'cc' | 'bcc', i: number) {
+    (kind === 'cc' ? this.ccChips : this.bccChips).splice(i, 1);
+  }
+  personalizeFooter(token: string) {
+    this.emailFooter = (this.emailFooter ? this.emailFooter + ' ' : '') + token;
   }
 
   // ---- ads accounts step -------------------------------------------------
@@ -405,9 +647,20 @@ export class AddChannelWizardComponent implements OnInit {
     switch (this.current) {
       case 'choose':       return !!this.selected;
       case 'connection':   return !!this.connectionType;
-      case 'authenticate': return this.isXVersionAuth ? this.xConnectedCount === 2 : this.authDone;
+      case 'authenticate':
+        if (this.isDelegate) return false;   // the card's own button closes the wizard
+        if (this.tokenFormKind === 'telegram') return this.telegramToken.trim().length > 0;
+        if (this.tokenFormKind === 'line') return this.lineChannelId.trim().length > 0 && this.lineAccessToken.trim().length > 0 && this.lineSecret.trim().length > 0;
+        if (this.tokenFormKind === 'sitejabber') return this.sjEmail.trim().length > 0 && this.sjPassword.trim().length > 0 && this.sjApiKey.trim().length > 0 && this.sjBusiness.trim().length > 0;
+        if (this.credFormKind === 'appstore') return !this.authLoading && this.asKeyId.trim().length > 0 && this.asIssuerId.trim().length > 0 && this.asPrivateKey.trim().length > 0;
+        if (this.keyFormKind === 'playstore') return !!this.psFile && this.psPackage.trim().length > 0 && this.psFriendly.trim().length > 0;
+        if (this.isEmailAuth) return this.emailMode === 'manual' ? true : this.emailMode === 'oauth' ? this.authDone : false;
+        return this.isXVersionAuth ? this.xConnectedCount === 2 : this.authDone;
       case 'public':       return this.isEcommerce ? this.ecomTotal > 0 : this.publicHandle.trim().length > 0;
-      case 'pages':        return this.selectedPages.size > 0;
+      case 'pages':         return this.isGmbPicker ? this.selectedGmbLocs.size > 0 : this.selectedPages.size > 0;
+      case 'incoming':      return this.inName.trim().length > 0 && this.inEmail.trim().length > 0 && this.inPassword.trim().length > 0 && this.inServer.trim().length > 0;
+      case 'outgoing':      return this.outName.trim().length > 0 && this.outEmail.trim().length > 0 && this.outPassword.trim().length > 0 && this.outServer.trim().length > 0 && this.outFooter.trim().length > 0;
+      case 'settings':      return true;
       case 'ads':          return true;   // optional — skippable
       case 'review':       return true;
       default:             return false;
@@ -417,7 +670,15 @@ export class AddChannelWizardComponent implements OnInit {
   get onReview(): boolean { return this.current === 'review'; }
 
   next() {
+    if (this.current === 'authenticate' && this.credFormKind === 'appstore' && !this.appsFetched) {
+      this.verifyAppStoreKey();
+      return;
+    }
     if (!this.canContinue) return;
+    if (this.current === 'incoming' && !this.outName) {
+      this.outName = this.inName; this.outEmail = this.inEmail; this.outPassword = this.inPassword;
+      this.outServer = this.inServer.replace(/^imap\.|^pop\./, 'smtp.'); this.outPort = 587; this.outSSL = true;
+    }
     if (this.onReview) { this.finish(); return; }
     this.stepIndex = Math.min(this.stepIndex + 1, this.totalSteps - 1);
   }
@@ -443,18 +704,7 @@ export class AddChannelWizardComponent implements OnInit {
     this.selected = null;
     this.stepIndex = 0;
     this.search = '';
-    this.connectionType = null;
-    this.publicHandle = '';
-    this.authDone = false;
-    this.authLoading = false;
-    this.selectedPages.clear();
-    this.selectedAds.clear();
-    this.xState = { v1: { loading: false, done: false }, v2: { loading: false, done: false } };
-    this.ecomTab = 'url';
-    this.urlDraft = ''; this.urlList = []; this.editIndex = -1; this.editDraft = '';
-    this.csvName = ''; this.csvCols = []; this.csvRows = [];
-    this.searchQuery = ''; this.searchResults = []; this.selectedProducts.clear();
-    this.searchLoading = false; this.hasSearched = false; clearTimeout(this.searchTimer);
+    this.resetPathState();
   }
 
   /** Close the popover from the success screen. */
@@ -487,11 +737,28 @@ export class AddChannelWizardComponent implements OnInit {
       const n = this.ecomTotal;
       return n + ' product' + (n === 1 ? '' : 's');
     }
-    if (this.activeMode?.pages && this.selectedPageList.length) {
-      const noun = this.pagesNoun === 'locations' ? 'location'
-        : this.pagesNoun === 'Organisation Pages' ? 'Page' : 'account';
-      return this.selectedPageList.length + ' ' + noun + (this.selectedPageList.length > 1 ? 's' : '');
+    if (this.isGmbPicker && this.selectedGmbLocList.length) {
+      const n = this.selectedGmbLocList.length;
+      return n + ' location' + (n === 1 ? '' : 's');
     }
+    if (this.isEmailAuth) {
+      if (this.emailMode === 'oauth' && this.emailAddress) return this.emailAddress;
+      if (this.emailMode === 'manual' && this.inEmail) return this.inEmail;
+    }
+    if ((this.activeMode?.pages || this.credFormKind || this.isGaPicker) && this.selectedPageList.length) {
+      const noun = this.pagesNoun === 'locations' ? 'location'
+        : this.pagesNoun === 'Organisation Pages' ? 'Page'
+        : this.pagesNoun === 'apps' ? 'app'
+        : this.pagesNoun === 'properties' ? 'property'
+        : this.pagesNoun === 'folders' ? 'folder' : 'account';
+      const n = this.selectedPageList.length;
+      const plural = noun === 'property' ? 'properties' : noun + 's';
+      return n + ' ' + (n > 1 ? plural : noun);
+    }
+    if (this.tokenFormKind === 'telegram' && this.telegramToken.trim()) return '@yourbot';
+    if (this.tokenFormKind === 'line' && this.lineChannelId.trim()) return 'Channel ' + this.lineChannelId.trim();
+    if (this.tokenFormKind === 'sitejabber' && this.sjBusiness.trim()) return this.sjBusiness.trim();
+    if (this.keyFormKind === 'playstore' && this.psPackage.trim()) return this.psPackage.trim();
     if (this.publicHandle.trim()) return this.publicHandle.trim();
     return this.activeMode?.review.account ?? '—';
   }

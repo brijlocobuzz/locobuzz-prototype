@@ -105,7 +105,7 @@
       <div class="wz-body" [ngSwitch]="current">
 
         <!-- validation / planned banner (after a channel is chosen) -->
-        <div class="wz-flag" *ngIf="spec?.flag && current !== 'choose'"
+        <div class="wz-flag" *ngIf="spec?.flag && current !== 'choose' && !isDelegate"
              [class.planned]="spec?.flag === 'planned'">
           <span class="msr">{{ spec?.flag === 'planned' ? 'schedule' : 'release_alert' }}</span>
           <span>{{ spec?.flagText }}</span>
@@ -193,6 +193,168 @@
         <!-- 3a · authenticate (OAuth / key) -->
         <section *ngSwitchCase="'authenticate'" class="wz-auth">
 
+        <!-- delegated channels (WhatsApp / Voice): hand off to a dedicated setup -->
+        <div class="wz-delegate" *ngIf="isDelegate">
+          <span class="wz-delegate-ic" [style.background]="tint(selected?.color)" [style.color]="selected?.color">
+            <span class="msr">{{ selected?.icon }}</span>
+          </span>
+          <h3 class="wz-q">{{ selected?.label }} has a guided setup</h3>
+          <p class="wz-sub">{{ selected?.label }} connects through a dedicated setup (provider, credentials, and configuration). We'll open it next — it saves straight into your channel list.</p>
+          <button class="wz-authbtn" (click)="openExternalSetup()"><span class="msr">open_in_new</span>Open {{ selected?.label }} setup</button>
+        </div>
+
+        <ng-container *ngIf="!isDelegate">
+
+        <!-- token-form channels (Telegram / LINE / Sitejabber) -->
+        <ng-container *ngIf="tokenFormKind; else credOrNormal">
+          <div class="wz-tokenform">
+            <ng-container *ngIf="tokenFormKind === 'telegram'">
+              <div class="wz-field">
+                <label>Bot token</label>
+                <div class="wz-url"><span class="msr">key</span><input type="text" placeholder="123456789:ABCdef-gHIjklMNOpqrstUVwxyz" [(ngModel)]="telegramToken" (focus)="setActive('token')" (blur)="clearActive()" /></div>
+                <span class="wz-hint">Create a bot with <code>&#64;BotFather</code> on Telegram, then paste the HTTP API token it gives you.</span>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="tokenFormKind === 'line'">
+              <div class="wz-field">
+                <label>Channel ID</label>
+                <div class="wz-url"><span class="msr">tag</span><input type="text" placeholder="1234567890" [(ngModel)]="lineChannelId" (focus)="setActive('channelId')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Channel access token</label>
+                <div class="wz-url"><span class="msr">key</span><input type="text" placeholder="Long-lived channel access token" [(ngModel)]="lineAccessToken" (focus)="setActive('accessToken')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Channel secret</label>
+                <div class="wz-url"><span class="msr">lock</span><input type="text" placeholder="Channel secret" [(ngModel)]="lineSecret" (focus)="setActive('secret')" (blur)="clearActive()" /></div>
+                <span class="wz-hint">Find these in the LINE Developers console → your Messaging API channel.</span>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="tokenFormKind === 'sitejabber'">
+              <div class="wz-field">
+                <label>Business email</label>
+                <div class="wz-url"><span class="msr">mail</span><input type="email" placeholder="you@business.com" [(ngModel)]="sjEmail" (focus)="setActive('email')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Password</label>
+                <div class="wz-url"><span class="msr">lock</span><input type="password" placeholder="Sitejabber account password" [(ngModel)]="sjPassword" (focus)="setActive('password')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>API key</label>
+                <div class="wz-url"><span class="msr">key</span><input type="text" placeholder="Sitejabber API key" [(ngModel)]="sjApiKey" (focus)="setActive('apiKey')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Business name</label>
+                <div class="wz-url"><span class="msr">business</span><input type="text" placeholder="Your business / domain name" [(ngModel)]="sjBusiness" (focus)="setActive('business')" (blur)="clearActive()" /></div>
+                <span class="wz-hint">Enter your Sitejabber business-profile credentials and API key.</span>
+              </div>
+            </ng-container>
+          </div>
+        </ng-container>
+
+        <!-- App Store owned: API-key credentials, then an app picker -->
+        <ng-template #credOrNormal>
+          <ng-container *ngIf="credFormKind === 'appstore'; else keyOrNormal">
+            <div class="wz-tokenform">
+              <div class="wz-field">
+                <label>Key ID</label>
+                <div class="wz-url"><span class="msr">key</span><input type="text" placeholder="App Store Connect API Key ID" [(ngModel)]="asKeyId" (focus)="setActive('keyId')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Issuer ID</label>
+                <div class="wz-url"><span class="msr">badge</span><input type="text" placeholder="Issuer ID (Users and Access → Keys)" [(ngModel)]="asIssuerId" (focus)="setActive('issuerId')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>Private key (.p8 contents)</label>
+                <div class="wz-url ta"><span class="msr">lock</span><textarea rows="4" placeholder="-----BEGIN PRIVATE KEY-----&#10;…&#10;-----END PRIVATE KEY-----" [(ngModel)]="asPrivateKey" (focus)="setActive('privateKey')" (blur)="clearActive()"></textarea></div>
+                <span class="wz-hint">From App Store Connect → Users and Access → Keys. We verify the key and list your apps next.</span>
+              </div>
+              <div class="wz-authbtn-loading dark" *ngIf="authLoading"><span class="wz-spinner dark"></span>Verifying key &amp; loading your apps…</div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <!-- Play Store owned: upload service-account key + app details -->
+        <ng-template #keyOrNormal>
+          <ng-container *ngIf="keyFormKind === 'playstore'; else normalAuth">
+            <div class="wz-tokenform">
+              <div class="wz-field">
+                <label>Service-account key (.json)</label>
+                <label class="wz-file" [class.has]="psFileName">
+                  <span class="msr">{{ psFileName ? 'description' : 'upload_file' }}</span>
+                  <span class="wz-file-tx">{{ psFileName || 'Choose your Google Play service-account JSON key' }}</span>
+                  <span class="wz-file-cta">{{ psFileName ? 'Replace' : 'Browse' }}</span>
+                  <input type="file" accept="application/json" (change)="onPsFile($event)" (focus)="setActive('serviceKey')" (blur)="clearActive()" hidden />
+                </label>
+              </div>
+              <div class="wz-field">
+                <label>App package name</label>
+                <div class="wz-url"><span class="msr">inventory_2</span><input type="text" placeholder="com.yourcompany.app" [(ngModel)]="psPackage" (focus)="setActive('packageName')" (blur)="clearActive()" /></div>
+              </div>
+              <div class="wz-field">
+                <label>App friendly name</label>
+                <div class="wz-url"><span class="msr">badge</span><input type="text" placeholder="The name this app shows as" [(ngModel)]="psFriendly" (focus)="setActive('friendlyName')" (blur)="clearActive()" /></div>
+                <span class="wz-hint">Create the key in Google Play Console → Setup → API access.</span>
+              </div>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <!-- Email: how do you want to configure it? -->
+        <ng-container *ngIf="isEmailAuth && !authDone">
+          <div class="wz-emailhead">
+            <h3 class="wz-q">How do you want to configure Email?</h3>
+            <p class="wz-sub">Choose the mailbox type you want Locobuzz to listen to user queries on.</p>
+          </div>
+          <div class="wz-emailgrid">
+            <div class="wz-emailcard" [class.busy]="authLoading && emailProvider === 'gmail'">
+              <span class="wz-emailcard-ic google"><span class="msr">mail</span></span>
+              <span class="wz-emailcard-name">Google Exchange</span>
+              <span class="wz-emailcard-sub">Sign in with Google — Gmail / Workspace.</span>
+              <ul class="wz-bullets">
+                <li><span class="msr">check</span>Secure OAuth — no password stored</li>
+                <li><span class="msr">check</span>Pick which labels to collect</li>
+                <li><span class="msr">check</span>Reply from your unified inbox</li>
+              </ul>
+              <button class="wz-authbtn" [disabled]="authLoading" (click)="startEmailOAuth(true)">
+                <span *ngIf="!(authLoading && emailProvider === 'gmail')">Connect Google</span>
+                <span *ngIf="authLoading && emailProvider === 'gmail'" class="wz-authbtn-loading"><span class="wz-spinner"></span>Connecting…</span>
+              </button>
+            </div>
+
+            <div class="wz-emailcard" [class.busy]="authLoading && emailProvider === 'outlook'">
+              <span class="wz-emailcard-ic office"><span class="msr">mail</span></span>
+              <span class="wz-emailcard-name">Office 365</span>
+              <span class="wz-emailcard-sub">Sign in with Microsoft — Outlook / Exchange.</span>
+              <ul class="wz-bullets">
+                <li><span class="msr">check</span>Secure OAuth — no password stored</li>
+                <li><span class="msr">check</span>Pick which folders to collect</li>
+                <li><span class="msr">check</span>Reply from your unified inbox</li>
+              </ul>
+              <button class="wz-authbtn" [disabled]="authLoading" (click)="startEmailOAuth(false)">
+                <span *ngIf="!(authLoading && emailProvider === 'outlook')">Connect Microsoft</span>
+                <span *ngIf="authLoading && emailProvider === 'outlook'" class="wz-authbtn-loading"><span class="wz-spinner"></span>Connecting…</span>
+              </button>
+            </div>
+
+            <div class="wz-emailcard">
+              <span class="wz-emailcard-ic adv"><span class="msr">tune</span></span>
+              <span class="wz-emailcard-name">Advance Email Settings</span>
+              <span class="wz-emailcard-sub">Any mailbox via IMAP / POP + SMTP.</span>
+              <ul class="wz-bullets">
+                <li><span class="msr">check</span>Works with any provider</li>
+                <li><span class="msr">check</span>Test the connection before saving</li>
+              </ul>
+              <ul class="wz-bullets dont">
+                <li><span class="msr">remove</span>Needs server, port &amp; password</li>
+              </ul>
+              <button class="wz-authbtn ghost" [disabled]="authLoading" (click)="chooseEmailManual()">
+                <span class="msr">arrow_forward</span>Configure manually
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- X (Twitter) owned: connect API v1.1 and/or v2 independently -->
         <ng-container *ngIf="isXVersionAuth; else normalAuth">
           <div class="wz-xhead">
@@ -238,7 +400,7 @@
         <!-- default single OAuth / key auth -->
         <ng-template #normalAuth>
           <!-- connecting card -->
-          <div class="wz-conn-card" [class.ok]="authDone">
+          <div class="wz-conn-card" [class.ok]="authDone" *ngIf="!hasCredForm && (!isEmailAuth || authDone)">
             <span class="wz-conn-av" [style.background]="selected?.color">
               <svg *ngIf="brandSvg(selected?.id) as d; else authGlyph" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
                 <path [attr.d]="d"></path>
@@ -267,7 +429,7 @@
           </div> -->
 
           <!-- access list -->
-          <div class="wz-access" *ngIf="activeMode as m">
+          <div class="wz-access" *ngIf="!hasCredForm && (!isEmailAuth || authDone) && activeMode as m">
             <h4>{{ m.accessHeading || "What we'll request access to" }}</h4>
             <ul *ngIf="m.access?.length">
               <li *ngFor="let a of m.access"><span class="msr">check</span>{{ a }}</li>
@@ -277,14 +439,20 @@
             </div>
           </div>
 
-          <!-- big auth button -->
-          <button class="wz-authbtn" [class.ok]="authDone" [disabled]="authLoading || authDone"
+          <!-- Email: connected confirmation (replaces the generic button) -->
+          <button class="wz-authbtn ok" *ngIf="isEmailAuth && authDone" disabled>
+            <span class="wz-authbtn-ok"><span class="msr">check</span>Mailbox connected<ng-container *ngIf="emailAddress"> · {{ emailAddress }}</ng-container></span>
+          </button>
+
+          <!-- big auth button (single-OAuth channels) -->
+          <button class="wz-authbtn" *ngIf="!isEmailAuth && !hasCredForm" [class.ok]="authDone" [disabled]="authLoading || authDone"
                   (click)="startAuth()">
             <span *ngIf="!authDone && !authLoading">{{ authButtonLabel }}</span>
             <span *ngIf="authLoading" class="wz-authbtn-loading"><span class="wz-spinner"></span>Authenticating…</span>
             <span *ngIf="authDone" class="wz-authbtn-ok"><span class="msr">check</span>Authenticated</span>
           </button>
         </ng-template>
+        </ng-container>
         </section>
 
         <!-- 3b · public source -->
@@ -325,6 +493,66 @@
               </div>
               <span class="wz-hint">Ex. <code>{{ f.placeholder }}</code></span>
             </div>
+
+            <!-- TikTok: fetch a preview, then pick what to collect -->
+            <ng-container *ngIf="isTiktokPublic">
+              <button class="wz-tt-fetch" type="button" [disabled]="ttFetching || !publicHandle.trim()" (click)="fetchTiktok()">
+                <span class="wz-spinner dark" *ngIf="ttFetching"></span>
+                <span class="msr" *ngIf="!ttFetching">{{ ttData ? 'refresh' : 'search' }}</span>
+                {{ ttFetching ? 'Fetching account…' : (ttData ? 'Fetch again' : 'Fetch account') }}
+              </button>
+
+              <div class="wz-tt-card" *ngIf="ttData">
+                <span class="wz-tt-av ph">{{ ttData.avatarEmoji }}</span>
+                <div class="wz-tt-who">
+                  <span class="wz-tt-name">{{ ttData.name }}</span>
+                  <span class="wz-tt-handle">&#64;{{ ttData.handle }}</span>
+                </div>
+                <span class="wz-tt-ok"><span class="msr">check_circle</span>Found</span>
+              </div>
+
+              <div class="wz-tt-opts" *ngIf="ttData">
+                <button class="wz-tt-opt" type="button" (click)="ttComments = !ttComments">
+                  <span class="wz-check" [class.on]="ttComments"><span class="msr" *ngIf="ttComments">check</span></span>
+                  <span class="wz-tt-opt-tx"><b>Collect public comments</b><span>Bring in comments on this account's videos.</span></span>
+                </button>
+                <button class="wz-tt-opt" type="button" (click)="ttReplies = !ttReplies">
+                  <span class="wz-check" [class.on]="ttReplies"><span class="msr" *ngIf="ttReplies">check</span></span>
+                  <span class="wz-tt-opt-tx"><b>Fetch comment replies</b><span>Also collect replies under each comment.</span></span>
+                </button>
+              </div>
+            </ng-container>
+
+            <!-- FB Groups: fetch a public group preview, then pick what to collect -->
+            <ng-container *ngIf="isFbGroupPublic">
+              <button class="wz-tt-fetch" type="button" [disabled]="fbgFetching || !publicHandle.trim()" (click)="fetchFbGroup()">
+                <span class="wz-spinner dark" *ngIf="fbgFetching"></span>
+                <span class="msr" *ngIf="!fbgFetching">{{ fbgData ? 'refresh' : 'search' }}</span>
+                {{ fbgFetching ? 'Fetching group…' : (fbgData ? 'Fetch again' : 'Fetch group') }}
+              </button>
+
+              <div class="wz-tt-card" *ngIf="fbgData">
+                <span class="wz-tt-av sq ph"><span class="msr">groups</span></span>
+                <div class="wz-tt-who">
+                  <span class="wz-tt-name">{{ fbgData.groupName }}</span>
+                  <span class="wz-tt-handle">{{ fbgData.memberCount | number }} members</span>
+                </div>
+                <span class="wz-tt-ok" *ngIf="!fbgData.isPrivate"><span class="msr">check_circle</span>Public</span>
+                <span class="wz-tt-ok priv" *ngIf="fbgData.isPrivate"><span class="msr">lock</span>Private</span>
+              </div>
+
+              <div class="wz-guide warn" *ngIf="fbgData?.isPrivate">
+                <span class="wz-guide-ic"><span class="msr">info</span></span>
+                <div class="wz-guide-body"><b>This group is private</b><p>Only public groups can be tracked — paste a public group URL.</p></div>
+              </div>
+
+              <div class="wz-tt-opts" *ngIf="fbgData && !fbgData.isPrivate">
+                <button class="wz-tt-opt" type="button" (click)="fbgComments = !fbgComments">
+                  <span class="wz-check" [class.on]="fbgComments"><span class="msr" *ngIf="fbgComments">check</span></span>
+                  <span class="wz-tt-opt-tx"><b>Collect comments</b><span>Posts are always collected — add comments too.</span></span>
+                </button>
+              </div>
+            </ng-container>
 
             <!-- how-to-find-it guide -->
             <div class="wz-guide" *ngIf="activeMode?.field as f">
@@ -500,7 +728,7 @@
           </div>
 
           <!-- selection summary bar -->
-          <div class="wz-pages-bar">
+          <div class="wz-pages-bar" *ngIf="!isGmbPicker">
             <span class="wz-pages-count">
               <span class="msr">{{ selectedPages.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
               <b>{{ selectedPages.size }}</b>&nbsp;of {{ pages.length }} {{ pagesNoun }} selected
@@ -510,11 +738,53 @@
               {{ allPagesSelected ? 'Clear all' : 'Select all' }}
             </button>
           </div>
+          <div class="wz-pages-bar" *ngIf="isGmbPicker">
+            <span class="wz-pages-count">
+              <span class="msr">{{ selectedGmbLocs.size ? 'check_circle' : 'radio_button_unchecked' }}</span>
+              <b>{{ selectedGmbLocs.size }}</b>&nbsp;locations selected across {{ gmbAccounts.length }} accounts
+            </span>
+          </div>
+
+          <!-- GMB: account (group) → its locations, nested -->
+          <div class="wz-gmb" *ngIf="isGmbPicker">
+            <div class="wz-gmb-acct" *ngFor="let acct of gmbAccounts" [class.open]="gmbIsOpen(acct.id)">
+              <div class="wz-gmb-head">
+                <span class="wz-check grp" [class.on]="gmbAccountChecked(acct)" [class.part]="gmbAccountPartial(acct)"
+                      (click)="gmbToggleAccount(acct)" role="checkbox" [attr.aria-checked]="gmbAccountChecked(acct)">
+                  <span class="msr" *ngIf="gmbAccountChecked(acct)">check</span>
+                  <span class="msr" *ngIf="gmbAccountPartial(acct)">remove</span>
+                </span>
+                <button class="wz-gmb-headbtn" type="button" (click)="gmbToggleOpen(acct.id)">
+                  <span class="wz-gmb-av"><span class="msr">store</span></span>
+                  <span class="wz-gmb-meta">
+                    <span class="wz-gmb-title" [title]="acct.name">{{ acct.name }}</span>
+                    <span class="wz-gmb-sub">{{ gmbAccountCount(acct) }} of {{ acct.locations.length }} locations selected</span>
+                  </span>
+                  <span class="msr wz-gmb-chev">expand_more</span>
+                </button>
+              </div>
+              <div class="wz-gmb-locs" *ngIf="gmbIsOpen(acct.id)">
+                <p class="wz-gmb-note warn" *ngIf="acct.overCap"><span class="msr">warning</span>This account has more than 100 locations.</p>
+                <button class="wz-gmb-loc" type="button" *ngFor="let loc of acct.locations"
+                        [class.sel]="gmbLocChecked(loc)" (click)="gmbToggleLoc(loc)">
+                  <span class="wz-check" [class.on]="gmbLocChecked(loc)">
+                    <span class="msr" *ngIf="gmbLocChecked(loc)">check</span>
+                  </span>
+                  <span class="wz-gmb-pin"><span class="msr">place</span></span>
+                  <span class="wz-gmb-locwho">
+                    <span class="wz-gmb-locname">{{ loc.name }}</span>
+                    <span class="wz-gmb-locsub" *ngIf="loc.locality">{{ loc.locality }}<ng-container *ngIf="loc.rating"> · {{ loc.rating }}</ng-container></span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- page cards -->
-          <div class="wz-page-grid">
+          <div class="wz-page-grid" *ngIf="!isGmbPicker">
             <button class="wz-pagecard" *ngFor="let p of pages"
-                    [class.sel]="selectedPages.has(p.id)" (click)="togglePage(p.id)"
+                    [class.sel]="selectedPages.has(p.id)" [class.disabled]="p.disabled"
+                    [disabled]="p.disabled" (click)="togglePage(p.id)"
                     [style.--ch]="selected?.color">
               <span class="wz-check" [class.on]="selectedPages.has(p.id)">
                 <span class="msr" *ngIf="selectedPages.has(p.id)">check</span>
@@ -532,13 +802,205 @@
               </span>
               <span class="wz-page-who">
                 <span class="wz-page-name">{{ p.name }}</span>
-                <span class="wz-page-sub"><span class="msr">group</span>{{ p.followers }}</span>
+                <span class="wz-page-sub" *ngIf="p.followers"><span class="msr">group</span>{{ p.followers }}</span>
                 <span class="wz-page-ig" *ngIf="p.igHandle && selected?.id === 'facebook'">
                   <span class="wz-igtag"><svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="brandSvg('instagram')"></path></svg>{{ p.igHandle }}</span>
                   <span class="wz-igmsg" *ngIf="p.igMessages"><span class="msr">chat</span>Messages</span>
                 </span>
               </span>
             </button>
+          </div>
+        </section>
+
+        <!-- 3d · Email (manual) — Incoming server -->
+        <section *ngSwitchCase="'incoming'" class="wz-emailset">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">Incoming email</h3>
+            <p class="wz-sub left">The mailbox we listen to. We'll test the connection before moving on.</p>
+          </div>
+
+          <div class="wz-seg" (mouseenter)="setActive('forwarding')" (mouseleave)="clearActive()">
+            <button type="button" [class.on]="inType === '1'" (click)="inType = '1'; onIncomingTypeChange()">IMAP</button>
+            <button type="button" [class.on]="inType === '2'" (click)="inType = '2'; onIncomingTypeChange()">POP</button>
+            <button type="button" [class.on]="inType === '3'" (click)="inType = '3'; onIncomingTypeChange()">MAPI</button>
+          </div>
+          <span class="wz-seg-hint">
+            <span class="msr">info</span>
+            {{ inType === '1' ? 'Mail stays on the server and folders stay in sync — recommended.'
+             : inType === '2' ? 'Mail is downloaded; some servers delete it after fetching.'
+             : 'For Microsoft Exchange servers.' }}
+          </span>
+
+          <div class="wz-grid2">
+            <div class="wz-field">
+              <label>Name</label>
+              <div class="wz-url"><span class="msr">badge</span><input type="text" placeholder="Support" [(ngModel)]="inName" (focus)="setActive('inName')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Email address</label>
+              <div class="wz-url"><span class="msr">mail</span><input type="email" placeholder="support@brand.com" [(ngModel)]="inEmail" (focus)="setActive('inEmail')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Password</label>
+              <div class="wz-url">
+                <span class="msr">lock</span>
+                <input [type]="showPw ? 'text' : 'password'" placeholder="Mailbox password" [(ngModel)]="inPassword" (focus)="setActive('inPassword')" (blur)="clearActive()" />
+                <button type="button" class="wz-eye" (click)="showPw = !showPw"><span class="msr">{{ showPw ? 'visibility_off' : 'visibility' }}</span></button>
+              </div>
+            </div>
+            <div class="wz-field">
+              <label>Port</label>
+              <div class="wz-url"><span class="msr">tag</span><input type="number" [(ngModel)]="inPort" (focus)="setActive('inPort')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field span2">
+              <label>Incoming server</label>
+              <div class="wz-url"><span class="msr">dns</span><input type="text" [(ngModel)]="inServer" (focus)="setActive('inServer')" (blur)="clearActive()" /></div>
+            </div>
+          </div>
+
+          <button class="wz-tt-opt solo" type="button" (click)="inSSL = !inSSL">
+            <span class="wz-check" [class.on]="inSSL"><span class="msr" *ngIf="inSSL">check</span></span>
+            <span class="wz-tt-opt-tx"><b>SSL enabled</b><span>Encrypt the connection to the incoming server.</span></span>
+          </button>
+
+          <div class="wz-testrow">
+            <button class="wz-testbtn" type="button" [disabled]="testingIn" (click)="testIncoming()">
+              <span class="wz-spinner dark" *ngIf="testingIn"></span>
+              <span class="msr" *ngIf="!testingIn">bolt</span>
+              {{ testingIn ? 'Testing…' : 'Test configuration' }}
+            </button>
+          </div>
+        </section>
+
+        <!-- 3e · Email (manual) — Outgoing server -->
+        <section *ngSwitchCase="'outgoing'" class="wz-emailset">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">Outgoing email (SMTP)</h3>
+            <p class="wz-sub left">How replies are sent. Pre-filled from your incoming details — change anything that differs.</p>
+          </div>
+
+          <div class="wz-grid2">
+            <div class="wz-field">
+              <label>Name</label>
+              <div class="wz-url"><span class="msr">badge</span><input type="text" [(ngModel)]="outName" (focus)="setActive('outName')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Email address</label>
+              <div class="wz-url"><span class="msr">mail</span><input type="email" [(ngModel)]="outEmail" (focus)="setActive('outEmail')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Password</label>
+              <div class="wz-url">
+                <span class="msr">lock</span>
+                <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="outPassword" (focus)="setActive('outPassword')" (blur)="clearActive()" />
+                <button type="button" class="wz-eye" (click)="showPw = !showPw"><span class="msr">{{ showPw ? 'visibility_off' : 'visibility' }}</span></button>
+              </div>
+            </div>
+            <div class="wz-field">
+              <label>Port</label>
+              <div class="wz-url"><span class="msr">tag</span><input type="number" [(ngModel)]="outPort" (focus)="setActive('outPort')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field span2">
+              <label>Outgoing server</label>
+              <div class="wz-url"><span class="msr">dns</span><input type="text" [(ngModel)]="outServer" (focus)="setActive('outServer')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Reply-to address <em>optional</em></label>
+              <div class="wz-url"><span class="msr">reply</span><input type="email" [(ngModel)]="outReplyTo" (focus)="setActive('outReplyTo')" (blur)="clearActive()" /></div>
+            </div>
+            <div class="wz-field">
+              <label>Email alias <em>optional</em></label>
+              <div class="wz-url"><span class="msr">alternate_email</span><input type="text" [(ngModel)]="outAlias" (focus)="setActive('outAlias')" (blur)="clearActive()" /></div>
+            </div>
+          </div>
+
+          <button class="wz-tt-opt solo" type="button" (click)="outSSL = !outSSL">
+            <span class="wz-check" [class.on]="outSSL"><span class="msr" *ngIf="outSSL">check</span></span>
+            <span class="wz-tt-opt-tx"><b>SSL enabled</b><span>Encrypt the connection to the outgoing server.</span></span>
+          </button>
+
+          <div class="wz-grid2">
+            <div class="wz-field">
+              <label>Cc <em>optional</em></label>
+              <div class="wz-chipbox" (focusin)="setActive('cc')" (focusout)="clearActive()">
+                <span class="wz-chip" *ngFor="let c of ccChips; let i = index">{{ c }}
+                  <button type="button" (click)="removeChip('cc', i)"><span class="msr">close</span></button></span>
+                <input type="text" placeholder="Enter email id" [(ngModel)]="ccDraft" (keyup.enter)="addChip('cc')" (blur)="addChip('cc')" />
+              </div>
+            </div>
+            <div class="wz-field">
+              <label>Bcc <em>optional</em></label>
+              <div class="wz-chipbox" (focusin)="setActive('bcc')" (focusout)="clearActive()">
+                <span class="wz-chip" *ngFor="let c of bccChips; let i = index">{{ c }}
+                  <button type="button" (click)="removeChip('bcc', i)"><span class="msr">close</span></button></span>
+                <input type="text" placeholder="Enter email id" [(ngModel)]="bccDraft" (keyup.enter)="addChip('bcc')" (blur)="addChip('bcc')" />
+              </div>
+            </div>
+          </div>
+
+          <div class="wz-editor" (focusin)="setActive('outFooter')" (focusout)="clearActive()">
+            <div class="wz-editor-head">
+              <span class="wz-editor-title"><span class="msr">edit_note</span>Email footer <em class="wz-req">required</em></span>
+            </div>
+            <textarea class="wz-editor-body" rows="4" placeholder="Thanks,&#10;The Support Team" [(ngModel)]="outFooter"></textarea>
+          </div>
+
+          <div class="wz-testrow">
+            <button class="wz-testbtn" type="button" [disabled]="testingOut" (click)="testOutgoing('test')">
+              <span class="wz-spinner dark" *ngIf="testingOut"></span>
+              <span class="msr" *ngIf="!testingOut">bolt</span>
+              {{ testingOut ? 'Testing…' : 'Test configuration' }}
+            </button>
+          </div>
+        </section>
+
+        <!-- 3f · Email advanced settings (mail trail · auto-ack · alias · footer + preview) -->
+        <section *ngSwitchCase="'settings'" class="wz-emailset">
+          <div class="wz-pages-titles">
+            <h3 class="wz-q left">Advanced settings</h3>
+            <p class="wz-sub left">Choose how replies are composed and what gets attached to every outgoing email.</p>
+          </div>
+
+          <div class="wz-set-opts">
+            <button class="wz-tt-opt" type="button" (click)="emailPrevTrail = !emailPrevTrail">
+              <span class="wz-check" [class.on]="emailPrevTrail"><span class="msr" *ngIf="emailPrevTrail">check</span></span>
+              <span class="wz-tt-opt-tx"><b>Add previous mail trail</b><span>Attach the earlier conversation thread to each reply.</span></span>
+            </button>
+            <button class="wz-tt-opt" type="button" (click)="emailAutoAck = !emailAutoAck">
+              <span class="wz-check" [class.on]="emailAutoAck"><span class="msr" *ngIf="emailAutoAck">check</span></span>
+              <span class="wz-tt-opt-tx"><b>Auto acknowledge</b><span>Send an automatic acknowledgement when a mail arrives.</span></span>
+            </button>
+            <!-- only the OAuth path persists an alias — hidden in manual mode -->
+            <button class="wz-tt-opt" type="button" *ngIf="!isEmailManual" (click)="emailAliasReply = !emailAliasReply">
+              <span class="wz-check" [class.on]="emailAliasReply"><span class="msr" *ngIf="emailAliasReply">check</span></span>
+              <span class="wz-tt-opt-tx"><b>Reply using alias email</b><span>Send replies from the mailbox alias instead of the primary address.</span></span>
+            </button>
+          </div>
+
+          <!-- footer editor + live preview -->
+          <div class="wz-editor" [class.off]="!emailPrevTrail">
+            <div class="wz-editor-head">
+              <span class="wz-editor-title"><span class="msr">edit_note</span>Email footer</span>
+              <div class="wz-token-row">
+                <span class="wz-token-lbl"><span class="msr">data_object</span>Insert</span>
+                <button type="button" class="wz-token" [disabled]="!emailPrevTrail" (click)="personalizeFooter('{{Agent Name}}')">
+                  <span class="msr">add</span>Agent name
+                </button>
+                <button type="button" class="wz-token" [disabled]="!emailPrevTrail" (click)="personalizeFooter('{{Ticket ID}}')">
+                  <span class="msr">add</span>Ticket ID
+                </button>
+                <button type="button" class="wz-token" [disabled]="!emailPrevTrail" (click)="personalizeFooter('{{Time}}')">
+                  <span class="msr">add</span>Time
+                </button>
+              </div>
+            </div>
+            <textarea class="wz-editor-body" rows="4" [disabled]="!emailPrevTrail" [(ngModel)]="emailFooter"></textarea>
+            <p class="wz-hint" *ngIf="!emailPrevTrail">Turn on <b>Add previous mail trail</b> to compose a footer.</p>
+          </div>
+
+          <div class="wz-preview" *ngIf="emailPrevTrail && emailFooter">
+            <span class="wz-preview-h"><span class="msr">visibility</span>Email preview</span>
+            <div class="wz-preview-body">{{ emailFooter }}</div>
           </div>
         </section>
 
@@ -625,8 +1087,8 @@
             </div>
           </div>
 
-          <!-- connected pages / accounts / locations -->
-          <div class="wz-collect" *ngIf="selectedPageList.length">
+          <!-- connected pages / accounts / folders / apps / properties -->
+          <div class="wz-collect" *ngIf="!isGmbPicker && selectedPageList.length">
             <span class="wz-collect-h">
               <span class="msr">{{ pagesNoun === 'locations' ? 'place' : 'description' }}</span>
               {{ pagesNoun | titlecase }} connected
@@ -635,6 +1097,17 @@
             <div class="wz-chiprow">
               <span class="wz-chip2" *ngFor="let p of selectedPageList">
                 <span class="wz-chip2-av" [style.background]="p.color">{{ p.initials }}</span>{{ p.name }}
+              </span>
+            </div>
+          </div>
+
+          <!-- GMB: connected locations -->
+          <div class="wz-collect" *ngIf="isGmbPicker && selectedGmbLocList.length">
+            <span class="wz-collect-h"><span class="msr">place</span>Locations connected
+              <span class="wz-sum-count">{{ selectedGmbLocList.length }}</span></span>
+            <div class="wz-chiprow">
+              <span class="wz-chip2" *ngFor="let l of selectedGmbLocList">
+                <span class="wz-chip2-av" [style.background]="selected?.color"><span class="msr">place</span></span>{{ l.name }}
               </span>
             </div>
           </div>
@@ -708,7 +1181,7 @@
     </div>
 
     <!-- ---- right: step-aware aside (re-renders per step → reveal animation re-runs) ---- -->
-    <aside class="wz-aside" [ngSwitch]="current">
+    <aside class="wz-aside" [ngSwitch]="current" [class.has-active]="!!activeField">
 
       <!-- choose: generic value props until a channel is picked, then a live preview
            (keyed by channel id so the reveal re-runs on every selection change) -->
@@ -796,32 +1269,105 @@
         </div>
       </ng-container>
 
-      <!-- authenticate: reassure on security, then preview the outcome -->
+      <!-- authenticate: credential channels show per-field "where to find it" help -->
       <ng-container *ngSwitchCase="'authenticate'">
-        <span class="wz-aside-eyebrow">Secure connection</span>
-        <h3 class="wz-aside-title">Your credentials stay with {{ selected?.label }}.</h3>
-        <p class="wz-aside-lead">{{ authNote }}</p>
+        <ng-container *ngIf="hasCredForm; else authAsideDefault">
+          <span class="wz-aside-eyebrow">{{ selected?.label }} credentials</span>
+          <h3 class="wz-aside-title">Where do I find these?</h3>
+          <p class="wz-aside-lead">A quick guide for each field — focus a field on the left to jump here.</p>
+          <div class="wz-aside-infos">
+            <div class="wz-aside-info" *ngFor="let f of fieldHelps" [class.active]="activeField === f.field">
+              <span class="wz-aside-info-ic"><span class="msr">{{ f.icon }}</span></span>
+              <div class="wz-aside-info-tx">
+                <b>{{ f.label }}</b>
+                <span class="wz-aside-info-lead" *ngIf="f.lead">{{ f.lead }}</span>
+                <ol class="wz-steps">
+                  <li *ngFor="let s of f.steps; let i = index"><span class="wz-step-n">{{ i + 1 }}</span>{{ s }}</li>
+                </ol>
+                <span class="wz-aside-note" *ngIf="f.note"><span class="msr">info</span>{{ f.note }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #authAsideDefault>
+          <span class="wz-aside-eyebrow">Secure connection</span>
+          <h3 class="wz-aside-title">Your credentials stay with {{ selected?.label }}.</h3>
+          <p class="wz-aside-lead">{{ authNote }}</p>
+          <div class="wz-feat">
+            <span class="wz-feat-ic"><span class="msr">shield</span></span>
+            <div class="wz-feat-text"><b>You stay in control</b><span>You approve every permission, and you can revoke access anytime.</span></div>
+          </div>
+          <div class="wz-feat">
+            <span class="wz-feat-ic"><span class="msr">bolt</span></span>
+            <div class="wz-feat-text"><b>Then we start collecting</b><span>{{ reviewReadySub }}</span></div>
+          </div>
+          <div class="wz-facts" *ngIf="activeMode as m">
+            <div class="wz-fact">
+              <span class="wz-fact-ic"><span class="msr">sync</span></span>
+              <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
+            </div>
+            <div class="wz-fact">
+              <span class="wz-fact-ic"><span class="msr">history</span></span>
+              <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
+            </div>
+            <div class="wz-fact">
+              <span class="wz-fact-ic"><span class="msr">database</span></span>
+              <span class="wz-fact-tx"><span class="wz-fact-k">Data collected</span><span class="wz-fact-v">{{ m.dataTypes }}</span></span>
+            </div>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <!-- incoming / outgoing (manual Email): per-field help -->
+      <ng-container *ngSwitchCase="'incoming'">
+        <span class="wz-aside-eyebrow">Incoming mail</span>
+        <h3 class="wz-aside-title">Where do I find these?</h3>
+        <p class="wz-aside-lead">Focus a field on the left to jump to its guide.</p>
+        <div class="wz-aside-infos">
+          <div class="wz-aside-info" *ngFor="let f of emailIncomingHelp" [class.active]="activeField === f.field">
+            <span class="wz-aside-info-ic"><span class="msr">{{ f.icon }}</span></span>
+            <div class="wz-aside-info-tx">
+              <b>{{ f.label }}</b>
+              <span class="wz-aside-info-lead" *ngIf="f.lead">{{ f.lead }}</span>
+              <ol class="wz-steps"><li *ngFor="let s of f.steps; let i = index"><span class="wz-step-n">{{ i + 1 }}</span>{{ s }}</li></ol>
+              <span class="wz-aside-note" *ngIf="f.note"><span class="msr">info</span>{{ f.note }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngSwitchCase="'outgoing'">
+        <span class="wz-aside-eyebrow">Outgoing mail</span>
+        <h3 class="wz-aside-title">Where do I find these?</h3>
+        <p class="wz-aside-lead">Focus a field on the left to jump to its guide.</p>
+        <div class="wz-aside-infos">
+          <div class="wz-aside-info" *ngFor="let f of emailOutgoingHelp" [class.active]="activeField === f.field">
+            <span class="wz-aside-info-ic"><span class="msr">{{ f.icon }}</span></span>
+            <div class="wz-aside-info-tx">
+              <b>{{ f.label }}</b>
+              <span class="wz-aside-info-lead" *ngIf="f.lead">{{ f.lead }}</span>
+              <ol class="wz-steps"><li *ngFor="let s of f.steps; let i = index"><span class="wz-step-n">{{ i + 1 }}</span>{{ s }}</li></ol>
+              <span class="wz-aside-note" *ngIf="f.note"><span class="msr">info</span>{{ f.note }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- settings (Email advanced settings): what each toggle does -->
+      <ng-container *ngSwitchCase="'settings'">
+        <span class="wz-aside-eyebrow">Almost done</span>
+        <h3 class="wz-aside-title">Fine-tune how replies behave.</h3>
+        <p class="wz-aside-lead">These apply to every reply sent from this mailbox — you can change them anytime.</p>
         <div class="wz-feat">
-          <span class="wz-feat-ic"><span class="msr">shield</span></span>
-          <div class="wz-feat-text"><b>You stay in control</b><span>You approve every permission, and you can revoke access anytime.</span></div>
+          <span class="wz-feat-ic"><span class="msr">forum</span></span>
+          <div class="wz-feat-text"><b>Previous mail trail</b><span>Keeps the conversation history visible in every reply, like a normal email thread.</span></div>
         </div>
         <div class="wz-feat">
-          <span class="wz-feat-ic"><span class="msr">bolt</span></span>
-          <div class="wz-feat-text"><b>Then we start collecting</b><span>{{ reviewReadySub }}</span></div>
+          <span class="wz-feat-ic"><span class="msr">mark_email_read</span></span>
+          <div class="wz-feat-text"><b>Auto acknowledge</b><span>Customers get an instant "we received your email" the moment it lands.</span></div>
         </div>
-        <div class="wz-facts" *ngIf="activeMode as m">
-          <div class="wz-fact">
-            <span class="wz-fact-ic"><span class="msr">sync</span></span>
-            <span class="wz-fact-tx"><span class="wz-fact-k">Mentions sync</span><span class="wz-fact-v">{{ m.sync }}</span></span>
-          </div>
-          <div class="wz-fact">
-            <span class="wz-fact-ic"><span class="msr">history</span></span>
-            <span class="wz-fact-tx"><span class="wz-fact-k">History on connect</span><span class="wz-fact-v">{{ m.history }}</span></span>
-          </div>
-          <div class="wz-fact">
-            <span class="wz-fact-ic"><span class="msr">database</span></span>
-            <span class="wz-fact-tx"><span class="wz-fact-k">Data collected</span><span class="wz-fact-v">{{ m.dataTypes }}</span></span>
-          </div>
+        <div class="wz-feat">
+          <span class="wz-feat-ic"><span class="msr">edit_note</span></span>
+          <div class="wz-feat-text"><b>Footer</b><span>Appended to every reply — add your signature, support hours or a disclaimer.</span></div>
         </div>
       </ng-container>
 
