@@ -202,10 +202,15 @@
 // ---------------------------------------------------------------------------
 .pc-media-row { display: flex; gap: 12px; }
 
-// text-only posts: rail flows horizontally under the caption
-.pc-media-row--textonly {
-  .pc-stats { flex-direction: row; width: 100%; justify-content: flex-start; gap: 18px; }
-  .pc-stat { flex-direction: row; gap: 6px; }
+// text-only posts: caption fills the media column, rail stays vertical on the right
+.pc-media-row--textonly { align-items: flex-start; }
+
+.pc-text-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .pc-media {

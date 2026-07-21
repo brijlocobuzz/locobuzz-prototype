@@ -3,11 +3,6 @@
   <!-- ======================= Toolbar (row 1) ======================= -->
   <div class="mp-toolbar">
 
-    <!-- View switch projected from the page shell -->
-    <ng-content />
-
-    <span class="mp-divider" aria-hidden="true"></span>
-
     <!-- Brand selector -->
     <button type="button" class="mp-control" [matMenuTriggerFor]="brandMenu"
             matTooltip="Brand" aria-label="Select brand">
@@ -43,7 +38,7 @@
     <span class="mp-toolbar-spacer"></span>
 
     <!-- Search -->
-    <label class="mp-search">
+    <label class="mp-search" *ngIf="view() === 'manage'">
       <span class="msr">search</span>
       <input type="search" placeholder="Search post content, account or #tag"
              [ngModel]="search()" (ngModelChange)="search.set($event)"
@@ -55,7 +50,8 @@
     </label>
 
     <!-- Filters -->
-    <app-post-filter [posts]="posts" [applied]="filters()"
+    <app-post-filter *ngIf="view() === 'manage'"
+                     [posts]="posts" [applied]="filters()"
                      (appliedChange)="filters.set($event)" />
 
     <!-- Compose -->
@@ -68,30 +64,53 @@
   <!-- ================= Status rail + content ================= -->
   <div class="mp-main">
 
-    <!-- Vertical status rail (mirrors the Tickets folder panel pattern) -->
-    <aside class="mp-rail" [class.mp-rail--slim]="railSlim()" aria-label="Filter posts by status">
+    <!-- Publish nav rail — view switch + status list (mirrors the Tickets folder panel pattern) -->
+    <aside class="mp-rail" [class.mp-rail--slim]="railSlim()" aria-label="Publish navigation">
       <div class="mp-rail-head">
-        <span class="mp-rail-title">Post Status</span>
+        <span class="mp-rail-title">Publish</span>
         <button type="button" class="mp-rail-toggle" (click)="railSlim.set(!railSlim())"
                 [matTooltip]="railSlim() ? 'Expand' : 'Collapse'"
-                [attr.aria-label]="railSlim() ? 'Expand status rail' : 'Collapse status rail'">
+                [attr.aria-label]="railSlim() ? 'Expand panel' : 'Collapse panel'">
           <span class="msr">{{ railSlim() ? 'right_panel_open' : 'left_panel_close' }}</span>
         </button>
       </div>
 
-      <button type="button" class="mp-rail-item" *ngFor="let t of tabs; trackBy: trackTab"
-              [class.mp-rail-item--on]="activeTab() === t.key"
-              (click)="activeTab.set(t.key)"
-              [matTooltip]="railSlim() ? t.label + ' (' + counts()[t.key] + ')' : ''"
-              matTooltipPosition="right">
-        <span class="msr mp-rail-ic" [style.color]="t.color">{{ t.icon }}</span>
-        <span class="mp-rail-label">{{ t.label }}</span>
-        <span class="mp-rail-count" [class.mp-rail-count--zero]="!counts()[t.key]">{{ counts()[t.key] }}</span>
+      <!-- Manage Post -->
+      <button type="button" class="mp-rail-item mp-rail-nav" role="tab"
+              [class.mp-rail-item--on]="view() === 'manage'"
+              [attr.aria-selected]="view() === 'manage'"
+              (click)="view.set('manage')"
+              [matTooltip]="railSlim() ? 'Manage Post' : ''" matTooltipPosition="right">
+        <span class="msr mp-rail-ic">grid_view</span>
+        <span class="mp-rail-label">Manage Post</span>
+      </button>
+
+      <!-- Post statuses, nested under Manage Post -->
+      <div class="mp-rail-group" *ngIf="view() === 'manage'" role="group" aria-label="Filter posts by status">
+        <button type="button" class="mp-rail-item" *ngFor="let t of tabs; trackBy: trackTab"
+                [class.mp-rail-item--on]="activeTab() === t.key"
+                (click)="activeTab.set(t.key)"
+                [matTooltip]="railSlim() ? t.label + ' (' + counts()[t.key] + ')' : ''"
+                matTooltipPosition="right">
+          <span class="msr mp-rail-ic" [style.color]="t.color">{{ t.icon }}</span>
+          <span class="mp-rail-label">{{ t.label }}</span>
+          <span class="mp-rail-count" [class.mp-rail-count--zero]="!counts()[t.key]">{{ counts()[t.key] }}</span>
+        </button>
+      </div>
+
+      <!-- Calendar -->
+      <button type="button" class="mp-rail-item mp-rail-nav" role="tab"
+              [class.mp-rail-item--on]="view() === 'calendar'"
+              [attr.aria-selected]="view() === 'calendar'"
+              (click)="view.set('calendar')"
+              [matTooltip]="railSlim() ? 'Calendar' : ''" matTooltipPosition="right">
+        <span class="msr mp-rail-ic">calendar_month</span>
+        <span class="mp-rail-label">Calendar</span>
       </button>
     </aside>
 
     <!-- Content column -->
-    <div class="mp-content">
+    <div class="mp-content" *ngIf="view() === 'manage'; else calendarView">
 
       <!-- Applied filter chips — only occupies space when filters are active -->
       <div class="mp-applied" *ngIf="filterChips().length">
@@ -124,5 +143,14 @@
         </ng-template>
       </div>
     </div>
+
+    <!-- Calendar view -->
+    <ng-template #calendarView>
+      <div class="mp-content mp-placeholder">
+        <span class="msr">calendar_month</span>
+        <h3>Calendar</h3>
+        <p>The scheduling calendar will be wired up next.</p>
+      </div>
+    </ng-template>
   </div>
 </div>
