@@ -48,6 +48,9 @@ export class ManagePostComponent {
   readonly brands = POST_BRANDS;
   readonly durations = DURATION_OPTIONS;
 
+  /** Manage Post / Calendar switch — both live in the left nav rail. */
+  readonly view = signal<'manage' | 'calendar'>('manage');
+
   readonly brand = signal(POST_BRANDS[0]);
   readonly duration = signal('Last 90 Days');
   readonly search = signal('');

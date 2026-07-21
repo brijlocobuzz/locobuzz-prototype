@@ -67,8 +67,9 @@
       <p>{{ post.error }}</p>
     </div>
 
-    <!-- Body caption (text & document posts only — visual posts overlay it on media) -->
-    <ng-container *ngIf="bodyCaption">
+    <!-- Body caption (document posts — visual posts overlay it on media,
+         text-only posts render it inside the media row so the stats rail stays aligned) -->
+    <ng-container *ngIf="bodyCaption && post.mediaType !== 'text'">
       <p class="pc-caption">{{ post.caption }}</p>
       <p class="pc-hashtags" *ngIf="post.hashtags?.length">
         <a *ngFor="let tag of post.hashtags" href="javascript:void 0">{{ tag }}</a>
@@ -77,6 +78,14 @@
 
     <!-- Media + vertical stats rail -->
     <div class="pc-media-row" [class.pc-media-row--textonly]="post.mediaType === 'text'">
+
+      <!-- text-only posts: caption takes the media column so the rail stays on the right -->
+      <div class="pc-text-body" *ngIf="post.mediaType === 'text'">
+        <p class="pc-caption" *ngIf="post.caption">{{ post.caption }}</p>
+        <p class="pc-hashtags" *ngIf="post.hashtags?.length">
+          <a *ngFor="let tag of post.hashtags" href="javascript:void 0">{{ tag }}</a>
+        </p>
+      </div>
 
       <div class="pc-media" *ngIf="post.mediaType !== 'text'"
            [class.pc-media--story]="post.mediaType === 'story'"

@@ -8,7 +8,7 @@
 }
 
 // ---------------------------------------------------------------------------
-// Toolbar — single 50px row: view switch · brand · duration · search · filters · CTA
+// Toolbar — single 50px row: brand · duration · search · filters · CTA
 // ---------------------------------------------------------------------------
 .mp-toolbar {
   display: flex;
@@ -21,13 +21,6 @@
 }
 
 .mp-toolbar-spacer { flex: 1; }
-
-.mp-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--border);
-  margin: 0 2px;
-}
 
 .mp-control {
   display: inline-flex;
@@ -163,7 +156,27 @@
 
     .mp-rail-head { justify-content: center; }
     .mp-rail-item { justify-content: center; padding: 8px 0; }
+    .mp-rail-group { margin: 2px 0; padding-left: 0; border-left: none; }
   }
+}
+
+// status list nested under the Manage Post nav item
+.mp-rail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px 12px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-soft);
+}
+
+// top-level nav rows (Manage Post / Calendar)
+.mp-rail-nav {
+  font-size: var(--font-size-13);
+  color: var(--text-1);
+
+  .mp-rail-ic { color: var(--text-2); }
+  &.mp-rail-item--on .mp-rail-ic { color: var(--brand-strong); }
 }
 
 .mp-rail-head {
@@ -305,6 +318,19 @@
   white-space: nowrap;
 
   &:hover { background: #eef1f6; color: var(--text-1); }
+}
+
+// calendar placeholder
+.mp-placeholder {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--text-3);
+
+  > .msr { font-size: 44px; color: var(--brand); opacity: .6; }
+  h3 { margin: 6px 0 0; font-size: var(--font-size-20); font-weight: 600; color: var(--text-1); }
+  p { margin: 0; font-size: var(--font-size-13); }
 }
 
 // ---------------------------------------------------------------------------
