@@ -48,22 +48,25 @@ $lb-theme: mat.define-light-theme((
   --rail-w: 76px;
 
   // ---- Responsive font-size scale ----
-  --font-size-10: clamp(8px, 0.5vw, 10px);
-  --font-size-11: clamp(9px, 0.55vw, 11px);
-  --font-size-12: clamp(10px, 0.6vw, 12px);
-  --font-size-13: clamp(11px, 0.65vw, 13px);
-  --font-size-14: clamp(12px, 0.7vw, 14px);
-  --font-size-15: clamp(13px, 0.75vw, 15px);
-  --font-size-16: clamp(14px, 0.8vw, 16px);
-  --font-size-17: clamp(15px, 0.85vw, 17px);
-  --font-size-18: clamp(16px, 0.9vw, 18px);
-  --font-size-20: clamp(18px, 1vw, 20px);
-  --font-size-21: clamp(19px, 1.05vw, 21px);
-  --font-size-22: clamp(20px, 1.1vw, 22px);
-  --font-size-24: clamp(22px, 1.2vw, 24px);
-  --font-size-25: clamp(23px, 1.25vw, 25px);
-  --font-size-30: clamp(26px, 1.5vw, 30px);
-  --font-size-50: clamp(40px, 2.5vw, 50px);
+  // --font-size-adjust is set at runtime (px) by FontSizeService and shifts every
+  // font-size token below uniformly, so the whole app scales from one control.
+  --font-size-adjust: 0px;
+  --font-size-10: calc(clamp(8px, 0.5vw, 10px) + var(--font-size-adjust));
+  --font-size-11: calc(clamp(9px, 0.55vw, 11px) + var(--font-size-adjust));
+  --font-size-12: calc(clamp(10px, 0.6vw, 12px) + var(--font-size-adjust));
+  --font-size-13: calc(clamp(11px, 0.65vw, 13px) + var(--font-size-adjust));
+  --font-size-14: calc(clamp(12px, 0.7vw, 14px) + var(--font-size-adjust));
+  --font-size-15: calc(clamp(13px, 0.75vw, 15px) + var(--font-size-adjust));
+  --font-size-16: calc(clamp(14px, 0.8vw, 16px) + var(--font-size-adjust));
+  --font-size-17: calc(clamp(15px, 0.85vw, 17px) + var(--font-size-adjust));
+  --font-size-18: calc(clamp(16px, 0.9vw, 18px) + var(--font-size-adjust));
+  --font-size-20: calc(clamp(18px, 1vw, 20px) + var(--font-size-adjust));
+  --font-size-21: calc(clamp(19px, 1.05vw, 21px) + var(--font-size-adjust));
+  --font-size-22: calc(clamp(20px, 1.1vw, 22px) + var(--font-size-adjust));
+  --font-size-24: calc(clamp(22px, 1.2vw, 24px) + var(--font-size-adjust));
+  --font-size-25: calc(clamp(23px, 1.25vw, 25px) + var(--font-size-adjust));
+  --font-size-30: calc(clamp(26px, 1.5vw, 30px) + var(--font-size-adjust));
+  --font-size-50: calc(clamp(40px, 2.5vw, 50px) + var(--font-size-adjust));
 
   // ---- Responsive width scale ----
   --width-10: clamp(8px, 0.5vw, 10px);

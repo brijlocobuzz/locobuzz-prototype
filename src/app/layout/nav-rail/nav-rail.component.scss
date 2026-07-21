@@ -186,6 +186,8 @@
 .util.alert { background: #fdeaea; color: #e0414b; }
 .util .badge { top: -6px; right: -6px; }
 
+.profile-wrap { position: relative; }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -197,6 +199,180 @@
   place-items: center;
   cursor: pointer;
   text-decoration: none;
+  font: inherit;
+  padding: 0;
 }
 .avatar:hover { border-color: var(--brand); color: var(--brand); }
 .avatar.active { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+
+/* ---- profile flyout ---- */
+.profile-flyout {
+  position: absolute;
+  left: calc(100% + 6px);
+  bottom: 0;
+  width: 430px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(16, 24, 40, .18);
+  z-index: 60;
+  overflow: hidden;
+}
+
+.pf-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+}
+.pf-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--font-size-15);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.pf-name { font-size: var(--font-size-15); font-weight: 700; color: var(--text-1); }
+.pf-role { font-size: var(--font-size-13); color: var(--text-3); margin-top: 2px; }
+
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border-soft);
+}
+.pf-col {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pf-col.right { border-left: 1px solid var(--border-soft); }
+
+.pf-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-1);
+  text-decoration: none;
+  font: inherit;
+  font-size: var(--font-size-14);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+.pf-item:hover { background: #f5f7fb; }
+.pf-item .msr { font-size: var(--font-size-18); color: var(--text-3); }
+
+.pf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: var(--font-size-14);
+  color: var(--text-1);
+}
+.pf-row-label { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pf-row-label .msr { font-size: var(--font-size-18); color: var(--text-3); flex: 0 0 auto; }
+
+.pf-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.pf-value .chev { font-size: var(--font-size-16); color: var(--text-3); }
+
+.pf-font-options {
+  display: flex;
+  gap: 6px;
+  padding: 0 10px 8px;
+  flex-wrap: wrap;
+}
+.pf-font-btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--font-size-12);
+  font-weight: 600;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.pf-font-btn:hover { border-color: #cdd4e0; }
+.pf-font-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+.switch {
+  position: relative;
+  width: 36px; height: 21px;
+  border: none;
+  border-radius: 20px;
+  background: #d7dce4;
+  cursor: pointer;
+  padding: 2px;
+  flex: 0 0 auto;
+  transition: background .15s ease;
+}
+.switch .knob {
+  display: block;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .3);
+  transition: transform .15s ease;
+}
+.switch.on { background: var(--brand); }
+.switch.on .knob { transform: translateX(15px); }
+
+.pf-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-soft);
+}
+.pf-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: var(--urgent-fg);
+  font: inherit;
+  font-size: var(--font-size-14);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.pf-logout .msr { font-size: var(--font-size-18); }
+.pf-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-13);
+  font-weight: 600;
+  color: var(--brand);
+  white-space: nowrap;
+}
+.pf-download .msr { font-size: var(--font-size-18); color: var(--text-2); }

@@ -1,5 +1,11 @@
 <div class="list">
-  <article class="ticket" *ngFor="let t of tickets">
+  <article
+    class="ticket"
+    *ngFor="let t of visibleTickets"
+    [class.drag-over]="dragOverTicketId === t.id"
+    (dragover)="onTicketDragOver($event, t.id)"
+    (dragleave)="onTicketDragLeave(t.id)"
+    (drop)="onTicketDrop($event, t)">
     <!-- Header -->
     <div class="t-head">
       <input type="checkbox" class="t-check" />
@@ -14,59 +20,115 @@
       <div class="t-who">
         <div class="t-name-row">
           <span class="t-name">{{ t.name }}</span>
-          <span class="t-handle" *ngIf="t.handle">{{ t.handle }}</span>
-          <span class="t-group" *ngIf="t.group"><span class="msr">group</span>{{ t.group }}</span>
+          <span class="t-handle" *ngIf="t.handle">&#64; {{ t.handle }}</span>
+          <span class="t-group"><span class="msr">group</span>{{ t.group }}</span>
         </div>
         <div class="t-sub">
-          <span class="dm">DM</span>
-          <span class="chan">{{ t.channel }}</span>
+          <span class="mention"><span class="msr">alternate_email</span>Mention</span>
           <span class="dot">•</span>
-          <span class="brand"><span class="msr">storefront</span>{{ t.brand }}</span>
+          <span class="acc">
+            <span class="acc-avatar" [style.background]="t.accountColor">{{ t.accountInitial }}</span>
+            {{ t.account }}
+          </span>
         </div>
       </div>
 
       <div class="t-meta">
-        <span class="assignee" *ngIf="t.assignee">
-          <span class="a-dot"></span>{{ t.assignee }}
+        <span class="chip brand" *ngIf="viewSettings.settings().brandName">
+          <span class="msr">badge</span>{{ t.brandTag }}
         </span>
-        <span class="comments"><span class="msr">chat_bubble</span>{{ t.comments }}</span>
-        <span class="chip urgent" *ngIf="t.priority === 'Urgent'">
+        <span class="comments" *ngIf="viewSettings.settings().mentionCount">
+          <span class="msr">chat_bubble</span>{{ t.comments }}
+        </span>
+        <span class="chip urgent" *ngIf="t.priority === 'Urgent' && viewSettings.settings().priority">
           <span class="msr">local_fire_department</span>Urgent
         </span>
-        <span class="chip sla" [class.breached]="t.sla === 'Breached'">
+        <span class="chip sla" *ngIf="viewSettings.settings().slaBreached" [class.breached]="t.sla === 'Breached'">
           <span class="msr">{{ t.sla === 'Breached' ? 'gpp_bad' : 'verified_user' }}</span>{{ t.sla }}
         </span>
-        <span class="chip age"><span class="msr">timer</span>{{ t.age }}</span>
+        <span class="chip age" *ngIf="viewSettings.settings().createdTime">
+          <span class="msr">timer</span>{{ t.age }}
+        </span>
       </div>
     </div>
 
     <!-- Body -->
-    <p class="t-body">{{ t.message }}</p>
-
-    <div class="t-remaining" *ngIf="t.remaining">
-      <span class="msr">undo</span>{{ t.remaining }}
-    </div>
+    <p class="t-body">
+      <span class="mention-link" *ngIf="t.messageMention">{{ t.messageMention }}</span>
+      {{ t.messageText }}
+    </p>
 
     <!-- Footer -->
     <div class="t-foot">
       <div class="foot-left">
-        <span class="ticket-id" *ngIf="!t.tags"><span class="msr">confirmation_number</span>{{ t.id }}</span>
-        <ng-container *ngIf="t.tags">
-          <span class="tag" *ngFor="let tag of t.tags" [class.moderation]="tag.tone === 'moderation'">
+        <div class="sentiment-wrap">
+          <button class="sentiment" [class]="t.sentiment.tone" (click)="toggleSentimentMenu(t.id, $event)">
+            <span class="emoji">{{ t.sentiment.emoji }}</span>{{ t.sentiment.label }}
+            <span class="msr chev">expand_more</span>
+          </button>
+          <div class="sentiment-menu" *ngIf="openSentimentFor === t.id" (click)="$event.stopPropagation()">
+            <button
+              class="sentiment-option"
+              *ngFor="let opt of sentimentOptions"
+              [class.selected]="opt.tone === t.sentiment.tone"
+              (click)="selectSentiment(t, opt)">
+              <span class="emoji">{{ opt.emoji }}</span>{{ opt.label }}
+            </button>
+          </div>
+        </div>
+        <ng-container *ngFor="let tag of t.tags">
+          <span
+            class="tag"
+            *ngIf="tag.tone !== 'moderation' || viewSettings.settings().upperCategory"
+            [class.moderation]="tag.tone === 'moderation'">
             <span class="msr">{{ tag.tone === 'moderation' ? 'shield' : 'sell' }}</span>{{ tag.label }}
           </span>
         </ng-container>
+        <span class="tag ticket-category" *ngIf="t.ticketCategory && viewSettings.settings().ticketCategories">
+          <span class="msr">confirmation_number</span>{{ t.ticketCategory }}
+        </span>
+        <span class="mod-by" *ngIf="t.moderator && viewSettings.settings().mentionCategories">
+          <span class="msr">alternate_email</span>{{ t.moderator }}
+        </span>
+        <span class="tag" *ngIf="t.aspectGroup && viewSettings.settings().aspectGroups">
+          <span class="msr">sentiment_satisfied</span>{{ t.aspectGroup }}
+        </span>
+        <span class="tag" *ngIf="t.aspect && viewSettings.settings().aspects">
+          <span class="msr">sentiment_satisfied</span>{{ t.aspect }}
+        </span>
       </div>
 
       <div class="foot-actions">
-        <span class="ticket-id alt" *ngIf="t.tags"><span class="msr">confirmation_number</span>{{ t.id }}</span>
-        <button class="act"><span class="msr">desktop_windows</span>Open</button>
-        <button class="act assign"><span class="msr">person_add</span></button>
-        <button class="act close"><span class="msr">cancel</span>Close<span class="msr chev">expand_more</span></button>
-        <button class="act reply"><span class="msr">reply</span>Reply</button>
-        <button class="act more"><span class="msr">more_horiz</span></button>
-        <button class="act eye"><span class="msr">visibility</span></button>
+        <span class="ticket-id" *ngIf="viewSettings.settings().ticketId">
+          <span class="msr">confirmation_number</span>{{ t.id }}
+        </span>
+        <button class="act open" *ngIf="viewSettings.settings().ticketStatus">
+          <span class="msr">desktop_windows</span>Open
+        </button>
+        <span
+          class="assignee-avatar"
+          *ngIf="viewSettings.settings().assignTo && !t.unassigned"
+          [style.background]="t.assigneeColor">{{ t.assigneeInitials }}</span>
+        <button
+          class="assignee-avatar unassigned"
+          *ngIf="viewSettings.settings().assignTo && t.unassigned"
+          aria-label="Assign ticket">
+          <span class="msr">person_add</span>
+        </button>
+        <ng-container *ngIf="viewSettings.settings().actionButtons">
+          <button class="act close"><span class="msr">cancel</span>Close</button>
+          <button class="act reply"><span class="msr">reply</span>Reply</button>
+          <button class="act more"><span class="msr">more_horiz</span></button>
+        </ng-container>
       </div>
     </div>
   </article>
+
+  <button class="show-more" *ngIf="hasMoreTickets" (click)="toggleShowAllTickets()">
+    {{ showAllTickets ? 'Show less' : 'Show more' }}
+  </button>
+</div>
+
+<div class="toast" *ngIf="toastMessage">
+  <span class="msr">check_circle</span>{{ toastMessage }}
 </div>

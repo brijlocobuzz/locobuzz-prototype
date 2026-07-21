@@ -6,13 +6,20 @@
 
   <button class="filter-pill">
     <span class="lbl">Brands:</span>
-    <span class="val">All</span>
+    <span class="count-badge">1</span>
+    <span class="val">97 QA TEst Br...</span>
     <span class="msr chev">expand_more</span>
   </button>
 
   <button class="filter-pill">
     <span class="msr cal">calendar_today</span>
-    <span class="val">Last 2 Days</span>
+    <span class="val">Last 7 Days</span>
+    <span class="msr chev">expand_more</span>
+  </button>
+
+  <button class="filter-pill">
+    <span class="lbl">Channels:</span>
+    <span class="val">All</span>
     <span class="msr chev">expand_more</span>
   </button>
 
@@ -24,7 +31,156 @@
     <button class="icon-btn" aria-label="Sort"><span class="msr">sort</span></button>
     <button class="icon-btn" aria-label="More"><span class="msr">more_vert</span></button>
     <span class="sep"></span>
-    <button class="icon-btn" aria-label="Preview"><span class="msr">visibility</span></button>
+    <div class="eye-wrap">
+      <button class="icon-btn" aria-label="Preview" (click)="toggleEyeMenu($event)">
+        <span class="msr">visibility</span>
+      </button>
+
+      <div class="eye-menu" *ngIf="eyeMenuOpen" (click)="$event.stopPropagation()">
+        <div class="eye-section-title">AI Classifications:</div>
+        <div class="eye-row">
+          <span>SignalSense</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().signalSense"
+            (click)="viewSettings.toggle('signalSense')">
+            <span class="knob"></span>
+          </button>
+        </div>
+
+        <div class="eye-section-title">Categories & Aspects:</div>
+        <div class="eye-row">
+          <span>Ticket Categories</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().ticketCategories"
+            (click)="viewSettings.toggle('ticketCategories')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Mention Categories</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().mentionCategories"
+            (click)="viewSettings.toggle('mentionCategories')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Upper Category</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().upperCategory"
+            (click)="viewSettings.toggle('upperCategory')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Aspects</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().aspects"
+            (click)="viewSettings.toggle('aspects')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Aspect Groups</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().aspectGroups"
+            (click)="viewSettings.toggle('aspectGroups')">
+            <span class="knob"></span>
+          </button>
+        </div>
+
+        <div class="eye-section-title">Ticket Details:</div>
+        <div class="eye-row">
+          <span>Priority</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().priority"
+            (click)="viewSettings.toggle('priority')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>SLA / Breached</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().slaBreached"
+            (click)="viewSettings.toggle('slaBreached')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Mention Count</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().mentionCount"
+            (click)="viewSettings.toggle('mentionCount')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Created Time</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().createdTime"
+            (click)="viewSettings.toggle('createdTime')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Ticket/Mention Id</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().ticketId"
+            (click)="viewSettings.toggle('ticketId')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Action Buttons</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().actionButtons"
+            (click)="viewSettings.toggle('actionButtons')">
+            <span class="knob"></span>
+          </button>
+        </div>
+
+        <div class="eye-section-title">Others:</div>
+        <div class="eye-row">
+          <span>Brand Name</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().brandName"
+            (click)="viewSettings.toggle('brandName')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Assign to</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().assignTo"
+            (click)="viewSettings.toggle('assignTo')">
+            <span class="knob"></span>
+          </button>
+        </div>
+        <div class="eye-row">
+          <span>Ticket Status</span>
+          <button
+            class="switch"
+            [class.on]="viewSettings.settings().ticketStatus"
+            (click)="viewSettings.toggle('ticketStatus')">
+            <span class="knob"></span>
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="view-toggle">
       <button class="active" aria-label="List view"><span class="msr">view_list</span></button>
       <button aria-label="Board view"><span class="msr">view_column</span></button>

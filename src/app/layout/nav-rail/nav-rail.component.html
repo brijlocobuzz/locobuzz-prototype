@@ -54,12 +54,77 @@
       <span class="msr">warning</span>
       <span class="badge">610</span>
     </button>
-    <a class="avatar" routerLink="/account-settings" routerLinkActive="active"
-       matTooltip="Account Settings" matTooltipPosition="right" aria-label="Profile">
-      <span class="msr">person</span>
-    </a>
+    <div class="profile-wrap">
+      <button
+        class="avatar"
+        [class.active]="profileMenuOpen"
+        (click)="toggleProfileMenu($event)"
+        aria-label="Profile">
+        <span class="msr">person</span>
+      </button>
+
+      <div class="profile-flyout" *ngIf="profileMenuOpen" (click)="$event.stopPropagation()">
+        <div class="pf-head">
+          <span class="pf-avatar">BP</span>
+          <div class="pf-who">
+            <div class="pf-name">Brij Patil</div>
+            <div class="pf-role">Supervisor Admin Dashboard</div>
+          </div>
+        </div>
+
+        <div class="pf-grid">
+          <div class="pf-col">
+            <a class="pf-item" routerLink="/account-settings" routerLinkActive="active" (click)="closeProfileMenu()">
+              <span class="msr">person</span>Account Settings
+            </a>
+            <button class="pf-item"><span class="msr">photo_library</span>Media Gallery</button>
+            <button class="pf-item"><span class="msr">bug_report</span>Raise Issue</button>
+            <button class="pf-item"><span class="msr">chat</span>Feedback</button>
+          </div>
+
+          <div class="pf-col right">
+            <div class="pf-row">
+              <span class="pf-row-label"><span class="msr">dark_mode</span>Theme</span>
+              <button class="pf-value">Light Theme<span class="msr chev">expand_more</span></button>
+            </div>
+            <div class="pf-row">
+              <span class="pf-row-label"><span class="msr">language</span>Language</span>
+              <button class="pf-value">🇬🇧<span class="msr chev">expand_more</span></button>
+            </div>
+            <div class="pf-row">
+              <span class="pf-row-label"><span class="msr">volume_off</span>Sound</span>
+              <button class="switch" [class.on]="soundOn" (click)="soundOn = !soundOn">
+                <span class="knob"></span>
+              </button>
+            </div>
+            <div class="pf-row">
+              <span class="pf-row-label"><span class="msr">format_size</span>Font Size</span>
+            </div>
+            <div class="pf-font-options">
+              <button
+                *ngFor="let px of fontSizeSteps"
+                class="pf-font-btn"
+                [class.active]="fontSize.adjustPx() === px"
+                (click)="fontSize.setAdjust(px)">
+                {{ px === 0 ? 'Default' : '+' + px + 'px' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pf-foot">
+          <button class="pf-logout"><span class="msr">logout</span>Logout</button>
+          <div class="pf-download">
+            <span>Download Our App</span>
+            <span class="msr">play_arrow</span>
+            <span class="msr">apple</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 
-<!-- Click-away backdrop for the more flyout -->
+<!-- Click-away backdrop for the more / profile flyouts -->
 <div class="more-backdrop" *ngIf="moreOpen" (click)="closeMore()"></div>
+<div class="more-backdrop" *ngIf="profileMenuOpen" (click)="closeProfileMenu()"></div>

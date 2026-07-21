@@ -10,7 +10,7 @@ export interface NavItem {
  * on the rail (as in the live CX Suite). The rest live under "more".
  */
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Tickets',        icon: 'confirmation_number', route: '/social-inbox',  badge: '999+' },
+  { label: 'Tickets',        icon: 'confirmation_number', route: '/social-inbox',  badge: '91' },
   { label: 'Mentions',       icon: 'alternate_email',     route: '/mention-inbox', badge: '999+' },
   { label: 'Analytics',      icon: 'bar_chart',           route: '/analytics' },
   { label: 'Reports',        icon: 'description',         route: '/reports' },

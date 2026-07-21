@@ -9,15 +9,21 @@
 
   <div class="panel-body">
     <ng-container *ngFor="let folder of folders">
-      <div class="folder" [class.active]="folder.active">
+      <div
+        class="folder clickable"
+        [class.active]="filter.selectedFolder() === folder.label"
+        (click)="selectFolder(folder.label, !!folder.children)">
         <span class="f-icon msr">
-          {{ folder.children ? 'folder' : 'inbox' }}
+          {{ folder.icon || (folder.children ? 'folder' : 'inbox') }}
         </span>
         <span class="f-label">{{ folder.label }}</span>
         <span class="f-count">{{ folder.count }}</span>
+        <span class="f-chev msr" *ngIf="folder.children">
+          {{ isCollapsed(folder.label) ? 'expand_more' : 'expand_less' }}
+        </span>
       </div>
 
-      <div class="children" *ngIf="folder.children">
+      <div class="children" *ngIf="folder.children && !isCollapsed(folder.label)">
         <div class="child" *ngFor="let child of folder.children">
           <span class="c-label">{{ child.label }}</span>
           <span class="c-meta">
@@ -27,5 +33,42 @@
         </div>
       </div>
     </ng-container>
+
+    <!-- My Team -->
+    <div class="team-section">
+      <div class="team-head" (click)="toggleTeam()">
+        <span class="msr chev">{{ teamExpanded ? 'expand_more' : 'chevron_right' }}</span>
+        <span class="team-title">My Team</span>
+        <span class="team-count">{{ team.length }}</span>
+      </div>
+
+      <ng-container *ngIf="teamExpanded">
+        <div class="team-search">
+          <span class="msr">search</span>
+          <input type="text" placeholder="Search..." [(ngModel)]="teamSearch" />
+        </div>
+
+        <div class="team-list">
+          <div
+            class="team-member"
+            *ngFor="let m of visibleTeam"
+            [class.active]="m.active"
+            draggable="true"
+            (dragstart)="onMemberDragStart($event, m)"
+            title="Drag onto a ticket to assign">
+            <span class="tm-avatar" [style.background]="m.avatarColor">
+              {{ m.initials }}
+              <span class="status" [class.online]="m.online" [class.offline]="!m.online"></span>
+            </span>
+            <span class="tm-name">{{ m.name }}</span>
+            <span class="tm-count">{{ m.assigned }}/{{ m.capacity }}</span>
+          </div>
+        </div>
+
+        <button class="team-toggle" *ngIf="filteredTeam.length > teamVisibleCount" (click)="toggleShowAllTeam()">
+          {{ showAllTeam ? 'Show less' : 'Show more' }}
+        </button>
+      </ng-container>
+    </div>
   </div>
 </aside>
